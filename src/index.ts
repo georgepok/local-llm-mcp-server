@@ -15,6 +15,7 @@ import { LMStudioClient } from './lm-studio-client.js';
 import { PrivacyTools } from './privacy-tools.js';
 import { AnalysisTools } from './analysis-tools.js';
 import { PromptTemplates } from './prompt-templates.js';
+import { HttpTransport } from './http-transport.js';
 import type { MCPResponse } from './types.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
@@ -520,8 +521,40 @@ class LocalLLMMCPServer {
     // Initialize LM Studio client before connecting
     await this.lmStudio.initialize();
 
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
+    // Determine transport mode from environment or CLI args
+    const transportMode = process.env.MCP_TRANSPORT ||
+                         (process.argv.includes('--http') ? 'http' : 'stdio');
+
+    if (transportMode === 'http') {
+      // HTTP/SSE transport for remote access
+      const port = parseInt(process.env.PORT || '3000');
+      const host = process.env.HOST || '0.0.0.0';
+
+      console.log(`Starting MCP server in HTTP mode on ${host}:${port}...`);
+
+      const httpTransport = new HttpTransport(
+        { port, host, cors: true },
+        this.server
+      );
+
+      await httpTransport.start();
+
+      console.log('MCP server ready for remote connections');
+      console.log(`Access the server at: http://${host}:${port}`);
+      console.log('Press Ctrl+C to stop');
+
+      // Keep the process alive
+      process.on('SIGINT', async () => {
+        console.log('\nShutting down...');
+        await httpTransport.stop();
+        process.exit(0);
+      });
+    } else {
+      // Stdio transport for local access (default)
+      console.log('Starting MCP server in stdio mode (local access only)...');
+      const transport = new StdioServerTransport();
+      await this.server.connect(transport);
+    }
   }
 }
 
