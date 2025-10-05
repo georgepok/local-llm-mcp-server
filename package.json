@@ -13,9 +13,17 @@
     "test:basic": "npm run build && tsx test/basic-mcp-test.ts",
     "test:full": "npm run build && tsx test/mcp-client-test.ts"
   },
-  "keywords": ["mcp", "llm", "lm-studio", "local", "privacy", "ai"],
-  "author": "Your Name",
+  "keywords": ["mcp", "llm", "lm-studio", "local", "privacy", "ai", "model-context-protocol", "claude", "security", "analysis"],
+  "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/local-llm-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/local-llm-mcp-server/issues"
+  },
+  "homepage": "https://github.com/yourusername/local-llm-mcp-server#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "openai": "^4.0.0",
