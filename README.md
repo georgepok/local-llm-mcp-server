@@ -111,6 +111,26 @@ The server automatically:
 - Sets the first model as default
 - Provides full capability documentation via `local://capabilities`
 
+### Convenience Scripts
+
+For easier server management, use the included scripts:
+
+```bash
+# Start in local mode (stdio - for Claude Desktop)
+npm run start:local
+
+# Start in remote mode (HTTP - for network access)
+npm run start:remote
+
+# Stop all running servers
+npm run stop
+
+# Restart in remote mode
+npm run restart:remote
+```
+
+See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for detailed usage.
+
 ## 🌐 Remote Network Access
 
 Access the server from other devices on your home network!
