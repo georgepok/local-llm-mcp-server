@@ -4,6 +4,7 @@ import https from 'https';
 import http from 'http';
 import fs from 'fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 
 export interface HttpTransportConfig {
   port: number;
@@ -17,13 +18,13 @@ export interface HttpTransportConfig {
 
 /**
  * HTTP/SSE transport for remote MCP access
- * Simplified version for local network use (no authentication)
+ * Uses MCP SDK's SSEServerTransport for proper protocol handling
  */
 export class HttpTransport {
   private app: express.Application;
   private server: any;
   private mcpServer: Server;
-  private clients: Set<Response> = new Set();
+  private transports: Map<string, SSEServerTransport> = new Map();
 
   constructor(
     private config: HttpTransportConfig,
@@ -65,48 +66,66 @@ export class HttpTransport {
       });
     });
 
-    // SSE endpoint for streaming responses
-    this.app.get('/sse', (req, res) => {
-      console.log('[HTTP] Client connected via SSE');
+    // SSE endpoint - establishes SSE connection for MCP protocol
+    this.app.get('/sse', async (req, res) => {
+      console.log('[HTTP] Client connecting via SSE');
 
-      // Set SSE headers
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
+      // Create SSE transport for this client
+      const transport = new SSEServerTransport('/message', res);
 
-      // Add client to active connections
-      this.clients.add(res);
+      // Store transport by session ID
+      this.transports.set(transport.sessionId, transport);
 
-      // Send initial connection message
-      res.write('data: {"type":"connected"}\n\n');
+      // Connect the MCP server to this transport
+      await this.mcpServer.connect(transport);
 
-      // Remove client on disconnect
-      req.on('close', () => {
-        console.log('[HTTP] Client disconnected from SSE');
-        this.clients.delete(res);
-      });
+      console.log(`[HTTP] Client connected via SSE (session: ${transport.sessionId})`);
+
+      // Clean up on disconnect
+      transport.onclose = () => {
+        console.log(`[HTTP] Client disconnected from SSE (session: ${transport.sessionId})`);
+        this.transports.delete(transport.sessionId);
+      };
     });
 
-    // JSON-RPC endpoint for client requests
+    // Message endpoint - receives JSON-RPC messages from clients
     this.app.post('/message', async (req, res) => {
       try {
-        const message = req.body;
-        console.log('[HTTP] Received message:', JSON.stringify(message).substring(0, 100));
+        console.log('[HTTP] Received message:', JSON.stringify(req.body).substring(0, 100));
 
-        // In a full implementation, this would route to the MCP server
-        // For now, return a basic response structure
-        res.json({
-          jsonrpc: '2.0',
-          id: message.id,
-          result: {
-            protocolVersion: '2025-03-26',
-            capabilities: {},
-            serverInfo: {
-              name: 'local-llm-mcp-server',
-              version: '1.0.0',
+        // Extract session ID from query parameter
+        const sessionId = req.query.sessionId as string;
+
+        if (!sessionId) {
+          res.status(400).json({
+            jsonrpc: '2.0',
+            id: null,
+            error: {
+              code: -32600,
+              message: 'Invalid Request: sessionId required',
             },
-          },
-        });
+          });
+          return;
+        }
+
+        // Find the transport for this session
+        const transport = this.transports.get(sessionId);
+
+        if (!transport) {
+          res.status(404).json({
+            jsonrpc: '2.0',
+            id: null,
+            error: {
+              code: -32001,
+              message: 'Session not found',
+            },
+          });
+          return;
+        }
+
+        // Forward the message to the transport
+        await transport.handlePostMessage(req, res, req.body);
+
       } catch (error) {
         console.error('[HTTP] Error handling message:', error);
         res.status(500).json({
@@ -134,16 +153,6 @@ export class HttpTransport {
         },
         documentation: 'https://github.com/yourusername/local-llm-mcp-server',
       });
-    });
-  }
-
-  /**
-   * Broadcast a message to all connected SSE clients
-   */
-  private broadcast(message: any): void {
-    const data = JSON.stringify(message);
-    this.clients.forEach(client => {
-      client.write(`data: ${data}\n\n`);
     });
   }
 
@@ -206,11 +215,11 @@ export class HttpTransport {
   async stop(): Promise<void> {
     return new Promise((resolve) => {
       if (this.server) {
-        // Close all SSE connections
-        this.clients.forEach(client => {
-          client.end();
+        // Close all transports
+        this.transports.forEach(transport => {
+          transport.close();
         });
-        this.clients.clear();
+        this.transports.clear();
 
         this.server.close(() => {
           console.log('[HTTP] Server stopped');
@@ -226,6 +235,6 @@ export class HttpTransport {
    * Get the number of active connections
    */
   getConnectionCount(): number {
-    return this.clients.size;
+    return this.transports.size;
   }
 }
