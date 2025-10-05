@@ -7,6 +7,37 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -p|--port)
+      PORT="$2"
+      shift 2
+      ;;
+    -h|--host)
+      HOST="$2"
+      shift 2
+      ;;
+    --https)
+      USE_HTTPS=true
+      shift
+      ;;
+    --cert)
+      CERT_PATH="$2"
+      shift 2
+      ;;
+    --key)
+      KEY_PATH="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--port PORT] [--host HOST] [--https] [--cert CERT_PATH] [--key KEY_PATH]"
+      exit 1
+      ;;
+  esac
+done
+
 # Default configuration
 PORT=${PORT:-3000}
 HOST=${HOST:-0.0.0.0}
@@ -17,8 +48,8 @@ echo "============================================"
 echo ""
 
 if [ "$USE_HTTPS" = "true" ]; then
-  CERT_PATH=${HTTPS_CERT_PATH:-"./certs/cert.pem"}
-  KEY_PATH=${HTTPS_KEY_PATH:-"./certs/key.pem"}
+  CERT_PATH=${HTTPS_CERT_PATH:-${CERT_PATH:-"./certs/cert.pem"}}
+  KEY_PATH=${HTTPS_KEY_PATH:-${KEY_PATH:-"./certs/key.pem"}}
 
   echo "Mode: Stdio + HTTPS"
   echo "Configuration:"
