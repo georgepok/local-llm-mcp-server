@@ -111,6 +111,50 @@ The server automatically:
 - Sets the first model as default
 - Provides full capability documentation via `local://capabilities`
 
+## 🌐 Remote Network Access
+
+Access the server from other devices on your home network!
+
+```bash
+# Start in HTTP mode for network access
+MCP_TRANSPORT=http npm start
+
+# Or use CLI flag
+npm start -- --http
+
+# Access from any device on your network
+curl http://YOUR_MACHINE_IP:3000/health
+```
+
+**Quick Start:**
+```bash
+# Find your IP address
+ifconfig | grep "inet " | grep -v 127.0.0.1
+
+# Start server (default port 3000)
+MCP_TRANSPORT=http npm start
+
+# Access from browser or API client
+http://192.168.1.100:3000
+```
+
+**Available endpoints:**
+- `/` - Server information
+- `/health` - Health check
+- `/sse` - Server-Sent Events stream
+- `/message` - JSON-RPC messages
+
+**See [NETWORK_USAGE.md](NETWORK_USAGE.md) for complete guide** including:
+- Firewall configuration
+- Client examples (JavaScript, Python, cURL)
+- Troubleshooting
+- Multiple device scenarios
+
+**Dual Mode Support:**
+- **Local Mode** (default): stdio transport for Claude Desktop
+- **Remote Mode**: HTTP/SSE transport for network access
+- Both modes can run simultaneously on different ports!
+
 ## 📋 Available Tools
 
 ### Core Tools
