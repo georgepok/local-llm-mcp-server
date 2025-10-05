@@ -523,29 +523,52 @@ class LocalLLMMCPServer {
 
     // Determine transport mode from environment or CLI args
     const transportMode = process.env.MCP_TRANSPORT ||
-                         (process.argv.includes('--http') ? 'http' : 'stdio');
+                         (process.argv.includes('--http') ? 'http' :
+                          process.argv.includes('--https') ? 'https' : 'stdio');
 
-    if (transportMode === 'http') {
-      // HTTP/SSE transport for remote access
+    // Check if dual mode is enabled (stdio + http/https)
+    const enableDual = process.env.MCP_DUAL_MODE === 'true' || process.argv.includes('--dual');
+
+    if (transportMode === 'http' || transportMode === 'https' || enableDual) {
+      // HTTP/HTTPS transport for remote access
       const port = parseInt(process.env.PORT || '3000');
       const host = process.env.HOST || '0.0.0.0';
+      const useHttps = transportMode === 'https' || process.env.MCP_HTTPS === 'true';
 
-      console.error(`[HTTP] Starting MCP server on ${host}:${port}...`);
+      const protocol = useHttps ? 'HTTPS' : 'HTTP';
+      console.error(`[${protocol}] Starting MCP server on ${host}:${port}...`);
 
       const httpTransport = new HttpTransport(
-        { port, host, cors: true },
+        {
+          port,
+          host,
+          cors: true,
+          https: useHttps ? {
+            certPath: process.env.HTTPS_CERT_PATH || '',
+            keyPath: process.env.HTTPS_KEY_PATH || ''
+          } : undefined
+        },
         this.server
       );
 
       await httpTransport.start();
 
-      console.error('[HTTP] MCP server ready for remote connections');
-      console.error(`[HTTP] Access at: http://${host}:${port}`);
-      console.error('[HTTP] Press Ctrl+C to stop');
+      console.error(`[${protocol}] MCP server ready for remote connections`);
+      console.error(`[${protocol}] Access at: ${useHttps ? 'https' : 'http'}://${host}:${port}`);
+
+      // If dual mode, also start stdio transport
+      if (enableDual) {
+        console.error('[Dual] Also starting stdio transport for Claude Desktop...');
+        const stdioTransport = new StdioServerTransport();
+        await this.server.connect(stdioTransport);
+        console.error('[Dual] Both transports active: stdio + ' + protocol);
+      } else {
+        console.error(`[${protocol}] Press Ctrl+C to stop`);
+      }
 
       // Keep the process alive
       process.on('SIGINT', async () => {
-        console.error('\n[HTTP] Shutting down...');
+        console.error(`\n[${protocol}] Shutting down...`);
         await httpTransport.stop();
         process.exit(0);
       });

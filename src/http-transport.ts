@@ -1,11 +1,18 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import https from 'https';
+import http from 'http';
+import fs from 'fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
 export interface HttpTransportConfig {
   port: number;
   host?: string;
   cors?: boolean;
+  https?: {
+    certPath: string;
+    keyPath: string;
+  };
 }
 
 /**
@@ -141,21 +148,50 @@ export class HttpTransport {
   }
 
   /**
-   * Start the HTTP server
+   * Start the HTTP or HTTPS server
    */
   async start(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const host = this.config.host || '0.0.0.0';
-        this.server = this.app.listen(this.config.port, host, () => {
-          console.log(`[HTTP] MCP Server listening on http://${host}:${this.config.port}`);
-          console.log(`[HTTP] SSE endpoint: http://${host}:${this.config.port}/sse`);
-          console.log(`[HTTP] Message endpoint: http://${host}:${this.config.port}/message`);
+        const protocol = this.config.https ? 'https' : 'http';
+
+        if (this.config.https) {
+          // HTTPS mode
+          const { certPath, keyPath } = this.config.https;
+
+          if (!certPath || !keyPath) {
+            throw new Error('HTTPS enabled but certificate or key path not provided');
+          }
+
+          if (!fs.existsSync(certPath)) {
+            throw new Error(`Certificate file not found: ${certPath}`);
+          }
+
+          if (!fs.existsSync(keyPath)) {
+            throw new Error(`Key file not found: ${keyPath}`);
+          }
+
+          const httpsOptions = {
+            cert: fs.readFileSync(certPath),
+            key: fs.readFileSync(keyPath)
+          };
+
+          this.server = https.createServer(httpsOptions, this.app);
+        } else {
+          // HTTP mode
+          this.server = http.createServer(this.app);
+        }
+
+        this.server.listen(this.config.port, host, () => {
+          console.log(`[${protocol.toUpperCase()}] MCP Server listening on ${protocol}://${host}:${this.config.port}`);
+          console.log(`[${protocol.toUpperCase()}] SSE endpoint: ${protocol}://${host}:${this.config.port}/sse`);
+          console.log(`[${protocol.toUpperCase()}] Message endpoint: ${protocol}://${host}:${this.config.port}/message`);
           resolve();
         });
 
         this.server.on('error', (error: Error) => {
-          console.error('[HTTP] Server error:', error);
+          console.error(`[${protocol.toUpperCase()}] Server error:`, error);
           reject(error);
         });
       } catch (error) {

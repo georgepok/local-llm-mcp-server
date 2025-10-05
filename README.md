@@ -122,11 +122,17 @@ npm run start:local
 # Start in remote mode (HTTP - for network access)
 npm run start:remote
 
+# Start in secure mode (HTTPS - encrypted network access)
+npm run start:https
+
+# Start in dual mode (stdio + HTTP for both local and remote)
+npm run start:dual
+
+# Generate SSL certificates for HTTPS
+npm run generate:certs
+
 # Stop all running servers
 npm run stop
-
-# Restart in remote mode
-npm run restart:remote
 ```
 
 See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for detailed usage.
@@ -170,10 +176,13 @@ http://192.168.1.100:3000
 - Troubleshooting
 - Multiple device scenarios
 
-**Dual Mode Support:**
-- **Local Mode** (default): stdio transport for Claude Desktop
-- **Remote Mode**: HTTP/SSE transport for network access
-- Both modes can run simultaneously on different ports!
+**Transport Modes:**
+- **Local Mode** (stdio): For Claude Desktop integration
+- **HTTP Mode**: Unencrypted network access
+- **HTTPS Mode**: Encrypted network access with SSL/TLS
+- **Dual Mode**: Run stdio + HTTP/HTTPS simultaneously!
+
+**See [HTTPS_GUIDE.md](HTTPS_GUIDE.md) for secure setup and dual mode usage.**
 
 ## 📋 Available Tools
 
