@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "local-llm": {
+      "command": "node",
+      "args": ["/Users/george/Documents/GitHub/local-llm-mcp-server/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production",
+        "LLM_SERVER_PORT": "1234",
+        "LLM_SERVER_HOST": "localhost"
+      }
+    }
+  }
+}
