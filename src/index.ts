@@ -530,7 +530,7 @@ class LocalLLMMCPServer {
       const port = parseInt(process.env.PORT || '3000');
       const host = process.env.HOST || '0.0.0.0';
 
-      console.log(`Starting MCP server in HTTP mode on ${host}:${port}...`);
+      console.error(`[HTTP] Starting MCP server on ${host}:${port}...`);
 
       const httpTransport = new HttpTransport(
         { port, host, cors: true },
@@ -539,21 +539,24 @@ class LocalLLMMCPServer {
 
       await httpTransport.start();
 
-      console.log('MCP server ready for remote connections');
-      console.log(`Access the server at: http://${host}:${port}`);
-      console.log('Press Ctrl+C to stop');
+      console.error('[HTTP] MCP server ready for remote connections');
+      console.error(`[HTTP] Access at: http://${host}:${port}`);
+      console.error('[HTTP] Press Ctrl+C to stop');
 
       // Keep the process alive
       process.on('SIGINT', async () => {
-        console.log('\nShutting down...');
+        console.error('\n[HTTP] Shutting down...');
         await httpTransport.stop();
         process.exit(0);
       });
     } else {
       // Stdio transport for local access (default)
-      console.log('Starting MCP server in stdio mode (local access only)...');
+      // IMPORTANT: In stdio mode, stdout is reserved for JSON-RPC messages
+      // Use stderr for any logging/debugging
+      console.error('[Stdio] Starting MCP server in stdio mode...');
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
+      console.error('[Stdio] MCP server connected and ready');
     }
   }
 }
