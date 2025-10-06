@@ -9,6 +9,7 @@ import {
   ReadResourceRequestSchema,
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
+  InitializeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { LMStudioClient } from './lm-studio-client.js';
@@ -50,8 +51,66 @@ class LocalLLMMCPServer {
   }
 
   private setupHandlers(): void {
+    // Protocol handshake - advertise server capabilities
+    this.server.setRequestHandler(InitializeRequestSchema, async (request) => {
+      return {
+        protocolVersion: '2024-11-05',
+        serverInfo: {
+          name: 'local-llm-mcp-server',
+          version: '2.0.0',
+        },
+        capabilities: {
+          tools: {
+            description: 'Provides local LLM inference tools for private reasoning, analysis, and code review',
+            listChanged: false,
+          },
+          resources: {
+            description: 'Provides access to model metadata, server status, and configuration',
+            subscribe: false,
+            listChanged: false,
+          },
+          prompts: {
+            description: 'Provides pre-configured prompt templates for common tasks',
+            listChanged: false,
+          },
+        },
+      };
+    });
+
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
+        {
+          name: 'list_models',
+          description: 'List all available LLM and embedding models with their capabilities and metadata',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['all', 'llm', 'embedding'],
+                description: 'Filter models by type (default: all)',
+              },
+              includeMetadata: {
+                type: 'boolean',
+                description: 'Include detailed model metadata (default: true)',
+              },
+            },
+          },
+        },
+        {
+          name: 'get_model_info',
+          description: 'Get detailed information about a specific model including capabilities, parameters, and performance characteristics',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              model: {
+                type: 'string',
+                description: 'Model identifier (e.g., "openai/gpt-oss-20b")',
+              },
+            },
+            required: ['model'],
+          },
+        },
         {
           name: 'local_reasoning',
           description: 'Use local LLM for specialized reasoning tasks while keeping data private',
@@ -64,7 +123,7 @@ class LocalLLMMCPServer {
                 type: 'object',
                 description: 'Optional model parameters (temperature, max_tokens, etc.)'
               },
-              model: { type: 'string', description: 'Optional specific model to use (use local://models resource to see available models)' },
+              model: { type: 'string', description: 'Optional specific model to use (use list_models tool to see available models)' },
             },
             required: ['prompt'],
           },
@@ -156,7 +215,7 @@ class LocalLLMMCPServer {
         {
           uri: 'local://models',
           name: 'Available Local Models',
-          description: 'List all models loaded in LM Studio with current default model. Use this to discover which models you can reference in tool calls.',
+          description: 'Lists LLM models and embedding models separately. Use llmModels for text generation tools. Returns: {llmModels: string[], embeddingModels: string[], defaultModel: string}',
           mimeType: 'application/json',
         },
         {
@@ -191,6 +250,12 @@ class LocalLLMMCPServer {
         let result: CallToolResult;
 
         switch (name) {
+          case 'list_models':
+            result = await this.handleListModels(args);
+            break;
+          case 'get_model_info':
+            result = await this.handleGetModelInfo(args);
+            break;
           case 'local_reasoning':
             result = await this.handleLocalReasoning(args);
             break;
@@ -232,17 +297,51 @@ class LocalLLMMCPServer {
 
       switch (uri) {
         case 'local://models':
-          const models = await this.lmStudio.getAvailableModels();
+          const allModels = await this.lmStudio.getAvailableModelsWithMetadata();
           const defaultModel = this.lmStudio.getDefaultModel();
+
+          // Enrich models with metadata
+          const enrichedModels = allModels.map(model => {
+            const isEmbedding = model.id.includes('embedding') || model.id.includes('embed');
+            const modelInfo = this.parseModelName(model.id);
+
+            return {
+              id: model.id,
+              name: modelInfo.displayName,
+              type: isEmbedding ? 'embedding' : 'llm',
+              provider: modelInfo.provider,
+              parameters: modelInfo.parameters,
+              capabilities: isEmbedding ? ['embedding'] : ['chat', 'reasoning', 'completion'],
+              contextWindow: modelInfo.contextWindow,
+              isDefault: model.id === defaultModel,
+              status: 'ready',
+              metadata: {
+                created: model.created,
+                ownedBy: model.ownedBy,
+                architecture: modelInfo.architecture,
+              }
+            };
+          });
+
+          const llmModels = enrichedModels.filter(m => m.type === 'llm');
+          const embeddingModels = enrichedModels.filter(m => m.type === 'embedding');
+
           return {
             contents: [
               {
                 uri,
                 mimeType: 'application/json',
                 text: JSON.stringify({
-                  models,
-                  count: models.length,
+                  models: enrichedModels,
+                  llmModels: llmModels.map(m => m.id),
+                  embeddingModels: embeddingModels.map(m => m.id),
                   defaultModel,
+                  count: enrichedModels.length,
+                  summary: {
+                    totalModels: enrichedModels.length,
+                    llmCount: llmModels.length,
+                    embeddingCount: embeddingModels.length
+                  }
                 }, null, 2),
               },
             ],
@@ -377,8 +476,197 @@ class LocalLLMMCPServer {
     });
   }
 
+  private parseModelName(modelId: string): any {
+    // Parse model name to extract metadata
+    const parts = modelId.split(/[-\/]/);
+
+    let provider = 'Unknown';
+    let displayName = modelId;
+    let parameters = 'Unknown';
+    let architecture = 'Transformer';
+    let contextWindow = 8192;
+
+    // Detect provider
+    if (modelId.includes('openai')) {
+      provider = 'OpenAI';
+    } else if (modelId.includes('qwen')) {
+      provider = 'Alibaba Cloud';
+    } else if (modelId.includes('llama')) {
+      provider = 'Meta';
+    } else if (modelId.includes('mistral')) {
+      provider = 'Mistral AI';
+    } else if (modelId.includes('nomic')) {
+      provider = 'Nomic AI';
+    }
+
+    // Extract parameter count
+    const paramMatch = modelId.match(/(\d+)b/i);
+    if (paramMatch) {
+      parameters = `${paramMatch[1]}B`;
+    }
+
+    // Estimate context window based on model
+    if (modelId.includes('qwen3') || modelId.includes('32k')) {
+      contextWindow = 32768;
+    } else if (modelId.includes('128k')) {
+      contextWindow = 131072;
+    }
+
+    // Generate display name
+    displayName = modelId
+      .replace(/[-_]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    return {
+      provider,
+      displayName,
+      parameters,
+      architecture,
+      contextWindow
+    };
+  }
+
+  private async handleListModels(args: any): Promise<CallToolResult> {
+    const { type = 'all', includeMetadata = true } = args;
+
+    const allModels = await this.lmStudio.getAvailableModelsWithMetadata();
+    const defaultModel = this.lmStudio.getDefaultModel();
+
+    // Enrich models
+    const enrichedModels = allModels.map(model => {
+      const isEmbedding = model.id.includes('embedding') || model.id.includes('embed');
+      const modelInfo = this.parseModelName(model.id);
+
+      return {
+        id: model.id,
+        name: modelInfo.displayName,
+        type: isEmbedding ? 'embedding' : 'llm',
+        provider: modelInfo.provider,
+        parameters: modelInfo.parameters,
+        capabilities: isEmbedding ? ['embedding'] : ['chat', 'reasoning', 'completion'],
+        contextWindow: modelInfo.contextWindow,
+        isDefault: model.id === defaultModel,
+        status: 'ready',
+        ...(includeMetadata && {
+          metadata: {
+            created: model.created,
+            ownedBy: model.ownedBy,
+            architecture: modelInfo.architecture,
+          }
+        })
+      };
+    });
+
+    // Filter by type
+    let filteredModels = enrichedModels;
+    if (type === 'llm') {
+      filteredModels = enrichedModels.filter(m => m.type === 'llm');
+    } else if (type === 'embedding') {
+      filteredModels = enrichedModels.filter(m => m.type === 'embedding');
+    }
+
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          models: filteredModels,
+          defaultModel,
+          summary: {
+            total: filteredModels.length,
+            llmCount: enrichedModels.filter(m => m.type === 'llm').length,
+            embeddingCount: enrichedModels.filter(m => m.type === 'embedding').length,
+          }
+        }, null, 2)
+      }]
+    };
+  }
+
+  private async handleGetModelInfo(args: any): Promise<CallToolResult> {
+    const { model: modelId } = args;
+
+    if (!modelId) {
+      return {
+        content: [{
+          type: 'text',
+          text: 'Error: model parameter is required'
+        }],
+        isError: true
+      };
+    }
+
+    const allModels = await this.lmStudio.getAvailableModelsWithMetadata();
+    const modelData = allModels.find(m => m.id === modelId);
+
+    if (!modelData) {
+      const availableIds = allModels.map(m => m.id);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            error: {
+              code: 'MODEL_NOT_FOUND',
+              message: `Model '${modelId}' not found`,
+              details: {
+                requestedModel: modelId,
+                suggestion: 'Use list_models tool to see available models'
+              },
+              availableModels: availableIds
+            }
+          }, null, 2)
+        }],
+        isError: true
+      };
+    }
+
+    const isEmbedding = modelId.includes('embedding') || modelId.includes('embed');
+    const modelInfo = this.parseModelName(modelId);
+    const defaultModel = this.lmStudio.getDefaultModel();
+
+    const detailedInfo = {
+      id: modelId,
+      displayName: modelInfo.displayName,
+      provider: modelInfo.provider,
+      architecture: modelInfo.architecture,
+      parameters: modelInfo.parameters,
+      type: isEmbedding ? 'embedding' : 'llm',
+      capabilities: isEmbedding ? ['embedding'] : ['chat', 'reasoning', 'completion', 'code-generation'],
+      contextWindow: modelInfo.contextWindow,
+      maxTokens: Math.floor(modelInfo.contextWindow / 2),
+      isDefault: modelId === defaultModel,
+      status: 'ready',
+      metadata: {
+        created: modelData.created,
+        ownedBy: modelData.ownedBy,
+      },
+      usage: {
+        purpose: isEmbedding ? 'Generate vector embeddings for similarity search' : 'Text generation, reasoning, and completion tasks',
+        bestFor: isEmbedding ? ['Semantic search', 'Document similarity', 'Clustering'] : ['Chat', 'Analysis', 'Code generation', 'Reasoning']
+      }
+    };
+
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({ model: detailedInfo }, null, 2)
+      }]
+    };
+  }
+
   private async handleLocalReasoning(args: any): Promise<CallToolResult> {
     const { prompt, system_prompt, model_params = {}, model } = args;
+
+    // Validate model parameter - common mistake is using resource URI instead of model name
+    if (model && model.startsWith('local://')) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: Invalid model "${model}". This looks like a resource URI, not a model name.\n\nTo see available models, read the resource "local://models" first, then use one of the model names from that list (e.g., "openai/gpt-oss-20b").`
+        }],
+        isError: true
+      };
+    }
 
     const response = await this.lmStudio.generateResponse(
       prompt,

@@ -423,30 +423,149 @@ If JSON format is not possible, provide a structured text response with clear se
     overallRisk: 'low' | 'medium' | 'high';
     recommendations: string[];
   }> {
-    const systemPrompt = `You are a privacy compliance expert. Scan content for privacy issues including:
-    - Personal Identifiable Information (PII)
-    - GDPR compliance issues
-    - Data protection violations
-    - Sensitive personal data exposure`;
+    // First, do regex-based detection for common PII patterns
+    const detectedIssues: Array<{
+      type: string;
+      severity: 'low' | 'medium' | 'high';
+      description: string;
+      location: string;
+    }> = [];
 
-    const prompt = `Scan the following content for privacy issues:
+    // Email detection
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    const emails = content.match(emailRegex);
+    if (emails) {
+      detectedIssues.push({
+        type: 'PII - Email Address',
+        severity: 'medium',
+        description: `Found ${emails.length} email address(es): ${emails.slice(0, 2).join(', ')}${emails.length > 2 ? '...' : ''}`,
+        location: 'Content'
+      });
+    }
+
+    // Phone number detection (various formats)
+    const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\d{3}-\d{3}-\d{4}|\d{10}/g;
+    const phones = content.match(phoneRegex);
+    if (phones) {
+      detectedIssues.push({
+        type: 'PII - Phone Number',
+        severity: 'medium',
+        description: `Found ${phones.length} potential phone number(s)`,
+        location: 'Content'
+      });
+    }
+
+    // SSN detection (XXX-XX-XXXX)
+    const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/g;
+    const ssns = content.match(ssnRegex);
+    if (ssns) {
+      detectedIssues.push({
+        type: 'PII - Social Security Number',
+        severity: 'high',
+        description: `Found ${ssns.length} potential SSN(s) - CRITICAL`,
+        location: 'Content'
+      });
+    }
+
+    // Credit card detection (basic pattern)
+    const ccRegex = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
+    const creditCards = content.match(ccRegex);
+    if (creditCards) {
+      detectedIssues.push({
+        type: 'PII - Credit Card Number',
+        severity: 'high',
+        description: `Found ${creditCards.length} potential credit card number(s) - CRITICAL`,
+        location: 'Content'
+      });
+    }
+
+    // IP address detection
+    const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+    const ips = content.match(ipRegex);
+    if (ips) {
+      detectedIssues.push({
+        type: 'Technical - IP Address',
+        severity: 'low',
+        description: `Found ${ips.length} IP address(es)`,
+        location: 'Content'
+      });
+    }
+
+    // Now use LLM for contextual analysis
+    const systemPrompt = `You are a privacy compliance expert. Analyze the content for privacy issues that regex cannot detect, such as:
+    - Names of individuals
+    - Addresses or location information
+    - Medical information
+    - Financial information (account numbers, bank names)
+    - Biometric data references
+    - GDPR compliance concerns
+
+    Be specific about what you find and where.`;
+
+    const prompt = `Analyze this content for privacy issues. Focus on contextual PII that patterns cannot detect:
 
 ${content}
 
-Return JSON with detailed privacy analysis including issue types, severity, and recommendations.`;
-
-    const response = await this.lmStudio.generateResponse(prompt, systemPrompt, {
-      temperature: 0.1,
-      max_tokens: 800,
-    });
+Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+{
+  "issues": [
+    {
+      "type": "category of issue",
+      "severity": "low|medium|high",
+      "description": "specific description",
+      "location": "where in content"
+    }
+  ],
+  "overallRisk": "low|medium|high",
+  "recommendations": ["recommendation 1", "recommendation 2"]
+}`;
 
     try {
-      return JSON.parse(response);
-    } catch {
+      const response = await this.lmStudio.generateResponse(prompt, systemPrompt, {
+        temperature: 0.1,
+        max_tokens: 800,
+      });
+
+      // Try to extract JSON from response (handle markdown code blocks)
+      let jsonStr = response.trim();
+      if (jsonStr.startsWith('```json')) {
+        jsonStr = jsonStr.substring(7, jsonStr.lastIndexOf('```')).trim();
+      } else if (jsonStr.startsWith('```')) {
+        jsonStr = jsonStr.substring(3, jsonStr.lastIndexOf('```')).trim();
+      }
+
+      const llmResult = JSON.parse(jsonStr);
+
+      // Merge regex-detected issues with LLM-detected issues
+      const allIssues = [...detectedIssues, ...(llmResult.issues || [])];
+
+      // Determine overall risk
+      const hasCritical = allIssues.some(i => i.severity === 'high');
+      const hasMedium = allIssues.some(i => i.severity === 'medium');
+      const overallRisk = hasCritical ? 'high' : (hasMedium ? 'medium' : 'low');
+
       return {
-        issues: [],
-        overallRisk: 'medium',
-        recommendations: ['Manual review required due to analysis error'],
+        issues: allIssues,
+        overallRisk,
+        recommendations: llmResult.recommendations || [
+          'Review all detected PII',
+          'Consider redacting or anonymizing sensitive information',
+          'Ensure GDPR compliance if handling EU data'
+        ],
+      };
+    } catch (error) {
+      // Fallback: return regex-detected issues only
+      const overallRisk = detectedIssues.some(i => i.severity === 'high') ? 'high' :
+                         detectedIssues.some(i => i.severity === 'medium') ? 'medium' : 'low';
+
+      return {
+        issues: detectedIssues,
+        overallRisk,
+        recommendations: [
+          'Regex-based detection completed. Manual review recommended for contextual PII.',
+          'Review all detected sensitive information',
+          'Consider using anonymization tools for PII'
+        ],
       };
     }
   }

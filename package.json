@@ -1,7 +1,7 @@
 {
   "name": "local-llm-mcp-server",
-  "version": "1.0.0",
-  "description": "Model Context Protocol server that bridges local LLMs through LM Studio to larger cloud LLMs",
+  "version": "2.0.0",
+  "description": "Full MCP-compliant server bridging local LLMs through LM Studio with complete protocol support, resources, and discovery tools",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -19,7 +19,9 @@
     "test": "npm run build && tsx test/integration-test.ts",
     "test:basic": "npm run build && tsx test/basic-mcp-test.ts",
     "test:full": "npm run build && tsx test/mcp-client-test.ts",
-    "test:regression": "node test-regression.js"
+    "test:regression": "node test-regression.js",
+    "test:spec": "node validate-mcp-spec.js",
+    "test:streamable": "node test-streamable-http.js"
   },
   "keywords": [
     "mcp",

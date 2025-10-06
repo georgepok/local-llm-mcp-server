@@ -139,36 +139,60 @@ See [SCRIPTS_GUIDE.md](SCRIPTS_GUIDE.md) for detailed usage.
 
 ## 🌐 Remote Network Access
 
-Access the server from other devices on your home network!
+Access the server from other devices on your home network or connect Claude Desktop remotely!
+
+### Connect Claude Desktop Remotely
+
+**Quick Start (3 steps):**
+
+```bash
+# 1. Start HTTPS server
+npm run start:https
+
+# 2. Add to claude_desktop_config.json:
+{
+  "mcpServers": {
+    "local-llm-remote": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://localhost:3010/sse"],
+      "env": {"NODE_TLS_REJECT_UNAUTHORIZED": "0"}
+    }
+  }
+}
+
+# 3. Restart Claude Desktop
+```
+
+**📖 Complete Guide:** [REMOTE_QUICKSTART.md](REMOTE_QUICKSTART.md)
+
+### Remote Access Methods
+
+**Method 1: Claude Desktop Custom Connector UI** (Production)
+- For Claude Pro/Max/Team/Enterprise users
+- Requires valid SSL certificate (not self-signed)
+- Simple UI-based setup in Settings > Connectors
+- **Guide:** [CLAUDE_DESKTOP_REMOTE.md](docs/CLAUDE_DESKTOP_REMOTE.md)
+
+**Method 2: mcp-remote Proxy** (Development/Testing)
+- Works with self-signed certificates
+- Supports localhost and local networks
+- JSON configuration file
+- **Examples:** [claude_desktop_config_examples.json](claude_desktop_config_examples.json)
+
+### Network Access from Any Client
 
 ```bash
 # Start in HTTP mode for network access
-MCP_TRANSPORT=http npm start
-
-# Or use CLI flag
-npm start -- --http
+npm run start:remote
 
 # Access from any device on your network
-curl http://YOUR_MACHINE_IP:3000/health
-```
-
-**Quick Start:**
-```bash
-# Find your IP address
-ifconfig | grep "inet " | grep -v 127.0.0.1
-
-# Start server (default port 3000)
-MCP_TRANSPORT=http npm start
-
-# Access from browser or API client
-http://192.168.1.100:3000
+curl http://192.168.1.100:3000/health
 ```
 
 **Available endpoints:**
 - `/` - Server information
 - `/health` - Health check
-- `/sse` - Server-Sent Events stream
-- `/message` - JSON-RPC messages
+- `/mcp` - MCP Streamable HTTP endpoint (GET/POST/DELETE)
 
 **See [NETWORK_USAGE.md](NETWORK_USAGE.md) for complete guide** including:
 - Firewall configuration
@@ -183,6 +207,25 @@ http://192.168.1.100:3000
 - **Dual Mode**: Run stdio + HTTP/HTTPS simultaneously!
 
 **See [HTTPS_GUIDE.md](HTTPS_GUIDE.md) for secure setup and dual mode usage.**
+
+### Specification Compliance
+
+✅ **MCP Streamable HTTP Transport (Protocol 2025-03-26)**
+
+Our implementation uses the latest MCP Streamable HTTP transport:
+- Protocol version: `2025-03-26`
+- Full JSON-RPC 2.0 compliance
+- Session management via headers
+- SSE streaming for responses
+- Stateful mode with session IDs
+
+```bash
+# Run Streamable HTTP test
+npm run test:streamable
+```
+
+**🔄 Migration Note:** SSE transport (2024-11-05) has been replaced with Streamable HTTP per MCP specification.
+**See [STREAMABLE_HTTP_MIGRATION.md](docs/STREAMABLE_HTTP_MIGRATION.md) for migration guide.**
 
 ## 📋 Available Tools
 

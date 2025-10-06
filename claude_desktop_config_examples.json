@@ -1,0 +1,158 @@
+{
+  "_comment": "Example configurations for connecting Claude Desktop to this MCP server remotely",
+  "_instructions": "Copy one of these configurations to your claude_desktop_config.json file",
+  "_config_location_mac": "~/Library/Application Support/Claude/claude_desktop_config.json",
+  "_config_location_windows": "%APPDATA%\\Claude\\claude_desktop_config.json",
+
+  "example_1_localhost_https_self_signed": {
+    "description": "Connect to HTTPS server on localhost with self-signed certificate (development)",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://localhost:3010/sse"
+        ],
+        "env": {
+          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        }
+      }
+    }
+  },
+
+  "example_2_local_network_https": {
+    "description": "Connect to server on local network (replace IP with your machine's IP)",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://192.168.1.100:3010/sse"
+        ],
+        "env": {
+          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        }
+      }
+    }
+  },
+
+  "example_3_local_network_http": {
+    "description": "Connect to HTTP server on local network (not encrypted - use for testing only)",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "http://192.168.1.100:3000/sse"
+        ]
+      }
+    }
+  },
+
+  "example_4_production_valid_cert": {
+    "description": "Connect to production server with valid SSL certificate",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://your-domain.com/sse"
+        ]
+      }
+    }
+  },
+
+  "example_5_with_http_proxy": {
+    "description": "Connect through HTTP proxy (corporate networks)",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://your-server.com/sse",
+          "--enable-proxy"
+        ],
+        "env": {
+          "HTTPS_PROXY": "http://127.0.0.1:3128",
+          "NO_PROXY": "localhost,127.0.0.1"
+        }
+      }
+    }
+  },
+
+  "example_6_multiple_servers": {
+    "description": "Connect to both local stdio and remote HTTPS servers",
+    "mcpServers": {
+      "local-llm-stdio": {
+        "command": "node",
+        "args": [
+          "/absolute/path/to/local-llm-mcp-server/dist/index.js"
+        ],
+        "env": {
+          "NODE_ENV": "production"
+        }
+      },
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://192.168.1.100:3010/sse"
+        ],
+        "env": {
+          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        }
+      }
+    }
+  },
+
+  "example_7_with_tool_filtering": {
+    "description": "Connect but filter out specific tools",
+    "mcpServers": {
+      "local-llm-remote": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://localhost:3010/sse",
+          "--ignore-tool",
+          "code_analysis"
+        ],
+        "env": {
+          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+        }
+      }
+    }
+  },
+
+  "_how_to_use": [
+    "1. Choose an example that matches your setup",
+    "2. Copy the 'mcpServers' section",
+    "3. Paste into your claude_desktop_config.json",
+    "4. Modify URLs/IPs to match your server",
+    "5. Save the file",
+    "6. Restart Claude Desktop",
+    "7. Check Settings > Developer > View Logs to verify connection"
+  ],
+
+  "_troubleshooting": {
+    "connection_refused": "Ensure the server is running: npm run start:https",
+    "certificate_error": "Add NODE_TLS_REJECT_UNAUTHORIZED=0 to env (development only)",
+    "tools_not_appearing": "Restart Claude Desktop completely, check logs",
+    "cannot_post_sse_error": "This is normal! mcp-remote tries POST first, then falls back to GET"
+  },
+
+  "_server_commands": {
+    "start_https_localhost": "npm run start:https",
+    "start_http_network": "npm run start:remote",
+    "start_with_custom_port": "PORT=8080 npm run start:https",
+    "stop_all_servers": "npm run stop",
+    "test_connection": "curl -k https://localhost:3010/health",
+    "view_server_logs": "tail -f /tmp/mcp-server.log"
+  }
+}

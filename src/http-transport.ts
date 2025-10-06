@@ -1,10 +1,11 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import http from 'http';
 import fs from 'fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { randomUUID } from 'crypto';
 
 export interface HttpTransportConfig {
   port: number;
@@ -17,14 +18,20 @@ export interface HttpTransportConfig {
 }
 
 /**
- * HTTP/SSE transport for remote MCP access
- * Uses MCP SDK's SSEServerTransport for proper protocol handling
+ * Streamable HTTP transport for MCP
+ * Implements MCP Streamable HTTP Transport Specification (2025-03-26)
+ *
+ * Features:
+ * - Single /mcp endpoint for GET, POST, and DELETE
+ * - Stateful session management with session IDs
+ * - SSE streaming for server messages
+ * - CORS support for network access
  */
 export class HttpTransport {
   private app: express.Application;
-  private server: any;
+  private server: http.Server | https.Server | null = null;
   private mcpServer: Server;
-  private transports: Map<string, SSEServerTransport> = new Map();
+  private transport: StreamableHTTPServerTransport | null = null;
 
   constructor(
     private config: HttpTransportConfig,
@@ -36,120 +43,97 @@ export class HttpTransport {
     this.setupRoutes();
   }
 
+  /**
+   * Configure Express middleware
+   */
   private setupMiddleware(): void {
-    // Enable CORS for local network access
+    // Enable CORS if not explicitly disabled
     if (this.config.cors !== false) {
       this.app.use(cors({
-        origin: '*', // Allow all origins for local network
-        methods: ['GET', 'POST', 'OPTIONS'],
-        allowedHeaders: ['Content-Type'],
+        origin: '*',
+        methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+        allowedHeaders: [
+          'Content-Type',
+          'Accept',
+          'Mcp-Protocol-Version',
+          'Mcp-Session-Id',
+          'Last-Event-ID',
+        ],
+        exposedHeaders: ['Mcp-Session-Id', 'Mcp-Protocol-Version'],
       }));
     }
 
-    // Parse JSON bodies
+    // Parse JSON request bodies
     this.app.use(express.json());
 
-    // Request logging
+    // Request logging (to stderr per MCP spec)
     this.app.use((req, res, next) => {
-      console.log(`[HTTP] ${req.method} ${req.path}`);
+      console.error(`[HTTP] ${req.method} ${req.path}`);
       next();
     });
   }
 
+  /**
+   * Setup HTTP routes
+   */
   private setupRoutes(): void {
-    // Health check endpoint
+    // Health check endpoint (non-MCP)
     this.app.get('/health', (req, res) => {
       res.json({
         status: 'ok',
-        transport: 'http',
+        transport: 'streamable-http',
+        protocol: '2025-03-26',
         timestamp: new Date().toISOString(),
       });
     });
 
-    // SSE endpoint - establishes SSE connection for MCP protocol
-    this.app.get('/sse', async (req, res) => {
-      console.log('[HTTP] Client connecting via SSE');
-
-      // Create SSE transport for this client
-      const transport = new SSEServerTransport('/message', res);
-
-      // Store transport by session ID
-      this.transports.set(transport.sessionId, transport);
-
-      // Connect the MCP server to this transport
-      await this.mcpServer.connect(transport);
-
-      console.log(`[HTTP] Client connected via SSE (session: ${transport.sessionId})`);
-
-      // Clean up on disconnect
-      transport.onclose = () => {
-        console.log(`[HTTP] Client disconnected from SSE (session: ${transport.sessionId})`);
-        this.transports.delete(transport.sessionId);
-      };
-    });
-
-    // Message endpoint - receives JSON-RPC messages from clients
-    this.app.post('/message', async (req, res) => {
-      try {
-        console.log('[HTTP] Received message:', JSON.stringify(req.body).substring(0, 100));
-
-        // Extract session ID from query parameter
-        const sessionId = req.query.sessionId as string;
-
-        if (!sessionId) {
-          res.status(400).json({
-            jsonrpc: '2.0',
-            id: null,
-            error: {
-              code: -32600,
-              message: 'Invalid Request: sessionId required',
-            },
-          });
-          return;
-        }
-
-        // Find the transport for this session
-        const transport = this.transports.get(sessionId);
-
-        if (!transport) {
-          res.status(404).json({
-            jsonrpc: '2.0',
-            id: null,
-            error: {
-              code: -32001,
-              message: 'Session not found',
-            },
-          });
-          return;
-        }
-
-        // Forward the message to the transport
-        await transport.handlePostMessage(req, res, req.body);
-
-      } catch (error) {
-        console.error('[HTTP] Error handling message:', error);
-        res.status(500).json({
+    // MCP endpoint - handles all MCP protocol messages
+    // Supports: GET (SSE stream), POST (JSON-RPC), DELETE (session termination)
+    this.app.all('/mcp', async (req, res) => {
+      if (!this.transport) {
+        res.status(503).json({
           jsonrpc: '2.0',
-          id: req.body?.id || null,
           error: {
-            code: -32603,
-            message: 'Internal error',
-            data: error instanceof Error ? error.message : 'Unknown error',
+            code: -32000,
+            message: 'Transport not initialized',
           },
+          id: null,
         });
+        return;
+      }
+
+      try {
+        // Delegate to StreamableHTTPServerTransport
+        // It handles all protocol requirements: headers, session management, SSE, etc.
+        await this.transport.handleRequest(req, res, req.body);
+      } catch (error) {
+        console.error('[HTTP] Error handling request:', error);
+
+        // Only send error if headers haven't been sent (SSE streams send headers immediately)
+        if (!res.headersSent) {
+          res.status(500).json({
+            jsonrpc: '2.0',
+            error: {
+              code: -32603,
+              message: 'Internal error',
+              data: error instanceof Error ? error.message : 'Unknown error',
+            },
+            id: null,
+          });
+        }
       }
     });
 
-    // Info endpoint
+    // Server info endpoint (non-MCP)
     this.app.get('/', (req, res) => {
       res.json({
         server: 'local-llm-mcp-server',
         version: '1.0.0',
-        transport: 'http',
+        transport: 'streamable-http',
+        protocol: '2025-03-26',
         endpoints: {
           health: '/health',
-          sse: '/sse',
-          message: '/message',
+          mcp: '/mcp',
         },
         documentation: 'https://github.com/yourusername/local-llm-mcp-server',
       });
@@ -160,81 +144,109 @@ export class HttpTransport {
    * Start the HTTP or HTTPS server
    */
   async start(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        const host = this.config.host || '0.0.0.0';
-        const protocol = this.config.https ? 'https' : 'http';
+    const host = this.config.host || '0.0.0.0';
+    const protocol = this.config.https ? 'https' : 'http';
 
-        if (this.config.https) {
-          // HTTPS mode
-          const { certPath, keyPath } = this.config.https;
+    try {
+      // Create Streamable HTTP transport in stateless mode
+      // Stateless mode (sessionIdGenerator: undefined) is required for compatibility with mcp-remote
+      this.transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+      });
 
-          if (!certPath || !keyPath) {
-            throw new Error('HTTPS enabled but certificate or key path not provided');
-          }
+      // Connect MCP Server to transport
+      await this.mcpServer.connect(this.transport);
+      console.error('[MCP] Server connected to Streamable HTTP transport');
 
-          if (!fs.existsSync(certPath)) {
-            throw new Error(`Certificate file not found: ${certPath}`);
-          }
+      // Create HTTP or HTTPS server
+      if (this.config.https) {
+        const { certPath, keyPath } = this.config.https;
 
-          if (!fs.existsSync(keyPath)) {
-            throw new Error(`Key file not found: ${keyPath}`);
-          }
-
-          const httpsOptions = {
-            cert: fs.readFileSync(certPath),
-            key: fs.readFileSync(keyPath)
-          };
-
-          this.server = https.createServer(httpsOptions, this.app);
-        } else {
-          // HTTP mode
-          this.server = http.createServer(this.app);
+        if (!certPath || !keyPath) {
+          throw new Error('HTTPS enabled but certificate or key path not provided');
         }
 
-        this.server.listen(this.config.port, host, () => {
-          console.log(`[${protocol.toUpperCase()}] MCP Server listening on ${protocol}://${host}:${this.config.port}`);
-          console.log(`[${protocol.toUpperCase()}] SSE endpoint: ${protocol}://${host}:${this.config.port}/sse`);
-          console.log(`[${protocol.toUpperCase()}] Message endpoint: ${protocol}://${host}:${this.config.port}/message`);
+        if (!fs.existsSync(certPath)) {
+          throw new Error(`Certificate file not found: ${certPath}`);
+        }
+
+        if (!fs.existsSync(keyPath)) {
+          throw new Error(`Key file not found: ${keyPath}`);
+        }
+
+        const httpsOptions = {
+          cert: fs.readFileSync(certPath),
+          key: fs.readFileSync(keyPath),
+        };
+
+        this.server = https.createServer(httpsOptions, this.app);
+      } else {
+        this.server = http.createServer(this.app);
+      }
+
+      // Start listening
+      await new Promise<void>((resolve, reject) => {
+        this.server!.listen(this.config.port, host, () => {
+          console.error(`[${protocol.toUpperCase()}] MCP Server listening on ${protocol}://${host}:${this.config.port}`);
+          console.error(`[${protocol.toUpperCase()}] MCP endpoint: ${protocol}://${host}:${this.config.port}/mcp`);
+          console.error(`[${protocol.toUpperCase()}] Protocol: Streamable HTTP (2025-03-26)`);
+          console.error(`[${protocol.toUpperCase()}] Ready for connections`);
           resolve();
         });
 
-        this.server.on('error', (error: Error) => {
+        this.server!.on('error', (error: Error) => {
           console.error(`[${protocol.toUpperCase()}] Server error:`, error);
           reject(error);
         });
-      } catch (error) {
-        reject(error);
+      });
+    } catch (error) {
+      // Cleanup on error
+      if (this.transport) {
+        await this.transport.close();
+        this.transport = null;
       }
-    });
+      throw error;
+    }
   }
 
   /**
-   * Stop the HTTP server
+   * Stop the server and close transport
    */
   async stop(): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.server) {
-        // Close all transports
-        this.transports.forEach(transport => {
-          transport.close();
-        });
-        this.transports.clear();
+    // Close transport first
+    if (this.transport) {
+      try {
+        await this.transport.close();
+        console.error('[MCP] Transport closed');
+      } catch (error) {
+        console.error('[MCP] Error closing transport:', error);
+      }
+      this.transport = null;
+    }
 
-        this.server.close(() => {
-          console.log('[HTTP] Server stopped');
+    // Then close HTTP server
+    if (this.server) {
+      await new Promise<void>((resolve) => {
+        this.server!.close(() => {
+          console.error('[HTTP] Server stopped');
           resolve();
         });
-      } else {
-        resolve();
-      }
-    });
+      });
+      this.server = null;
+    }
   }
 
   /**
-   * Get the number of active connections
+   * Get the current session ID (if in stateful mode)
    */
-  getConnectionCount(): number {
-    return this.transports.size;
+  getSessionId(): string | undefined {
+    return this.transport?.sessionId;
+  }
+
+  /**
+   * Check if server is running
+   */
+  isRunning(): boolean {
+    return this.server !== null && this.transport !== null;
   }
 }

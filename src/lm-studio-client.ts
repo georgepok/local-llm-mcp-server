@@ -1,5 +1,6 @@
 import { OpenAI } from 'openai';
 import type { LMStudioConfig, ModelParams } from './types.js';
+import { getModelMetadata, getModelIntrospectionPrompt, isIntrospectionQuery } from './model-metadata.js';
 
 export class LMStudioClient {
   private client: OpenAI;
@@ -59,15 +60,42 @@ export class LMStudioClient {
     }
   }
 
+  async getAvailableModelsWithMetadata(): Promise<any[]> {
+    try {
+      const models = await this.client.models.list();
+      return models.data.map(model => ({
+        id: model.id,
+        name: model.id,
+        object: model.object,
+        created: model.created,
+        ownedBy: model.owned_by,
+      }));
+    } catch (error) {
+      console.error('Failed to get models with metadata:', error);
+      return [];
+    }
+  }
+
   async generateResponse(
     prompt: string,
     systemPrompt?: string,
     params: Partial<ModelParams> = {},
     modelOverride?: string
   ): Promise<string> {
+    const modelToUse = modelOverride || this.defaultModel;
+    if (!modelToUse) {
+      throw new Error('No model specified and no default model set. Use setDefaultModel() or pass a model parameter.');
+    }
+
     const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
 
-    if (systemPrompt) {
+    // Inject accurate model metadata for introspection queries
+    if (isIntrospectionQuery(prompt)) {
+      const introspectionPrompt = getModelIntrospectionPrompt(modelToUse);
+      if (introspectionPrompt) {
+        messages.push({ role: 'system', content: introspectionPrompt });
+      }
+    } else if (systemPrompt) {
       messages.push({ role: 'system', content: systemPrompt });
     }
 
@@ -86,11 +114,6 @@ export class LMStudioClient {
           timeout: adaptiveTimeout,
         })
       : this.client;
-
-    const modelToUse = modelOverride || this.defaultModel;
-    if (!modelToUse) {
-      throw new Error('No model specified and no default model set. Use setDefaultModel() or pass a model parameter.');
-    }
 
     try {
       const completion = await clientToUse.chat.completions.create({
