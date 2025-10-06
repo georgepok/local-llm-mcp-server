@@ -19,6 +19,9 @@
     "test": "npm run build && tsx test/integration-test.ts",
     "test:basic": "npm run build && tsx test/basic-mcp-test.ts",
     "test:full": "npm run build && tsx test/mcp-client-test.ts",
+    "test:client": "npm run build && tsx src/mcp-test-client.ts",
+    "test:client:all": "npm run build && tsx src/mcp-test-client.ts -- --all",
+    "test:client:verbose": "npm run build && tsx src/mcp-test-client.ts -- --all --verbose",
     "test:regression": "node test-regression.js",
     "test:spec": "node validate-mcp-spec.js",
     "test:streamable": "node test-streamable-http.js"
