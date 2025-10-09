@@ -20,7 +20,9 @@ export class PrivacyTools {
     let placeholderIndex = 1;
     for (const item of sensitiveData) {
       const placeholder = `[${item.type.toUpperCase()}_${placeholderIndex}]`;
-      preprocessedContent = preprocessedContent.replace(item.value, placeholder);
+      // Use global regex to replace ALL occurrences, not just the first
+      const escapedValue = item.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      preprocessedContent = preprocessedContent.replace(new RegExp(escapedValue, 'g'), placeholder);
       replacements.push({
         original: item.value,
         placeholder,

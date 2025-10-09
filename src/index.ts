@@ -20,6 +20,8 @@ import { HttpTransport } from './http-transport.js';
 import type { MCPResponse } from './types.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
+const SERVER_VERSION = '2.0.0';
+
 class LocalLLMMCPServer {
   private server: Server;
   private lmStudio: LMStudioClient;
@@ -31,7 +33,7 @@ class LocalLLMMCPServer {
     this.server = new Server(
       {
         name: 'local-llm-mcp-server',
-        version: '1.0.0',
+        version: SERVER_VERSION,
       },
       {
         capabilities: {
@@ -316,9 +318,10 @@ class LocalLLMMCPServer {
               isDefault: model.id === defaultModel,
               status: 'ready',
               metadata: {
-                created: model.created,
-                ownedBy: model.ownedBy,
                 architecture: modelInfo.architecture,
+                publisher: model.publisher,
+                quantization: model.quantization,
+                maxContextLength: model.maxContextLength,
               }
             };
           });
@@ -370,7 +373,7 @@ class LocalLLMMCPServer {
                 mimeType: 'application/json',
                 text: JSON.stringify({
                   server: 'local-llm-mcp-server',
-                  version: '1.0.0',
+                  version: SERVER_VERSION,
                   capabilities: ['reasoning', 'analysis', 'rewriting', 'code_analysis', 'templates'],
                   privacy_levels: ['strict', 'moderate', 'minimal'],
                   supported_domains: ['general', 'medical', 'legal', 'financial', 'technical', 'academic'],
@@ -551,9 +554,10 @@ class LocalLLMMCPServer {
         status: 'ready',
         ...(includeMetadata && {
           metadata: {
-            created: model.created,
-            ownedBy: model.ownedBy,
             architecture: modelInfo.architecture,
+            publisher: model.publisher,
+            quantization: model.quantization,
+            maxContextLength: model.maxContextLength,
           }
         })
       };
@@ -637,8 +641,11 @@ class LocalLLMMCPServer {
       isDefault: modelId === defaultModel,
       status: 'ready',
       metadata: {
-        created: modelData.created,
-        ownedBy: modelData.ownedBy,
+        publisher: modelData.publisher,
+        quantization: modelData.quantization,
+        maxContextLength: modelData.maxContextLength,
+        loadedContextLength: modelData.loadedContextLength,
+        compatibilityType: modelData.compatibilityType,
       },
       usage: {
         purpose: isEmbedding ? 'Generate vector embeddings for similarity search' : 'Text generation, reasoning, and completion tasks',
@@ -788,6 +795,8 @@ class LocalLLMMCPServer {
       };
     }
 
+    // Capture previous default before setting new one
+    const previousDefault = this.lmStudio.getDefaultModel();
     this.lmStudio.setDefaultModel(model);
 
     return {
@@ -797,7 +806,7 @@ class LocalLLMMCPServer {
           text: JSON.stringify({
             success: true,
             defaultModel: model,
-            previousDefault: this.lmStudio.getDefaultModel(),
+            previousDefault: previousDefault,
             message: `Default model set to "${model}"`,
           }, null, 2),
         },
