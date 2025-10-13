@@ -52,8 +52,17 @@ export class LMStudioClient {
 
   async getAvailableModels(): Promise<string[]> {
     try {
-      const models = await this.client.models.list();
-      return models.data.map(model => model.id);
+      // Use LM Studio REST API to get only loaded models
+      const baseUrl = this.config.baseUrl.replace('/v1', '');
+      const response = await fetch(`${baseUrl}/api/v0/models`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      const data = await response.json();
+      // Filter only loaded models
+      return data.data
+        .filter((model: any) => model.state === 'loaded')
+        .map((model: any) => model.id);
     } catch (error) {
       console.error('Failed to get available models:', error);
       return [];
@@ -62,14 +71,30 @@ export class LMStudioClient {
 
   async getAvailableModelsWithMetadata(): Promise<any[]> {
     try {
-      const models = await this.client.models.list();
-      return models.data.map(model => ({
-        id: model.id,
-        name: model.id,
-        object: model.object,
-        created: model.created,
-        ownedBy: model.owned_by,
-      }));
+      // Use LM Studio REST API to get detailed metadata for loaded models
+      const baseUrl = this.config.baseUrl.replace('/v1', '');
+      const response = await fetch(`${baseUrl}/api/v0/models`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      const data = await response.json();
+      // Filter only loaded models and return full metadata
+      return data.data
+        .filter((model: any) => model.state === 'loaded')
+        .map((model: any) => ({
+          id: model.id,
+          name: model.id,
+          object: model.object,
+          type: model.type,
+          publisher: model.publisher,
+          architecture: model.arch,
+          compatibilityType: model.compatibility_type,
+          quantization: model.quantization,
+          state: model.state,
+          maxContextLength: model.max_context_length,
+          loadedContextLength: model.loaded_context_length,
+          capabilities: model.capabilities || [],
+        }));
     } catch (error) {
       console.error('Failed to get models with metadata:', error);
       return [];
@@ -87,19 +112,19 @@ export class LMStudioClient {
       throw new Error('No model specified and no default model set. Use setDefaultModel() or pass a model parameter.');
     }
 
-    const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
+    const input: Array<{ role: 'system' | 'user'; content: string }> = [];
 
     // Inject accurate model metadata for introspection queries
     if (isIntrospectionQuery(prompt)) {
       const introspectionPrompt = getModelIntrospectionPrompt(modelToUse);
       if (introspectionPrompt) {
-        messages.push({ role: 'system', content: introspectionPrompt });
+        input.push({ role: 'system', content: introspectionPrompt });
       }
     } else if (systemPrompt) {
-      messages.push({ role: 'system', content: systemPrompt });
+      input.push({ role: 'system', content: systemPrompt });
     }
 
-    messages.push({ role: 'user', content: prompt });
+    input.push({ role: 'user', content: prompt });
 
     // Calculate adaptive timeout based on content complexity
     const adaptiveTimeout = this.config.adaptiveTimeout
@@ -116,18 +141,15 @@ export class LMStudioClient {
       : this.client;
 
     try {
-      const completion = await clientToUse.chat.completions.create({
+      const response = await clientToUse.responses.create({
         model: modelToUse,
-        messages,
+        input,
         temperature: params.temperature,
-        max_tokens: params.max_tokens,
+        max_output_tokens: params.max_tokens,
         top_p: params.top_p,
-        frequency_penalty: params.frequency_penalty,
-        presence_penalty: params.presence_penalty,
-        stop: params.stop,
       });
 
-      return completion.choices[0]?.message?.content || '';
+      return response.output_text || '';
     } catch (error) {
       console.error('LM Studio API error:', error);
 
@@ -186,13 +208,13 @@ export class LMStudioClient {
     params: Partial<ModelParams> = {},
     modelOverride?: string
   ): Promise<AsyncIterable<string>> {
-    const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
+    const input: Array<{ role: 'system' | 'user'; content: string }> = [];
 
     if (systemPrompt) {
-      messages.push({ role: 'system', content: systemPrompt });
+      input.push({ role: 'system', content: systemPrompt });
     }
 
-    messages.push({ role: 'user', content: prompt });
+    input.push({ role: 'user', content: prompt });
 
     const modelToUse = modelOverride || this.defaultModel;
     if (!modelToUse) {
@@ -200,15 +222,12 @@ export class LMStudioClient {
     }
 
     try {
-      const stream = await this.client.chat.completions.create({
+      const stream = await this.client.responses.create({
         model: modelToUse,
-        messages,
+        input,
         temperature: params.temperature,
-        max_tokens: params.max_tokens,
+        max_output_tokens: params.max_tokens,
         top_p: params.top_p,
-        frequency_penalty: params.frequency_penalty,
-        presence_penalty: params.presence_penalty,
-        stop: params.stop,
         stream: true,
       });
 
@@ -221,7 +240,8 @@ export class LMStudioClient {
 
   private async* streamToAsyncIterable(stream: any): AsyncIterable<string> {
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
+      // Responses API uses delta.output for streaming content
+      const content = chunk.delta?.output || chunk.output;
       if (content) {
         yield content;
       }
