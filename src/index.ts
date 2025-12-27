@@ -17,6 +17,7 @@ import { PrivacyTools } from './privacy-tools.js';
 import { AnalysisTools } from './analysis-tools.js';
 import { PromptTemplates } from './prompt-templates.js';
 import { HttpTransport } from './http-transport.js';
+import { ConfigManager } from './config.js';
 import type { MCPResponse } from './types.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
@@ -26,6 +27,7 @@ class LocalLLMMCPServer {
   private privacyTools: PrivacyTools;
   private analysisTools: AnalysisTools;
   private promptTemplates: PromptTemplates;
+  private configManager: ConfigManager;
 
   constructor() {
     this.server = new Server(
@@ -42,7 +44,16 @@ class LocalLLMMCPServer {
       }
     );
 
-    this.lmStudio = new LMStudioClient();
+    // Load configuration from config.json
+    this.configManager = new ConfigManager();
+    const lmConfig = this.configManager.getLMStudioConfig();
+
+    this.lmStudio = new LMStudioClient({
+      baseUrl: lmConfig.baseUrl,
+      model: lmConfig.model,
+      timeout: lmConfig.timeout,
+      retries: lmConfig.retries,
+    });
     this.privacyTools = new PrivacyTools(this.lmStudio);
     this.analysisTools = new AnalysisTools(this.lmStudio);
     this.promptTemplates = new PromptTemplates();

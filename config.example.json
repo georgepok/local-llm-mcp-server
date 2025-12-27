@@ -1,0 +1,68 @@
+{
+  "lmStudio": {
+    "baseUrl": "http://localhost:1234/v1",
+    "defaultModel": "local-model",
+    "timeout": 600000,
+    "retries": 3,
+    "adaptiveTimeout": true
+  },
+  "models": {
+    "reasoning": {
+      "name": "Reasoning Model",
+      "description": "Model optimized for complex reasoning tasks",
+      "capabilities": ["reasoning", "analysis", "problem-solving"],
+      "defaultParams": {
+        "temperature": 0.7,
+        "max_tokens": 4096,
+        "top_p": 0.9
+      }
+    },
+    "analysis": {
+      "name": "Analysis Model",
+      "description": "Model for content analysis and classification",
+      "capabilities": ["analysis", "classification", "extraction"],
+      "defaultParams": {
+        "temperature": 0.3,
+        "max_tokens": 2048,
+        "top_p": 0.8
+      }
+    },
+    "creative": {
+      "name": "Creative Model",
+      "description": "Model for creative writing and content generation",
+      "capabilities": ["writing", "rewriting", "creative"],
+      "defaultParams": {
+        "temperature": 0.8,
+        "max_tokens": 4096,
+        "top_p": 0.95
+      }
+    },
+    "privacy": {
+      "name": "Privacy Model",
+      "description": "Model for privacy-preserving tasks",
+      "capabilities": ["privacy", "anonymization", "security"],
+      "defaultParams": {
+        "temperature": 0.2,
+        "max_tokens": 2048,
+        "top_p": 0.7
+      }
+    }
+  },
+  "privacy": {
+    "defaultLevel": "moderate",
+    "enableLogging": false,
+    "logRetentionDays": 7
+  },
+  "performance": {
+    "cacheEnabled": true,
+    "cacheTTL": 3600,
+    "maxConcurrentRequests": 5,
+    "requestTimeout": 300000
+  },
+  "features": {
+    "enableStreamingResponses": true,
+    "enableMultimodalSupport": false,
+    "enableCustomPrompts": true,
+    "enableAnalytics": false
+  }
+}

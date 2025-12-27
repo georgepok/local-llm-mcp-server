@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { LMStudioConfig, ModelParams } from './types.js';
+
+// Get the directory where this script is located (works with ES modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const ConfigSchema = z.object({
   lmStudio: z.object({
@@ -49,7 +54,9 @@ export class ConfigManager {
   private configPath: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || join(process.cwd(), 'config.json');
+    // Look for config.json in the project root (one level up from dist/)
+    // This ensures it works regardless of the current working directory
+    this.configPath = configPath || join(__dirname, '..', 'config.json');
     this.config = this.loadConfig();
   }
 
