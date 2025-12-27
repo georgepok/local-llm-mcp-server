@@ -61,16 +61,27 @@ export class ConfigManager {
   }
 
   private loadConfig(): ServerConfig {
-    if (existsSync(this.configPath)) {
-      try {
-        const configFile = readFileSync(this.configPath, 'utf-8');
-        const parsed = JSON.parse(configFile);
-        return ConfigSchema.parse(parsed);
-      } catch (error) {
-        console.warn(`Failed to load config from ${this.configPath}:`, error);
-        return this.getDefaultConfig();
+    // Try config.json first, then fall back to config.example.json
+    const configFiles = [
+      this.configPath,
+      join(__dirname, '..', 'config.example.json')
+    ];
+
+    for (const configFile of configFiles) {
+      if (existsSync(configFile)) {
+        try {
+          const content = readFileSync(configFile, 'utf-8');
+          const parsed = JSON.parse(content);
+          const validated = ConfigSchema.parse(parsed);
+          console.error(`[Config] Loaded from ${configFile}`);
+          return validated;
+        } catch (error) {
+          console.warn(`Failed to load config from ${configFile}:`, error);
+        }
       }
     }
+
+    console.error('[Config] Using built-in defaults');
     return this.getDefaultConfig();
   }
 
