@@ -149,7 +149,31 @@ export class LMStudioClient {
         top_p: params.top_p,
       });
 
-      return response.output_text || '';
+      // Extract the output content
+      const output = (response as any).output;
+
+      // Primary: use output_text if available (from message output)
+      if (response.output_text) {
+        return response.output_text;
+      }
+
+      // Fallback: For thinking models, sometimes only reasoning output is produced
+      // without a final message. Extract reasoning content in this case.
+      if (output && Array.isArray(output)) {
+        for (const item of output) {
+          if (item.type === 'reasoning' && item.content) {
+            for (const c of item.content) {
+              // Content type can be 'text' or 'reasoning_text'
+              if ((c.type === 'text' || c.type === 'reasoning_text') && c.text) {
+                // Return reasoning content (this is the model's chain-of-thought)
+                return c.text;
+              }
+            }
+          }
+        }
+      }
+
+      return '';
     } catch (error) {
       console.error('LM Studio API error:', error);
 
