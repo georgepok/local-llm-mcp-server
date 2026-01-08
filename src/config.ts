@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { LMStudioConfig, ModelParams } from './types.js';
+
+// Get the directory where this script is located (works with ES modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const ConfigSchema = z.object({
   lmStudio: z.object({
@@ -49,21 +54,34 @@ export class ConfigManager {
   private configPath: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || join(process.cwd(), 'config.json');
+    // Look for config.json in the project root (one level up from dist/)
+    // This ensures it works regardless of the current working directory
+    this.configPath = configPath || join(__dirname, '..', 'config.json');
     this.config = this.loadConfig();
   }
 
   private loadConfig(): ServerConfig {
-    if (existsSync(this.configPath)) {
-      try {
-        const configFile = readFileSync(this.configPath, 'utf-8');
-        const parsed = JSON.parse(configFile);
-        return ConfigSchema.parse(parsed);
-      } catch (error) {
-        console.warn(`Failed to load config from ${this.configPath}:`, error);
-        return this.getDefaultConfig();
+    // Try config.json first, then fall back to config.example.json
+    const configFiles = [
+      this.configPath,
+      join(__dirname, '..', 'config.example.json')
+    ];
+
+    for (const configFile of configFiles) {
+      if (existsSync(configFile)) {
+        try {
+          const content = readFileSync(configFile, 'utf-8');
+          const parsed = JSON.parse(content);
+          const validated = ConfigSchema.parse(parsed);
+          console.error(`[Config] Loaded from ${configFile}`);
+          return validated;
+        } catch (error) {
+          console.warn(`Failed to load config from ${configFile}:`, error);
+        }
       }
     }
+
+    console.error('[Config] Using built-in defaults');
     return this.getDefaultConfig();
   }
 
