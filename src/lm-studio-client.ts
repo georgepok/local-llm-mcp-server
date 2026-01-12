@@ -52,17 +52,23 @@ export class LMStudioClient {
 
   async getAvailableModels(): Promise<string[]> {
     try {
-      // Use LM Studio REST API to get only loaded models
+      // Try LM Studio REST API first (for loaded models only)
       const baseUrl = this.config.baseUrl.replace('/v1', '');
-      const response = await fetch(`${baseUrl}/api/v0/models`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      const lmStudioResponse = await fetch(`${baseUrl}/api/v0/models`);
+      if (lmStudioResponse.ok) {
+        const data = await lmStudioResponse.json();
+        return data.data
+          .filter((model: any) => model.state === 'loaded')
+          .map((model: any) => model.id);
       }
-      const data = await response.json();
-      // Filter only loaded models
-      return data.data
-        .filter((model: any) => model.state === 'loaded')
-        .map((model: any) => model.id);
+    } catch {
+      // LM Studio API not available, try OpenAI-compatible endpoint
+    }
+
+    try {
+      // Fallback to standard OpenAI /v1/models endpoint (llama.cpp, vLLM, etc.)
+      const models = await this.client.models.list();
+      return models.data.map(model => model.id);
     } catch (error) {
       console.error('Failed to get available models:', error);
       return [];
@@ -71,30 +77,42 @@ export class LMStudioClient {
 
   async getAvailableModelsWithMetadata(): Promise<any[]> {
     try {
-      // Use LM Studio REST API to get detailed metadata for loaded models
+      // Try LM Studio REST API first (for detailed metadata)
       const baseUrl = this.config.baseUrl.replace('/v1', '');
-      const response = await fetch(`${baseUrl}/api/v0/models`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      const lmStudioResponse = await fetch(`${baseUrl}/api/v0/models`);
+      if (lmStudioResponse.ok) {
+        const data = await lmStudioResponse.json();
+        return data.data
+          .filter((model: any) => model.state === 'loaded')
+          .map((model: any) => ({
+            id: model.id,
+            name: model.id,
+            object: model.object,
+            type: model.type,
+            publisher: model.publisher,
+            architecture: model.arch,
+            compatibilityType: model.compatibility_type,
+            quantization: model.quantization,
+            state: model.state,
+            maxContextLength: model.max_context_length,
+            loadedContextLength: model.loaded_context_length,
+            capabilities: model.capabilities || [],
+          }));
       }
-      const data = await response.json();
-      // Filter only loaded models and return full metadata
-      return data.data
-        .filter((model: any) => model.state === 'loaded')
-        .map((model: any) => ({
-          id: model.id,
-          name: model.id,
-          object: model.object,
-          type: model.type,
-          publisher: model.publisher,
-          architecture: model.arch,
-          compatibilityType: model.compatibility_type,
-          quantization: model.quantization,
-          state: model.state,
-          maxContextLength: model.max_context_length,
-          loadedContextLength: model.loaded_context_length,
-          capabilities: model.capabilities || [],
-        }));
+    } catch {
+      // LM Studio API not available, try OpenAI-compatible endpoint
+    }
+
+    try {
+      // Fallback to standard OpenAI /v1/models endpoint (llama.cpp, vLLM, etc.)
+      const models = await this.client.models.list();
+      return models.data.map(model => ({
+        id: model.id,
+        name: model.id,
+        object: model.object,
+        created: model.created,
+        ownedBy: model.owned_by,
+      }));
     } catch (error) {
       console.error('Failed to get models with metadata:', error);
       return [];
@@ -140,6 +158,7 @@ export class LMStudioClient {
         })
       : this.client;
 
+    // Try LM Studio Responses API first, then fall back to Chat Completions API
     try {
       const response = await clientToUse.responses.create({
         model: modelToUse,
@@ -174,15 +193,46 @@ export class LMStudioClient {
       }
 
       return '';
-    } catch (error) {
-      console.error('LM Studio API error:', error);
+    } catch (responsesError) {
+      // Responses API not available, fall back to Chat Completions API (llama.cpp, vLLM, etc.)
+      try {
+        const messages: Array<{ role: 'system' | 'user'; content: string }> = input;
+        const completion = await clientToUse.chat.completions.create({
+          model: modelToUse,
+          messages,
+          temperature: params.temperature,
+          max_tokens: params.max_tokens,
+          top_p: params.top_p,
+          frequency_penalty: params.frequency_penalty,
+          presence_penalty: params.presence_penalty,
+          stop: params.stop,
+        });
 
-      if (error instanceof Error && error.message.includes('timeout')) {
-        const suggestions = this.getPerformanceSuggestions(prompt, params.max_tokens);
-        throw new Error(`Request timed out after ${adaptiveTimeout / 1000}s. ${suggestions}`);
+        const message = completion.choices[0]?.message;
+
+        // Primary: return content if available
+        if (message?.content) {
+          return message.content;
+        }
+
+        // Fallback: For thinking models (like Nemotron), check reasoning_content
+        // when content is empty - the model may have only produced chain-of-thought
+        const reasoningContent = (message as any)?.reasoning_content;
+        if (reasoningContent) {
+          return reasoningContent;
+        }
+
+        return '';
+      } catch (chatError) {
+        console.error('API error:', chatError);
+
+        if (chatError instanceof Error && chatError.message.includes('timeout')) {
+          const suggestions = this.getPerformanceSuggestions(prompt, params.max_tokens);
+          throw new Error(`Request timed out after ${adaptiveTimeout / 1000}s. ${suggestions}`);
+        }
+
+        throw new Error(`Failed to generate response: ${chatError instanceof Error ? chatError.message : 'Unknown error'}`);
       }
-
-      throw new Error(`Failed to generate response: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -245,6 +295,7 @@ export class LMStudioClient {
       throw new Error('No model specified and no default model set. Use setDefaultModel() or pass a model parameter.');
     }
 
+    // Try LM Studio Responses API first, then fall back to Chat Completions API
     try {
       const stream = await this.client.responses.create({
         model: modelToUse,
@@ -255,17 +306,42 @@ export class LMStudioClient {
         stream: true,
       });
 
-      return this.streamToAsyncIterable(stream);
-    } catch (error) {
-      console.error('LM Studio streaming error:', error);
-      throw new Error(`Failed to generate stream response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return this.streamResponsesAPI(stream);
+    } catch {
+      // Responses API not available, fall back to Chat Completions API
+      try {
+        const messages: Array<{ role: 'system' | 'user'; content: string }> = input;
+        const stream = await this.client.chat.completions.create({
+          model: modelToUse,
+          messages,
+          temperature: params.temperature,
+          max_tokens: params.max_tokens,
+          top_p: params.top_p,
+          stream: true,
+        });
+
+        return this.streamChatCompletionsAPI(stream);
+      } catch (error) {
+        console.error('Streaming error:', error);
+        throw new Error(`Failed to generate stream response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   }
 
-  private async* streamToAsyncIterable(stream: any): AsyncIterable<string> {
+  private async* streamResponsesAPI(stream: any): AsyncIterable<string> {
     for await (const chunk of stream) {
       // Responses API uses delta.output for streaming content
       const content = chunk.delta?.output || chunk.output;
+      if (content) {
+        yield content;
+      }
+    }
+  }
+
+  private async* streamChatCompletionsAPI(stream: any): AsyncIterable<string> {
+    for await (const chunk of stream) {
+      // Chat Completions API uses delta.content for streaming
+      const content = chunk.choices[0]?.delta?.content;
       if (content) {
         yield content;
       }
