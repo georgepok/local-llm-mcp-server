@@ -1,7 +1,7 @@
 {
   "lmStudio": {
     "baseUrl": "http://spark-129a.local:30000/v1",
-    "defaultModel": "Nemotron-3-Nano-30B-A3B-UD-Q8_K_XL.gguf",
+    "defaultModel": "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
     "timeout": 600000,
     "retries": 3,
     "adaptiveTimeout": true
