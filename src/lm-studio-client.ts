@@ -160,79 +160,149 @@ export class LMStudioClient {
 
     // Try LM Studio Responses API first, then fall back to Chat Completions API
     try {
-      const response = await clientToUse.responses.create({
-        model: modelToUse,
-        input,
+      const result = await this.tryResponsesAPI(clientToUse, modelToUse, input, params);
+      if (result !== null) return result;
+
+      // Responses API returned no visible content — fall through to Chat Completions
+    } catch {
+      // Responses API not available — fall through to Chat Completions
+    }
+
+    // Chat Completions API (llama.cpp, vLLM, etc.)
+    const chatResult = await this.tryChatCompletionsAPI(clientToUse, modelToUse, input, params, adaptiveTimeout, prompt);
+
+    if (!chatResult || chatResult.trim().length === 0) {
+      const maxTok = params.max_tokens || 'default';
+      throw new Error(
+        `Model produced no visible response (max_tokens=${maxTok}). ` +
+        `The model may have spent its entire token budget on internal reasoning. ` +
+        `Try increasing max_tokens (e.g. 2048+) or simplifying the prompt.`
+      );
+    }
+
+    return chatResult;
+  }
+
+  /**
+   * Attempt the Responses API. Returns the visible content string,
+   * or null if only reasoning was produced (thinking-only response).
+   *
+   * On thinking exhaustion, returns null so the caller falls through to
+   * Chat Completions API which can disable thinking via chat_template_kwargs.
+   */
+  private async tryResponsesAPI(
+    client: OpenAI,
+    model: string,
+    input: Array<{ role: 'system' | 'user'; content: string }>,
+    params: Partial<ModelParams>,
+  ): Promise<string | null> {
+    const response = await client.responses.create({
+      model,
+      input,
+      temperature: params.temperature,
+      max_output_tokens: params.max_tokens,
+      top_p: params.top_p,
+    });
+
+    // Primary: use output_text if available (visible content from message output)
+    if (response.output_text) {
+      return response.output_text;
+    }
+
+    // Check if only reasoning was produced (thinking model exhausted tokens)
+    const output = (response as any).output;
+    const hasReasoning = output && Array.isArray(output) &&
+      output.some((item: any) => item.type === 'reasoning');
+
+    if (hasReasoning) {
+      console.error(
+        `[thinking-retry] Responses API: model produced only reasoning ` +
+        `(max_tokens=${params.max_tokens}), will retry via Chat Completions with thinking disabled`
+      );
+    }
+
+    // No visible content — signal caller to try Chat Completions fallback
+    return null;
+  }
+
+  /**
+   * Attempt the Chat Completions API. Returns visible content string.
+   *
+   * If the model produces only reasoning (thinking exhaustion), retries once
+   * with thinking disabled via chat_template_kwargs. This handles models that
+   * expand reasoning to fill any token budget (Parkinson's Law of Reasoning).
+   */
+  private async tryChatCompletionsAPI(
+    client: OpenAI,
+    model: string,
+    input: Array<{ role: 'system' | 'user'; content: string }>,
+    params: Partial<ModelParams>,
+    adaptiveTimeout: number,
+    prompt: string,
+    disableThinking = false,
+  ): Promise<string> {
+    try {
+      const messages: Array<{ role: 'system' | 'user'; content: string }> = input;
+
+      // Build request body — optionally disable thinking on retry
+      const requestBody: Record<string, any> = {
+        model,
+        messages,
         temperature: params.temperature,
-        max_output_tokens: params.max_tokens,
+        max_tokens: params.max_tokens,
         top_p: params.top_p,
-      });
+        frequency_penalty: params.frequency_penalty,
+        presence_penalty: params.presence_penalty,
+        stop: params.stop,
+      };
 
-      // Extract the output content
-      const output = (response as any).output;
-
-      // Primary: use output_text if available (from message output)
-      if (response.output_text) {
-        return response.output_text;
+      if (disableThinking) {
+        // vLLM: disable thinking via chat template
+        requestBody.chat_template_kwargs = { enable_thinking: false };
       }
 
-      // Fallback: For thinking models, sometimes only reasoning output is produced
-      // without a final message. Extract reasoning content in this case.
-      if (output && Array.isArray(output)) {
-        for (const item of output) {
-          if (item.type === 'reasoning' && item.content) {
-            for (const c of item.content) {
-              // Content type can be 'text' or 'reasoning_text'
-              if ((c.type === 'text' || c.type === 'reasoning_text') && c.text) {
-                // Return reasoning content (this is the model's chain-of-thought)
-                return c.text;
-              }
-            }
-          }
-        }
+      const completion = await (client.chat.completions.create as any)(requestBody);
+
+      const message = completion.choices[0]?.message;
+
+      // Primary: return visible content if available
+      if (message?.content) {
+        return message.content;
       }
 
+      // Check if model produced only reasoning (thinking leak scenario)
+      const reasoningContent = (message as any)?.reasoning_content;
+      if (reasoningContent && !disableThinking) {
+        // Model spent all tokens on thinking — retry with thinking disabled.
+        // Doubling tokens doesn't help: thinking models expand reasoning to
+        // fill any budget. Disabling thinking forces direct response.
+        console.error(
+          `[thinking-retry] Chat Completions: model produced only reasoning ` +
+          `(max_tokens=${params.max_tokens}), retrying with thinking disabled`
+        );
+        return this.tryChatCompletionsAPI(
+          client, model, input, params,
+          adaptiveTimeout, prompt, true,
+        );
+      }
+
+      // No content produced — caller will raise a descriptive error
+      const finishReason = completion.choices[0]?.finish_reason;
+      console.error(
+        `[empty-response] Chat Completions: no visible content ` +
+        `(finish_reason=${finishReason}, thinking_disabled=${disableThinking}, ` +
+        `has_reasoning=${!!reasoningContent})`
+      );
       return '';
-    } catch (responsesError) {
-      // Responses API not available, fall back to Chat Completions API (llama.cpp, vLLM, etc.)
-      try {
-        const messages: Array<{ role: 'system' | 'user'; content: string }> = input;
-        const completion = await clientToUse.chat.completions.create({
-          model: modelToUse,
-          messages,
-          temperature: params.temperature,
-          max_tokens: params.max_tokens,
-          top_p: params.top_p,
-          frequency_penalty: params.frequency_penalty,
-          presence_penalty: params.presence_penalty,
-          stop: params.stop,
-        });
+    } catch (chatError) {
+      console.error('API error:', chatError);
 
-        const message = completion.choices[0]?.message;
-
-        // Primary: return content if available
-        if (message?.content) {
-          return message.content;
-        }
-
-        // Fallback: For thinking models (like Nemotron), check reasoning_content
-        // when content is empty - the model may have only produced chain-of-thought
-        const reasoningContent = (message as any)?.reasoning_content;
-        if (reasoningContent) {
-          return reasoningContent;
-        }
-
-        return '';
-      } catch (chatError) {
-        console.error('API error:', chatError);
-
-        if (chatError instanceof Error && chatError.message.includes('timeout')) {
-          const suggestions = this.getPerformanceSuggestions(prompt, params.max_tokens);
-          throw new Error(`Request timed out after ${adaptiveTimeout / 1000}s. ${suggestions}`);
-        }
-
-        throw new Error(`Failed to generate response: ${chatError instanceof Error ? chatError.message : 'Unknown error'}`);
+      if (chatError instanceof Error && chatError.message.includes('timeout')) {
+        const suggestions = this.getPerformanceSuggestions(prompt, params.max_tokens);
+        throw new Error(`Request timed out after ${adaptiveTimeout / 1000}s. ${suggestions}`);
       }
+
+      throw new Error(`Failed to generate response: ${chatError instanceof Error ? chatError.message : 'Unknown error'}`);
     }
   }
 
@@ -330,10 +400,15 @@ export class LMStudioClient {
 
   private async* streamResponsesAPI(stream: any): AsyncIterable<string> {
     for await (const chunk of stream) {
-      // Responses API uses delta.output for streaming content
-      const content = chunk.delta?.output || chunk.output;
-      if (content) {
-        yield content;
+      // Only yield visible output text, never reasoning/thinking content
+      if (chunk.type === 'response.output_text.delta' && chunk.delta) {
+        yield chunk.delta;
+      } else if (chunk.type !== 'response.reasoning_summary_text.delta') {
+        // Fallback for non-typed chunks: use output but skip reasoning
+        const content = chunk.delta?.output || chunk.output;
+        if (content && typeof content === 'string') {
+          yield content;
+        }
       }
     }
   }
