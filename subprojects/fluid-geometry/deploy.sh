@@ -15,15 +15,15 @@ VLLM_IMAGE="nvcr.io/nvidia/vllm:26.01-py3"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=== Fluid Geometry Deployment ==="
+echo "=== Fluid Geometry v3 (Per-Request Geometric Engine) Deployment ==="
 
 # 1. Upload processor
-echo "[1/3] Uploading fluid_geometry.py..."
+echo "[1/4] Uploading fluid_geometry.py..."
 sshpass -p "$REMOTE_PASS" scp "$SCRIPT_DIR/fluid_geometry.py" \
     "$REMOTE_USER@$REMOTE_HOST:~/models/"
 
 # 2. Create remote startup script
-echo "[2/3] Creating startup script on remote..."
+echo "[2/4] Creating startup script on remote..."
 sshpass -p "$REMOTE_PASS" ssh "$REMOTE_USER@$REMOTE_HOST" "cat > ~/start_vllm_with_fluid.sh << 'SCRIPT'
 #!/bin/bash
 # Stop existing container
@@ -60,12 +60,18 @@ SCRIPT
 chmod +x ~/start_vllm_with_fluid.sh"
 
 # 3. Start the container
-echo "[3/3] Starting vLLM container..."
+echo "[3/4] Starting vLLM container..."
 sshpass -p "$REMOTE_PASS" ssh "$REMOTE_USER@$REMOTE_HOST" "~/start_vllm_with_fluid.sh"
+
+# 4. Wait and verify
+echo "[4/4] Waiting for container to start..."
+sleep 3
+sshpass -p "$REMOTE_PASS" ssh "$REMOTE_USER@$REMOTE_HOST" "docker logs $CONTAINER_NAME 2>&1 | tail -5"
 
 echo ""
 echo "=== Deployment Complete ==="
 echo "Server: http://$REMOTE_HOST:$PORT"
+echo "Engine: v3 per-request self-calibrating (no persistent state)"
 echo "Model loading takes ~5 minutes. Check status with:"
 echo "  ssh $REMOTE_USER@$REMOTE_HOST 'docker logs -f $CONTAINER_NAME'"
 echo ""
