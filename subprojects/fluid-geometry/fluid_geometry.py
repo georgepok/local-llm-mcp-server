@@ -79,7 +79,8 @@ THINK_END_TOKEN: str = "</think>"
 class PhaseState:
     """Single step of phase space measurement."""
     step: int
-    H: float                    # Shannon entropy of full distribution
+    H: float                    # Shannon entropy (EMA-smoothed, for derivatives)
+    H_raw: float                # Shannon entropy (raw, for calibration)
     delta_H: float              # First derivative (velocity)
     delta2_H: float             # Second derivative (acceleration)
     kappa: float                # Scalar curvature κ(t) = Δ²H / (1 + |ΔH|)
@@ -87,6 +88,8 @@ class PhaseState:
     T_applied: float            # Temperature actually applied
     confidence: float           # Request-local confidence at this step
     token_logprob: float        # Log-prob of selected token (for stability)
+    top2_mass: float            # p1 + p2 (top-2 probability concentration)
+    bimodality: float           # min(p1,p2)/max(p1,p2) — 1.0 = perfectly bimodal
 
 
 @dataclass
@@ -210,6 +213,13 @@ class Accumulator:
         H_raw = -(probs * log_probs).sum().item()
         self.H_raw = H_raw
 
+        # Step 1b: Distribution shape analysis (top-2 for bimodal detection)
+        top2 = torch.topk(probs, k=2)
+        p1 = top2.values[0].item()
+        p2 = top2.values[1].item()
+        top2_mass = p1 + p2
+        bimodality = min(p1, p2) / max(p1, p2) if p1 > 1e-10 else 0.0
+
         # Step 2: Apply EMA smoothing to entropy
         if self.step == 0:
             self.H_smooth = H_raw
@@ -249,10 +259,11 @@ class Accumulator:
         delta_kappa = self.kappa_smooth - self.kappa_prev
         self.kappa_prev = self.kappa_smooth
 
-        # Step 8: Build phase state (use smoothed values)
+        # Step 8: Build phase state (smoothed values for laws, raw for calibration)
         state = PhaseState(
             step=self.step,
             H=self.H_smooth,
+            H_raw=H_raw,
             delta_H=delta_H,
             delta2_H=delta2_H,
             kappa=self.kappa_smooth,
@@ -260,6 +271,8 @@ class Accumulator:
             T_applied=T_applied,
             confidence=confidence,
             token_logprob=selected_token_logprob,
+            top2_mass=top2_mass,
+            bimodality=bimodality,
         )
 
         self.trace.append(state)
@@ -283,7 +296,9 @@ class StructuralLaws:
     def temperature(
         kappa: float,
         calibration: RequestCalibration,
-        T_prev: float = 1.0
+        T_prev: float = 1.0,
+        bimodality: float = 0.0,
+        top2_mass: float = 0.0
     ) -> float:
         """
         Law 1 — Geodesic Equation (Temperature Modulation).
@@ -292,6 +307,10 @@ class StructuralLaws:
 
         Uses request-local kappa_ref and H_mean for proper scaling.
         Rate-limited to prevent wild oscillations.
+
+        v3.1: Attenuates intervention at bimodal decision points where the
+        model is choosing between two strong competing options. Temperature
+        distortion at these points would arbitrarily collapse a genuine choice.
         """
         C_eff = calibration.confidence()
 
@@ -302,7 +321,15 @@ class StructuralLaws:
 
         # Scale by entropy regime (low entropy → reduce response)
         entropy_scale = min(1.0, calibration.H_mean / 1.0)
-        effective_scale = T_RESPONSE_SCALE * entropy_scale
+
+        # Bimodal attenuation: reduce intervention at genuine decision points.
+        # When top-2 tokens hold >30% mass and are nearly equal (bimodality >0.5),
+        # the model is choosing between two coherent options — don't distort.
+        bimodal_factor = 1.0
+        if bimodality > 0.5 and top2_mass > 0.3:
+            bimodal_factor = 1.0 - 0.7 * bimodality  # up to 70% reduction
+
+        effective_scale = T_RESPONSE_SCALE * entropy_scale * bimodal_factor
 
         T_target = T_BASE * (1.0 + C_eff * effective_scale * kappa_clamped)
 
@@ -340,15 +367,20 @@ class StructuralLaws:
 
         biases: Dict[int, float] = {}
 
+        # v3.1: Use normalized curvature (κ/κ_ref) instead of raw κ.
+        # Raw κ is ~0.001-0.01 after smoothing → bias of ~0.06 logits (invisible).
+        # Normalized κ can reach ±5.0 → bias of up to 15.0 logits (meaningful).
+        kappa_normalized = abs(kappa) / max(calibration.kappa_ref, 1e-6)
+
         if not is_thinking:
             # ENTRY criterion: entropy above request's 90th percentile AND accelerating
             if H > calibration.H_p90 and kappa > 0:
-                strength = C_eff * min(kappa * 10.0, 15.0)
+                strength = C_eff * min(kappa_normalized * 3.0, 15.0)
                 biases[think_start_id] = strength
         else:
             # EXIT criterion: entropy below request's 25th percentile AND decelerating
             if H < calibration.H_p25 and kappa < 0:
-                strength = C_eff * min(abs(kappa) * 10.0, 15.0)
+                strength = C_eff * min(kappa_normalized * 3.0, 15.0)
                 biases[think_end_id] = strength
 
         return biases
@@ -481,16 +513,20 @@ class GeometricRequestProcessor:
             selected_token_logprob=top_logprob,
         )
 
-        # 5. Feed observation to warmup calibration
-        self.calibration.observe(phase.H, abs(phase.kappa))
+        # 5. Feed RAW observations to warmup calibration (not EMA-smoothed).
+        #    Raw values preserve the actual variance of entropy and curvature
+        #    during warmup, preventing percentile collapse from heavy smoothing.
+        self.calibration.observe(phase.H_raw, abs(self.accumulator.kappa_raw))
 
         # 6. Apply structural laws only after warmup
         if self.calibration.warmup_complete:
-            # Law 1: Temperature
+            # Law 1: Temperature (with bimodal attenuation)
             T = StructuralLaws.temperature(
                 kappa=phase.kappa,
                 calibration=self.calibration,
                 T_prev=self.T_prev,
+                bimodality=phase.bimodality,
+                top2_mass=phase.top2_mass,
             )
             self.T_prev = T
 
@@ -524,13 +560,15 @@ class GeometricRequestProcessor:
             trace_line = (
                 f"req_t={self.calibration.t_request}"
                 f" H={phase.H:.3f}"
+                f" Hr={phase.H_raw:.3f}"
                 f" dH={phase.delta_H:.3f}"
-                f" d2H={phase.delta2_H:.3f}"
                 f" k={phase.kappa:.4f}"
                 f" T={phase.T_applied:.3f}"
                 f" C={conf:.3f}"
                 f" co={self.calibration.confidence_override:.3f}"
                 f" kref={self.calibration.kappa_ref:.4f}"
+                f" bi={phase.bimodality:.2f}"
+                f" t2={phase.top2_mass:.2f}"
                 f" warm={'Y' if self.calibration.warmup_complete else 'N'}"
             )
             try:
