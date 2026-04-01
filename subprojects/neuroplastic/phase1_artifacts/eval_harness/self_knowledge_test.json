@@ -1,0 +1,218 @@
+{
+  "meta": {
+    "description": "Phase 1 Task 2 self-knowledge evaluation for Nemotron-3-Nano-30B-A3B-FP8",
+    "source": "Phase 0 cartography — architecture_ground_truth.json + weight_baseline.json",
+    "total_questions": 25,
+    "categories": ["architecture_facts", "weight_properties", "information_flow", "modification_reasoning"]
+  },
+  "questions": [
+    {
+      "id": "arch_001",
+      "category": "architecture_facts",
+      "question": "How many total layers do you have?",
+      "verified_answer": "52 total layers",
+      "scoring": "exact",
+      "key_facts": ["52"]
+    },
+    {
+      "id": "arch_002",
+      "category": "architecture_facts",
+      "question": "How many attention layers do you have, and at which layer positions are they located?",
+      "verified_answer": "6 attention layers at positions 5, 12, 19, 26, 33, and 42",
+      "scoring": "semantic",
+      "key_facts": ["6", "5", "12", "19", "26", "33", "42"]
+    },
+    {
+      "id": "arch_003",
+      "category": "architecture_facts",
+      "question": "How many Mamba SSM layers do you have?",
+      "verified_answer": "23 Mamba SSM layers",
+      "scoring": "exact",
+      "key_facts": ["23"]
+    },
+    {
+      "id": "arch_004",
+      "category": "architecture_facts",
+      "question": "How many Mixture-of-Experts (MoE) FFN layers do you have?",
+      "verified_answer": "23 MoE-FFN layers",
+      "scoring": "exact",
+      "key_facts": ["23"]
+    },
+    {
+      "id": "arch_005",
+      "category": "architecture_facts",
+      "question": "What is your hidden dimension (hidden_size)?",
+      "verified_answer": "2688",
+      "scoring": "exact",
+      "key_facts": ["2688"]
+    },
+    {
+      "id": "arch_006",
+      "category": "architecture_facts",
+      "question": "What is your GQA (Grouped Query Attention) ratio? How many query heads and how many key-value heads do you have?",
+      "verified_answer": "16:1 GQA ratio — 32 query heads and 2 key-value heads",
+      "scoring": "semantic",
+      "key_facts": ["32", "2", "16:1"]
+    },
+    {
+      "id": "arch_007",
+      "category": "architecture_facts",
+      "question": "How many routed experts does each MoE layer have?",
+      "verified_answer": "128 routed experts per MoE layer",
+      "scoring": "exact",
+      "key_facts": ["128"]
+    },
+    {
+      "id": "arch_008",
+      "category": "architecture_facts",
+      "question": "How many experts are active per token in your MoE layers?",
+      "verified_answer": "6 experts active per token (top-6 routing)",
+      "scoring": "exact",
+      "key_facts": ["6"]
+    },
+    {
+      "id": "arch_009",
+      "category": "architecture_facts",
+      "question": "What is your vocabulary size?",
+      "verified_answer": "131072 tokens",
+      "scoring": "exact",
+      "key_facts": ["131072"]
+    },
+    {
+      "id": "arch_010",
+      "category": "architecture_facts",
+      "question": "What is your hybrid layer pattern? Describe the sequence of Mamba (M), MoE-FFN (E), and Attention (*) layers.",
+      "verified_answer": "MEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEM*EMEMEMEME — alternating Mamba and MoE blocks with attention checkpoints roughly every 7 layers",
+      "scoring": "semantic",
+      "key_facts": ["MEMEM*", "attention", "every 7", "Mamba", "MoE"]
+    },
+    {
+      "id": "weight_001",
+      "category": "weight_properties",
+      "question": "Which of your attention layers has the largest V projection (v_proj) weight norm, and approximately what is that norm?",
+      "verified_answer": "Layer 42 has the largest V projection norm at approximately 51.16 (Frobenius norm)",
+      "scoring": "semantic",
+      "key_facts": ["layer 42", "51"]
+    },
+    {
+      "id": "weight_002",
+      "category": "weight_properties",
+      "question": "Which of your attention layers has the smallest V projection (v_proj) weight norm, and approximately what is that norm?",
+      "verified_answer": "Layer 5 has the smallest V projection norm at approximately 6.32 (Frobenius norm)",
+      "scoring": "semantic",
+      "key_facts": ["layer 5", "6"]
+    },
+    {
+      "id": "weight_003",
+      "category": "weight_properties",
+      "question": "Are your MoE experts differentiated from each other in weight scale, or are they approximately homogeneous? What is the typical coefficient of variation (CV) of expert norms within a layer?",
+      "verified_answer": "The experts are nearly homogeneous in weight scale. The coefficient of variation (CV) of expert weight norms within a layer is approximately 1-4%, indicating specialization is in weight direction rather than magnitude.",
+      "scoring": "semantic",
+      "key_facts": ["homogeneous", "1", "4", "direction", "magnitude"]
+    },
+    {
+      "id": "weight_004",
+      "category": "weight_properties",
+      "question": "How do the Q projection (q_proj) weight norms change with depth across your 6 attention layers? What are the approximate norms at layers 5 and 42?",
+      "verified_answer": "Q projection norms decrease slightly with depth, from approximately 98 at layer 5 to approximately 80 at layer 42.",
+      "scoring": "semantic",
+      "key_facts": ["decrease", "98", "80", "layer 5", "layer 42"]
+    },
+    {
+      "id": "weight_005",
+      "category": "weight_properties",
+      "question": "How do the V projection (v_proj) weight norms change with depth across your 6 attention layers? Describe the trend.",
+      "verified_answer": "V projection norms increase dramatically with depth, from approximately 6 at layer 5 to approximately 51 at layer 42 — roughly an 8x increase.",
+      "scoring": "semantic",
+      "key_facts": ["increase", "6", "51", "layer 5", "layer 42"]
+    },
+    {
+      "id": "weight_006",
+      "category": "weight_properties",
+      "question": "How do the MoE gate (router) weight norms change with depth? Describe the trend across early versus late MoE layers.",
+      "verified_answer": "Gate weight norms decrease with depth, from approximately 40 in the earliest MoE layers (around layer 1) to approximately 10 in the latest MoE layers (around layer 40-51).",
+      "scoring": "semantic",
+      "key_facts": ["decrease", "40", "10", "early", "late"]
+    },
+    {
+      "id": "flow_001",
+      "category": "information_flow",
+      "question": "What happens in your last 9 layers, layers 43 through 51? What types of layers are present?",
+      "verified_answer": "Layers 43-51 contain no attention layers — they are pure Mamba SSM and MoE-FFN layers only. After the final attention checkpoint at layer 42, there is no further global token-to-token comparison.",
+      "scoring": "semantic",
+      "key_facts": ["43", "51", "no attention", "Mamba", "MoE"]
+    },
+    {
+      "id": "flow_002",
+      "category": "information_flow",
+      "question": "What is the functional role of your early attention layers (like layer 5 and 12) versus your late attention layers (like layer 33 and 42)?",
+      "verified_answer": "Early attention layers (5, 12) perform routing and matching with weak content transformation — their V norms are small (~6-8), suggesting they primarily establish token relationships. Late attention layers (33, 42) perform stronger content transformation — their V norms are large (~29-51) and O norms are also large, indicating they transform the residual stream more substantially.",
+      "scoring": "semantic",
+      "key_facts": ["early", "routing", "matching", "late", "transformation", "V norm"]
+    },
+    {
+      "id": "flow_003",
+      "category": "information_flow",
+      "question": "How does information flow between attention layer 33 and attention layer 42? What processing occurs between them?",
+      "verified_answer": "Between layers 33 and 42, information flows through 8 non-attention layers: MoE-FFN (34), Mamba (35), MoE-FFN (36), Mamba (37), MoE-FFN (38), Mamba (39), MoE-FFN (40), and Mamba (41). These Mamba and MoE layers process the residual stream sequentially before layer 42's global attention.",
+      "scoring": "semantic",
+      "key_facts": ["Mamba", "MoE", "34", "41", "sequential", "residual"]
+    },
+    {
+      "id": "flow_004",
+      "category": "information_flow",
+      "question": "What is the role of the shared expert in your MoE layers? How does it differ from the routed experts?",
+      "verified_answer": "The shared expert is always active for every token, unlike the 6 routed experts that are selected per token. It has a 2x larger intermediate dimension (3712 versus 1856 for routed experts) and functions as a baseline FFN transformation applied to every token regardless of routing. It provides a stable baseline output that all tokens receive before the routed experts add specialized contributions.",
+      "scoring": "semantic",
+      "key_facts": ["always active", "every token", "3712", "baseline"]
+    },
+    {
+      "id": "flow_005",
+      "category": "information_flow",
+      "question": "How does FP8 quantization affect the attention boundary layers? Which specific layers are excluded from FP8 quantization?",
+      "verified_answer": "The Mamba in_proj and out_proj at layers immediately before each attention checkpoint, and all attention projection weights (q_proj, k_proj, v_proj, o_proj) at the attention layers themselves, are excluded from FP8 and kept in BF16. Specifically, the Mamba+Attention boundary pairs at layers 4+5, 11+12, 18+19, 25+26, 32+33, and 41+42 are not quantized.",
+      "scoring": "semantic",
+      "key_facts": ["BF16", "excluded", "4+5", "11+12", "41+42", "q_proj", "v_proj"]
+    },
+    {
+      "id": "mod_001",
+      "category": "modification_reasoning",
+      "question": "If the MoE router gate weights in layer 40 were zeroed out, what would happen to the model's behavior?",
+      "verified_answer": "Zeroing the router gate weights would produce uniform logits (all zeros) across the 128 experts, causing uniform activation probabilities. The top-6 selection would become effectively random or tied, losing all expert specialization. Tokens would route to whatever experts tie-break first rather than to functionally appropriate experts. The shared expert would still function normally, providing a baseline output, but the routed contribution would lose its specialization.",
+      "scoring": "semantic",
+      "key_facts": ["uniform", "random", "specialization", "lose", "routing"]
+    },
+    {
+      "id": "mod_002",
+      "category": "modification_reasoning",
+      "question": "What is the safest layer type for you to modify experimentally, and why?",
+      "verified_answer": "MoE expert weights (the up_proj and down_proj of individual routed experts) are the safest to modify because: (1) experts are nearly homogeneous by scale (CV 1-4%), so individual experts are redundant with each other; (2) only 6 of 128 experts activate per token, so modifying a single expert affects at most 4.7% of token-level computations; (3) the shared expert provides a stable baseline even if a routed expert behaves unexpectedly. Single-expert modifications are highly localized and recoverable.",
+      "scoring": "semantic",
+      "key_facts": ["MoE", "expert", "homogeneous", "redundant", "6 of 128", "localized"]
+    },
+    {
+      "id": "mod_003",
+      "category": "modification_reasoning",
+      "question": "If you increased the V projection weight norm in layer 5 (the earliest attention layer), what effect would that have on the model's information processing?",
+      "verified_answer": "Increasing the V projection norm in layer 5 would amplify content transformation at the earliest attention checkpoint. Layer 5 currently has a small V norm (~6) compared to layer 42 (~51), suggesting it primarily routes and matches tokens rather than strongly transforming them. Increasing V norm would shift layer 5 toward stronger early content transformation, which could disrupt the depth gradient where transformation strength is meant to grow with depth. It may cause early over-transformation before later layers have refined token representations.",
+      "scoring": "semantic",
+      "key_facts": ["layer 5", "amplify", "early", "transformation", "depth gradient"]
+    },
+    {
+      "id": "mod_004",
+      "category": "modification_reasoning",
+      "question": "Why should layer 42's attention weights be modified with extreme care?",
+      "verified_answer": "Layer 42 is the last attention layer and has the largest V projection norm (~51) and O projection norm (~101) of all attention layers. It is the final point where global token-to-token mixing can occur — all 9 subsequent layers (43-51) have no attention. Any change to layer 42's weights therefore has the highest downstream impact and cannot be corrected by later attention. It is the most impactful single attention layer in the entire network.",
+      "scoring": "semantic",
+      "key_facts": ["last attention", "largest", "V norm", "O norm", "51", "101", "no attention after", "43"]
+    },
+    {
+      "id": "mod_005",
+      "category": "modification_reasoning",
+      "question": "What would happen to your capabilities if all Mamba SSM layers were disabled (set to pass-through)?",
+      "verified_answer": "Disabling all 23 Mamba layers would eliminate all O(L) sequential/recurrent processing from the network. The model would be left with only 6 attention layers and 23 MoE-FFN layers. This would severely degrade: (1) sequential and positional processing that Mamba handles via its SSM state; (2) local context accumulation within the 128-token SSM window; (3) efficient processing of long sequences, since Mamba handles the bulk of sequence processing at O(L) cost. The 6 remaining attention layers would bear the entire burden of token interaction, but are not designed to carry this load alone.",
+      "scoring": "semantic",
+      "key_facts": ["sequential", "local context", "SSM", "O(L)", "6 attention", "burden", "degraded"]
+    }
+  ]
+}

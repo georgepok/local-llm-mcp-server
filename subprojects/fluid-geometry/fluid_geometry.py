@@ -3,7 +3,7 @@ Geometric Engine v3 — Per-Request Self-Calibrating Entropy-Curvature Processor
 
 Implements adaptive reasoning control based on phase space dynamics:
 - Measures multi-dimensional phase space Φ(t) at every generation step
-- Computes scalar curvature κ(t) from entropy derivatives
+- Computes scalar curvature κ(t) from entropy derivativeswhar
 - Applies structural response laws (temperature, think-token bias)
 - Self-calibrates ALL reference constants per-request from a 15-token warmup
 - Self-gates intervention via fast per-request confidence ramp

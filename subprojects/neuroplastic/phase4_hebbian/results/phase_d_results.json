@@ -1,0 +1,39 @@
+{
+  "phase": "D",
+  "description": "Cross-domain regression (full capability eval)",
+  "timestamp": "2026-03-11T20:02:57Z",
+  "api_url": "http://spark-129a.local:30000",
+  "eval_script": "/Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase1_artifacts/eval_harness/run_eval.py",
+  "eval_output_dir": "/Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase4_hebbian/results/phase_d_eval",
+  "returncode": 0,
+  "success": true,
+  "elapsed_seconds": 304.2,
+  "eval_summary": {
+    "sequential_reasoning": {
+      "pass": 0,
+      "total": 3,
+      "accuracy": 0.0
+    },
+    "state_tracking": {
+      "pass": 0,
+      "total": 3,
+      "accuracy": 0.0
+    },
+    "code_generation": {
+      "pass": 0,
+      "total": 3,
+      "accuracy": 0.0
+    },
+    "self_prediction": {
+      "pass": 0,
+      "total": 3,
+      "accuracy": 0.0
+    },
+    "overall": {
+      "pass": 0,
+      "total": 12,
+      "accuracy": 0.0
+    }
+  },
+  "stdout_tail": "& Capability Evaluation\nAPI URL:   http://spark-129a.local:30000\nTrials:    1\nOutput:    /Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase4_hebbian/results/phase_d_eval\nTimestamp: 20260311T155753\nQuestions: 26\n\n============================================================\nCAPABILITY BASELINE TESTS\n============================================================\n\n  Category: sequential_reasoning\n    [seq_001] 3-step arithmetic chain\n      Trial 1/1: FAIL (expected=14)\n    [seq_002] 5-step arithmetic chain\n      Trial 1/1: FAIL (expected=57)\n    [seq_003] 7-step arithmetic chain\n      Trial 1/1: FAIL (expected=125)\n\n  Category: state_tracking\n    [state_001] Bag inventory tracking\n      Trial 1/1: FAIL (missing: ['2 apple', '0 orange', '4 banana'])\n    [state_002] Counter with conditional operations\n      Trial 1/1: FAIL (missing: ['13'])\n    [state_003] Multi-variable state tracking\n      Trial 1/1: FAIL (missing: ['X', '12', 'Y', '2'])\n\n  Category: code_generation\n    [code_001] Fibonacci function\n      Trial 1/1: FAIL (no code found)\n    [code_002] String reversal function\n      Trial 1/1: FAIL (no code found)\n    [code_003] List deduplication preserving order\n      Trial 1/1: FAIL (no code found)\n\n  Category: self_prediction\n    [pred_001] MoE router zeroing effect\n      Trial 1/1: FAIL (missing: ['uniform', 'random', 'specialization'])\n    [pred_002] Disabling last attention layer effect\n      Trial 1/1: FAIL (missing: ['last attention', 'global', 'long-range'])\n    [pred_003] Increasing Mamba SSM state size effect\n      Trial 1/1: FAIL (missing: ['memory', 'sequential', 'longer'])\n\nCapability baseline summary:\n  Overall accuracy: 0.0% (0/12)\n  sequential_reasoning: 0.0% (0/3)\n  state_tracking: 0.0% (0/3)\n  code_generation: 0.0% (0/3)\n  self_prediction: 0.0% (0/3)\n  Elapsed: 304.1s\n  Written: /Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase4_hebbian/results/phase_d_eval/capability_baseline.json\n\nDone.\n"
+}

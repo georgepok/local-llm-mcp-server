@@ -1,0 +1,29 @@
+{
+  "experiment": "001",
+  "date": "2026-03-10",
+  "target_tensor": "backbone.layers.45.mixer.gate.weight",
+  "shard": "model-00007-of-00010.safetensors",
+  "tensor_dtype": "float32",
+  "tensor_shape": [128, 2688],
+  "modification": "t * 1.1",
+  "description": "Gate weight amplification by 1.1× to sharpen MoE routing softmax distribution, making expert selection more decisive. Targets the router gate in a deep MoE layer (layer 45) with high expert redundancy.",
+  "rationale": "Nemotron proposed increasing gate weight differentiation to force more diverse expert routing. Simplified from structured sparsity proposal to a single scalar amplification as the first experiment.",
+  "original_stats": {
+    "mean": -0.000310,
+    "std": 0.016842,
+    "norm": 9.8804,
+    "abs_max": 0.231445,
+    "row_norm_cv_pct": 14.35,
+    "mean_pairwise_cosine_sim": 0.2256
+  },
+  "modified_stats": {
+    "mean": -0.000341,
+    "std": 0.018526,
+    "norm": 10.8685,
+    "abs_max": 0.254590
+  },
+  "backup_path": "/workspace/gate_backup.safetensors/model-00007-of-00010.safetensors",
+  "fp8_requantization_needed": false,
+  "vllm_restart_required": true,
+  "restart_time_seconds": 75
+}

@@ -1,0 +1,15 @@
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304
+max_seq_len: 1024
+model_type: fgn
+architecture_version: "v6"
+geo_heads: 4
+geo_metric_type: flat
+attention_budgets: [0.00, 0.05, 0.10, 0.10, 0.20, 0.30]
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+dropout: 0.1
+use_torch_compile: true

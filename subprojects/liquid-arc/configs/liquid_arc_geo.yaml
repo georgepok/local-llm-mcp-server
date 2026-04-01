@@ -1,0 +1,53 @@
+# LiquidARC with Geometric Auxiliary Loss (L_geo) — MSE on D²
+#
+# Phase 1 (0–5K):   MSE(model_D², squared_Manhattan). CE=0. Only MetricNet trains.
+# Phase 2 (5K+):    Object boundaries (interpolated over 3K steps). CE ramps 0→1.
+#                    Scaffold is PERMANENT (λ_geo=1.0 forever).
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 1024
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_freeze_steps: 5000
+
+# Geometric auxiliary loss — MSE on D²
+geo_loss_enabled: true
+geo_wall_distance: 50.0
+geo_lambda_init: 1.0
+geo_lambda_final: 1.0
+geo_ce_ramp_start: 5000
+geo_ce_ramp_end: 15000
+geo_lambda_decay_start: 15000
+geo_lambda_decay_end: 20000
+geo_phase2_start: 5000
+geo_phase2_interp_steps: 3000
+geo_use_h0: true
+geo_detach_h: false

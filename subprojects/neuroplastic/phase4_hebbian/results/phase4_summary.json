@@ -1,0 +1,40 @@
+{
+  "experiment": "Phase 4 Hebbian Learning",
+  "timestamp": "2026-03-11T20:02:57Z",
+  "phases": {
+    "A": {
+      "description": "Baseline (no Hebbian updates)",
+      "accuracy": 0.2,
+      "pass_count": 10,
+      "n_problems": 50,
+      "elapsed_seconds": 87.3,
+      "success": true
+    },
+    "B": {
+      "description": "Hebbian Adaptation",
+      "accuracy": 0.16,
+      "pass_count": 8,
+      "n_problems": 50,
+      "elapsed_seconds": 520.1,
+      "success": true
+    },
+    "C": {
+      "description": "Retention (post-adaptation, new problems, no updates)",
+      "accuracy": 0.2,
+      "pass_count": 4,
+      "n_problems": 20,
+      "elapsed_seconds": 23.7,
+      "success": true
+    },
+    "D": {
+      "description": "Cross-domain regression (full capability eval)",
+      "accuracy": null,
+      "pass_count": null,
+      "n_problems": null,
+      "elapsed_seconds": 304.2,
+      "success": true
+    }
+  },
+  "hebbian_lift_b_vs_a": -0.04,
+  "retention_lift_c_vs_a": 0.0
+}

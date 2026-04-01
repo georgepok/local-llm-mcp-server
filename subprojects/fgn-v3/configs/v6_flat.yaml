@@ -1,0 +1,10 @@
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304
+max_seq_len: 1024
+model_type: flat
+architecture_version: "v6"
+dropout: 0.1
+use_torch_compile: true

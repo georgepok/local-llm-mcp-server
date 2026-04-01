@@ -1,0 +1,31 @@
+{
+  "sessions": [
+    {
+      "session": 1,
+      "session_dir": "session_20260310T230222",
+      "turns": 40,
+      "peak_score": 66.7,
+      "turns_to_first_improvement": null,
+      "avg_proposal_quality": null,
+      "prediction_accuracy": null
+    },
+    {
+      "session": 2,
+      "session_dir": "session_20260311T010244",
+      "turns": 103,
+      "peak_score": 91.7,
+      "turns_to_first_improvement": 48,
+      "avg_proposal_quality": 1.62,
+      "prediction_accuracy": null
+    },
+    {
+      "session": 3,
+      "session_dir": null,
+      "turns": "?",
+      "peak_score": "?",
+      "turns_to_first_improvement": "?",
+      "avg_proposal_quality": "?",
+      "prediction_accuracy": "?"
+    }
+  ]
+}

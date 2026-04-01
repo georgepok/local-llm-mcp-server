@@ -1,0 +1,22 @@
+# ARC FluidNet — 30M param grok setup
+# Scale up from 3.1M (d=256, 6L) to ~30M (d=512, 10L, 2048 FFN)
+# Keeps: shared role embedding, input-colors masking, no penalties, 1x metric LR
+d_model: 512
+n_heads: 8
+n_layers: 10
+d_ff: 2048
+d_ffn_fluid: 2048
+d_metric: 128
+n_scales: 3
+max_seq_len: 1024
+model_type: fgn
+architecture_version: "fluid"
+geo_metric_type: learned
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+structural_energy_lambda: 0.0
+kappa_floor: 0.0
+dropout: 0.1
+use_torch_compile: true
+metric_lr_mult: 1.0
+diffusion_floor: 0.0

@@ -1,0 +1,131 @@
+{
+  "model_name": "base",
+  "model_used": "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+  "base_url": "http://spark-129a.local:30000",
+  "passed": 18,
+  "total": 25,
+  "score": 0.72,
+  "results": [
+    {
+      "name": "api_syntax_inspect",
+      "category": "api",
+      "passed": 4,
+      "total": 4,
+      "score": 1.0,
+      "checks": {
+        "contains_inspect": true,
+        "correct_layer": true,
+        "correct_path": true,
+        "valid_tensor_path": true
+      },
+      "response": "\nINSPECT(model.layers.26.mixer.q_proj.weight)",
+      "response_length": 45,
+      "time": 4.5500218868255615
+    },
+    {
+      "name": "api_syntax_modify",
+      "category": "api",
+      "passed": 4,
+      "total": 4,
+      "score": 1.0,
+      "checks": {
+        "contains_modify": true,
+        "correct_layer": true,
+        "references_A_log": true,
+        "references_scale": true
+      },
+      "response": "\nMODIFY(model.layers.50.mixer.A_log, scale, 0.9)",
+      "response_length": 48,
+      "time": 6.298598289489746
+    },
+    {
+      "name": "architecture_mamba",
+      "category": "architecture",
+      "passed": 3,
+      "total": 3,
+      "score": 1.0,
+      "checks": {
+        "knows_mamba_layers": true,
+        "knows_mamba_params": true,
+        "knows_not_attention": true
+      },
+      "response": "\n**Mamba layers in your model**\n\n| Layer index | Typical parameter names (paths you can inspect/modify) |\n|------------|----------------------------------------------------------|\n| 0 | `model.layers.0.mixer.A`, `model.layers.0.mixer.D`, `model.layers.0.mixer.dt_bias`, `model.layers.0.mixer.in_proj.weight`, `model.layers.0.mixer.out_proj.weight` |\n| 2 | `model.layers.2.mixer.A`,",
+      "response_length": 381,
+      "time": 7.3314831256866455
+    },
+    {
+      "name": "architecture_moe",
+      "category": "architecture",
+      "passed": 1,
+      "total": 3,
+      "score": 0.3333333333333333,
+      "checks": {
+        "knows_expert_path": true,
+        "knows_proj_names": false,
+        "provides_path_format": false
+      },
+      "response": "\nEach MoE layer contains **multiple expert sub\u2011modules** that are indexed sequentially (e.g.,\u202f`experts.0`,\u202f`experts.1`,\u202f`experts.2`, \u2026).  \nThe exact count of experts per layer is defined when the model is instantiated \u2013 in the default configuration the model uses **8 experts per MoE layer**,",
+      "response_length": 292,
+      "time": 7.244948863983154
+    },
+    {
+      "name": "reasoning_task",
+      "category": "reasoning",
+      "passed": 3,
+      "total": 4,
+      "score": 0.75,
+      "checks": {
+        "suggests_mamba": true,
+        "suggests_A_or_decay": true,
+        "suggests_specific_layers": false,
+        "reasoning_present": true
+      },
+      "response": "\nSECTION 1\nTo improve long\u2011range memory retention, focus on the components that control information flow across many time steps:\n\n1. **Mamba layers (state\u2011space dynamics)**\n   - Inspect `model.layers.{i}.mixer.dt_bias` \u2013 the bias on the decay parameter; larger, more stable decay values help retain older states.\n   - Examine `model.layers.{i}.mixer.in_proj.weight` and `model.layers.{i}.mixer",
+      "response_length": 393,
+      "time": 7.320480823516846
+    },
+    {
+      "name": "reasoning_attention",
+      "category": "reasoning",
+      "passed": 0,
+      "total": 3,
+      "score": 0.0,
+      "checks": {
+        "suggests_attention": false,
+        "names_attention_layers": false,
+        "suggests_specific_param": false
+      },
+      "response": "[EMPTY RESPONSE]",
+      "response_length": 16,
+      "time": 7.239811897277832
+    },
+    {
+      "name": "general_capability",
+      "category": "general",
+      "passed": 0,
+      "total": 1,
+      "score": 0.0,
+      "checks": {
+        "correct_answer": false
+      },
+      "response": "[EMPTY RESPONSE]",
+      "response_length": 16,
+      "time": 7.238184928894043
+    },
+    {
+      "name": "general_code",
+      "category": "general",
+      "passed": 3,
+      "total": 3,
+      "score": 1.0,
+      "checks": {
+        "has_def": true,
+        "has_return": true,
+        "mentions_prime": true
+      },
+      "response": "\ndef is_prime(n):\n    if n < 2:\n        return False\n    if n == 2:\n        return True\n    if n % 2 == 0:\n        return False\n    i = 3\n    while i * i <= n:\n        if n % i == 0:\n            return False\n        i += 2\n    return True",
+      "response_length": 238,
+      "time": 6.091655015945435
+    }
+  ]
+}

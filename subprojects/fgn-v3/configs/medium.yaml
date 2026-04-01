@@ -1,0 +1,29 @@
+d_model: 512
+n_heads: 8
+n_layers: 12
+d_ff: 2048
+vocab_size: 50304  # GPT-2 has 50257 tokens, round up to multiple of 128 for tensor cores
+max_seq_len: 2048
+
+metric_type: diagonal
+metric_activation: softplus
+
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+
+curvature_lambda: 0.01
+correlation_length_init: 5.0
+curvature_reward_mu: 0.01  # Phase 1a.1: reward non-trivial curvature
+
+# Curriculum: 2K steps of synthetic copy-pattern with high metric LR
+curriculum_steps: 2000
+curriculum_metric_lr_mult: 2.0
+curriculum_freeze_qkv: true
+
+dropout: 0.1
+
+transport_rank: 8
+
+use_fp8_metric: false
+use_torch_compile: true

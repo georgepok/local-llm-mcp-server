@@ -1,0 +1,1092 @@
+{
+  "meta": {
+    "timestamp": "20260311T121835",
+    "api_url": "http://spark-129a.local:30000",
+    "blueprint": "/Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase1_artifacts/blueprint_prompt_compact.txt",
+    "trials": 5,
+    "elapsed_seconds": 789.0
+  },
+  "summary": {
+    "sequential_reasoning": {
+      "pass": 3,
+      "total": 3,
+      "accuracy": 1.0
+    },
+    "state_tracking": {
+      "pass": 2,
+      "total": 3,
+      "accuracy": 0.6666666666666666
+    },
+    "code_generation": {
+      "pass": 3,
+      "total": 3,
+      "accuracy": 1.0
+    },
+    "self_prediction": {
+      "pass": 2,
+      "total": 3,
+      "accuracy": 0.6666666666666666
+    },
+    "overall": {
+      "pass": 10,
+      "total": 12,
+      "accuracy": 0.8333333333333334
+    }
+  },
+  "results": {
+    "sequential_reasoning": [
+      {
+        "id": "seq_001",
+        "description": "3-step arithmetic chain",
+        "question": "A is twice B. B is three more than C. C is 4. What is A? Show your work step by step.",
+        "expected_answer": 14,
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "\nWe are given:\n\n- A is twice B → A = 2B  \n- B is three more than C → B = C + 3  \n- C is 4 → C = 4  \n\nStep 1: Find B  \nSince C = 4 and B is three more than C:  \nB = C + 3 = 4 + 3 = 7  \n\nStep 2: Find A  \nSince A is twice B:  \nA = 2 × B = 2 × 7 = 14  \n\nFinal Answer:  \nA = 14",
+          "\nWe are given:\n\n- C = 4  \n- B is three more than C → B = C + 3  \n- A is twice B → A = 2 × B  \n\nStep 1: Find B  \nC = 4  \nB = C + 3 = 4 + 3 = 7  \n\nStep 2: Find A  \nA = 2 × B = 2 × 7 = 14  \n\nTherefore, A = 14  \n\nShowing work step by step:  \n1. C = 4  \n2. B = C + 3 = 4 + 3 = 7  \n3. A = 2 × B = 2 × 7 = 14  \n4. Final answer: A = 14",
+          "\nWe are given:\n\n- C = 4  \n- B is three more than C → B = C + 3  \n- A is twice B → A = 2 × B  \n\nStep 1: Find B  \nC = 4  \nB = C + 3 = 4 + 3 = 7  \n\nStep 2: Find A  \nA = 2 × B = 2 × 7 = 14  \n\nAnswer: A = 14  \n\nWork shown:  \nC = 4  \nB = C + 3 = 4 + 3 = 7  \nA = 2 × B = 2 × 7 = 14  \nTherefore, A = 14",
+          "\nWe are given the following relationships and values:  \n- **A is twice B** → \\( A = 2 \\times B \\)  \n- **B is three more than C** → \\( B = C + 3 \\)  \n- **C is 4** → \\( C = 4 \\)  \n\n### Step-by-Step Solution:  \n1. **Find B using C**:  \n   Since \\( B = C + 3 \\) and \\( C = 4 \\):  \n   \\[\n   B = 4 + 3 = 7\n   \\]  \n\n2. **Find A using B**:  \n   Since \\( A = 2 \\times B \\) and \\( B = 7 \\):  \n   \\[\n   A = 2 \\times 7 = 14\n   \\]  \n\n### Verification:  \n- Check \\( B \\) relative to \\( C \\): \\( 7 = 4 + 3 \\) → **True** (B is three more than C).  \n- Check \\( A \\) relative to \\( B \\): \\( 14 = 2 \\times 7 \\) → **True** (A is twice B).  \n- \\( C = 4 \\) is explicitly given → **True**.  \n\n### Final Answer:  \n**A = 14**  \n\n*(No ambiguity or external assumptions needed; all values and relationships are explicitly defined.)*",
+          "**Step‑by‑step solution**\n\n1. **Translate the statements into equations**\n\n   - “A is twice B” → \\(A = 2B\\)  \n   - “B is three more than C” → \\(B = C + 3\\)  \n   - “C is 4” → \\(C = 4\\)\n\n2. **Find B using the value of C**\n\n   \\[\n   B = C + 3 = 4 + 3 = 7\n   \\]\n\n3. **Find A using the value of B**\n\n   \\[\n   A = 2B = 2 \\times 7 = 14\n   \\]\n\n---\n\n**Answer:** \\( \\boxed{14} \\)"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "expected": 14,
+            "found": "14"
+          },
+          {
+            "pass": true,
+            "expected": 14,
+            "found": "14"
+          },
+          {
+            "pass": true,
+            "expected": 14,
+            "found": "14"
+          },
+          {
+            "pass": true,
+            "expected": 14,
+            "found": "14"
+          },
+          {
+            "pass": true,
+            "expected": 14,
+            "found": "14"
+          }
+        ]
+      },
+      {
+        "id": "seq_002",
+        "description": "5-step arithmetic chain",
+        "question": "Start with 100. Subtract 23. Multiply by 2. Add 17. Divide by 3. What is the final result? Show your work step by step.",
+        "expected_answer": 57,
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "Let's solve the expression step by step, starting with **100** and following the operations exactly as given:\n\n---\n\n### Step 1: **Start with 100**\n> Value = 100\n\n---\n\n### Step 2: **Subtract 23**\n> 100 - 23 = **77**\n\n---\n\n### Step 3: **Multiply by 2**\n> 77 × 2 = **154**\n\n---\n\n### Step 4: **Add 17**\n> 154 + 17 = **171**\n\n---\n\n### Step 5: **Divide by 3**\n> 171 ÷ 3 = **57**\n\n---\n\n### ✅ Final Result: **57**\n\n---\n\n### 🔍 Step-by-step Summary:\n1. Start: **100**  \n2. Subtract 23: 100 - 23 = **77**  \n3. Multiply by 2: 77 × 2 = **154**  \n4. Add 17: 154 + 17 = **171**  \n5. Divide by 3: 171 ÷ 3 = **57**\n\n---\n\n**Answer: 57** ✅",
+          "100 − 23 = 77  \n77 × 2 = 154  \n154 + 17 = 171  \n171 ÷ 3 = 57  \n\n**Final result: 57**  \n\n*Step-by-step calculation:*  \n1. Start with 100  \n2. Subtract 23 → 100 − 23 = **77**  \n3. Multiply by 2 → 77 × 2 = **154**  \n4. Add 17 → 154 + 17 = **171**  \n5. Divide by 3 → 171 ÷ 3 = **57**",
+          "Let's solve the math step by step, starting with **100** and following each operation in sequence:\n\n---\n\n**Step 1: Start with 100**  \n→ Current value: **100**\n\n---\n\n**Step 2: Subtract 23**  \n→ 100 − 23 = **77**\n\n---\n\n**Step 3: Multiply by 2**  \n→ 77 × 2 = **154**\n\n---\n\n**Step 4: Add 17**  \n→ 154 + 17 = **171**\n\n---\n\n**Step 5: Divide by 3**  \n→ 171 ÷ 3 = **57**\n\n---\n\n### ✅ Final Result: **57**\n\n**Work shown step by step:**  \n1. 100  \n2. 100 − 23 = 77  \n3. 77 × 2 = 154  \n4. 154 + 17 = 171  \n5. 171 ÷ 3 = **57**  \n\n**Answer: 57**",
+          "**Step‑by‑step calculation**\n\n1. **Start with 100**  \n   \\(100\\)\n\n2. **Subtract 23**  \n   \\(100 - 23 = 77\\)\n\n3. **Multiply by 2**  \n   \\(77 \\times 2 = 154\\)\n\n4. **Add 17**  \n   \\(154 + 17 = 171\\)\n\n5. **Divide by 3**  \n   \\(171 \\div 3 = 57\\)\n\n---\n\n**Final result:** **57**  \n\n(Each arithmetic operation has been shown explicitly above.)",
+          "\nLet's solve this step by step with clear arithmetic:\n\n**Step 1: Start with 100**  \nInitial value = 100\n\n**Step 2: Subtract 23**  \n100 - 23 = **77**\n\n**Step 3: Multiply by 2**  \n77 × 2 = **154**\n\n**Step 4: Add 17**  \n154 + 17 = **171**\n\n**Step 5: Divide by 3**  \n171 ÷ 3 = **57**\n\n### Final Result:\n**57**\n\n### Verification with full expression:\n(100 - 23 × 2 + 17) ÷ 3  \n= (77 × 2 + 17) ÷ 3  \n= (154 + 17) ÷ 3  \n= 171 ÷ 3  \n= **57** ✅"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "expected": 57,
+            "found": "57"
+          },
+          {
+            "pass": true,
+            "expected": 57,
+            "found": "57"
+          },
+          {
+            "pass": true,
+            "expected": 57,
+            "found": "57"
+          },
+          {
+            "pass": true,
+            "expected": 57,
+            "found": "57"
+          },
+          {
+            "pass": true,
+            "expected": 57,
+            "found": "57"
+          }
+        ]
+      },
+      {
+        "id": "seq_003",
+        "description": "7-step arithmetic chain",
+        "question": "Start with 50. Add 30. Multiply by 2. Subtract 40. Divide by 4. Add 15. Multiply by 3. Subtract 10. What is the final result? Show your work step by step.",
+        "expected_answer": 125,
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "\nLet's solve the arithmetic expression step by step, showing each operation clearly:\n\n**Expression:**  \nStart with 50. Add 30. Multiply by 2. Subtract 40. Divide by 4. Add 15. Multiply by 3. Subtract 10.\n\n**Step-by-step calculation:**  \n1. Start with 50  \n   → `50`  \n2. Add 30  \n   → `50 + 30 = 80`  \n3. Multiply by 2  \n   → `80 × 2 = 160`  \n4. Subtract 40  \n   → `160 - 40 = 120`  \n5. Divide by 4  \n   → `120 ÷ 4 = 30`  \n6. Add 15  \n   → `30 + 15 = 45`  \n7. Multiply by 3  \n   → `45 × 3 = 135`  \n8. Subtract 10  \n   → `135 - 10 = 125`  \n\n**Final result:**  \n`125`  \n\n**Verification with full expression:**  \n`(((50 + 30) × 2 - 40) ÷ 4 + 15) × 3 - 10 = 125`",
+          "We start with **50** and apply each operation in sequence step by step.\n\n---\n\n**Step 1: Start with 50**  \n→ Current value: **50**\n\n**Step 2: Add 30**  \n→ 50 + 30 = **80**\n\n**Step 3: Multiply by 2**  \n→ 80 × 2 = **160**\n\n**Step 4: Subtract 40**  \n→ 160 − 40 = **120**\n\n**Step 5: Divide by 4**  \n→ 120 ÷ 4 = **30**\n\n**Step 6: Add 15**  \n→ 30 + 15 = **45**\n\n**Step 7: Multiply by 3**  \n→ 45 × 3 = **135**\n\n**Step 8: Subtract 10**  \n→ 135 − 10 = **125**\n\n---\n\n### ✅ Final Result: **125**\n\n**Work Summary:**\n1. 50  \n2. +30 → 80  \n3. ×2 → 160  \n4. −40 → 120  \n5. ÷4 → 30  \n6. +15 → 45  \n7. ×3 → 135  \n8. −10 → **125**\n\n**Answer: 125**",
+          "\nLet's solve the arithmetic expression step by step, starting with 50 and applying each operation in sequence:\n\n**Step-by-step calculation:**\n\n1. **Start with 50**  \n   Initial value: `50`\n\n2. **Add 30**  \n   `50 + 30 = 80`\n\n3. **Multiply by 2**  \n   `80 × 2 = 160`\n\n4. **Subtract 40**  \n   `160 - 40 = 120`\n\n5. **Divide by 4**  \n   `120 ÷ 4 = 30`  \n   *(Note: Integer division is implied here, but 120/4 = 30 exactly)*\n\n6. **Add 15**  \n   `30 + 15 = 45`\n\n7. **Multiply by 3**  \n   `45 × 3 = 135`\n\n8. **Subtract 10**  \n   `135 - 10 = 125`\n\n**Final result:**  \n`125`\n\n**Verification with full expression:**  \n`(((50 + 30) × 2 - 40) ÷ 4 + 15) × 3 - 10`  \n`= (((80 × 2 - 40) ÷ 4 + 15) × 3 - 10)`  \n`= (((160 - 40) ÷ 4 + 15) × 3 - 10)`  \n`= (((120 ÷ 4 + 15) × 3 - 10)`  \n`= (((30 + 15) × 3 - 10)`  \n`= ((45 × 3 - 10)`  \n`= (135 - 10)`  \n`= 125`  \n\n**Answer:** `125`",
+          "\nLet's solve the arithmetic expression step by step, showing each operation clearly:\n\n**Expression:**  \nStart with 50. Add 30. Multiply by 2. Subtract 40. Divide by 4. Add 15. Multiply by 3. Subtract 10.\n\n**Step-by-step calculation:**  \n1. Start with **50**  \n   → Current value: **50**  \n2. Add 30:  \n   → 50 + 30 = **80**  \n3. Multiply by 2:  \n   → 80 × 2 = **160**  \n4. Subtract 40:  \n   → 160 - 40 = **120**  \n5. Divide by 4:  \n   → 120 ÷ 4 = **30**  \n6. Add 15:  \n   → 30 + 15 = **45**  \n7. Multiply by 3:  \n   → 45 × 3 = **135**  \n8. Subtract 10:  \n   → 135 - 10 = **125**  \n\n**Final result:**  \n→ **125**  \n\n**Verification with full expression:**  \n(50 + 30) × 2 - 40 ÷ 4 + 15 × 3 - 10  \n= 80 × 2 - 10 + 45 × 3 - 10  \n= 160 - 10 + 135 - 10  \n= 150 + 135 - 10  \n= 285 - 10  \n= **125**  \n\n✅ **Answer: 125**",
+          "\n**Step‑by‑step calculation**\n\n| Step | Operation | Result |\n|------|-----------|--------|\n| 1 | Start with 50 | 50 |\n| 2 | Add 30 | 50 + 30 = **80** |\n| 3 | Multiply by 2 | 80 × 2 = **160** |\n| 4 | Subtract 40 | 160 − 40 = **120** |\n| 5 | Divide by 4 | 120 ÷ 4 = **30** |\n| 6 | Add 15 | 30 + 15 = **45** |\n| 7 | Multiply by 3 | 45 × 3 = **135** |\n| 8 | Subtract 10 | 135 − 10 = **125** |\n\n**Final result:** **125**."
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "expected": 125,
+            "found": "125"
+          },
+          {
+            "pass": true,
+            "expected": 125,
+            "found": "125"
+          },
+          {
+            "pass": true,
+            "expected": 125,
+            "found": "125"
+          },
+          {
+            "pass": true,
+            "expected": 125,
+            "found": "125"
+          },
+          {
+            "pass": true,
+            "expected": 125,
+            "found": "125"
+          }
+        ]
+      }
+    ],
+    "state_tracking": [
+      {
+        "id": "state_001",
+        "description": "Bag inventory tracking",
+        "question": "A bag starts empty. Add 3 apples. Add 2 oranges. Remove 1 apple. Add 4 bananas. Remove 2 oranges. How many of each fruit are in the bag? List apples, oranges, and bananas separately.",
+        "key_facts": [
+          "2 apple",
+          "0 orange",
+          "4 banana"
+        ],
+        "trials": 5,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "trial_responses": [
+          "Apples: 2  \nOranges: 1  \nBananas: 4",
+          "Apples: 2  \nOranges: 1  \nBananas: 4",
+          "Apples: 2  \nOranges: 1  \nBananas: 4",
+          "Apples: 2  \nOranges: 1  \nBananas: 4",
+          "- Apples: 2  \n- Oranges: 1  \n- Bananas: 4"
+        ],
+        "trial_scores": [
+          {
+            "pass": false,
+            "matched": [],
+            "missed": [
+              "2 apple",
+              "0 orange",
+              "4 banana"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [],
+            "missed": [
+              "2 apple",
+              "0 orange",
+              "4 banana"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [],
+            "missed": [
+              "2 apple",
+              "0 orange",
+              "4 banana"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [],
+            "missed": [
+              "2 apple",
+              "0 orange",
+              "4 banana"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [],
+            "missed": [
+              "2 apple",
+              "0 orange",
+              "4 banana"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "state_002",
+        "description": "Counter with conditional operations",
+        "question": "A counter starts at 10. Add 5. Double the current value. Subtract 7. Add 3. Halve the current value (integer division). What is the final counter value?",
+        "key_facts": [
+          "13"
+        ],
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "The counter evolves as follows:\n\n1. Start: 10  \n2. Add 5 → 15  \n3. Double → 30  \n4. Subtract 7 → 23  \n5. Add 3 → 26  \n6. Halve (integer division) → 13  \n\n**Final counter value: 13**.",
+          "The counter evolves as follows:\n\n1. Start: 10  \n2. Add 5 → 15  \n3. Double → 30  \n4. Subtract 7 → 23  \n5. Add 3 → 26  \n6. Halve (integer division) → 13  \n\n**Final counter value: 13**.",
+          "The counter evolves as follows:\n\n1. Start: 10  \n2. Add 5 → 15  \n3. Double → 30  \n4. Subtract 7 → 23  \n5. Add 3 → 26  \n6. Halve (integer division) → 13  \n\n**Final counter value: 13**.",
+          "The counter starts at 10.\n\n1. +5 → 15  \n2. ×2 → 30  \n3. −7 → 23  \n4. +3 → 26  \n5. ÷2 (integer division) → 13  \n\n**Final counter value: 13**.",
+          "The counter operations are:\n\n1. Start: 10  \n2. Add 5 → 15  \n3. Double → 30  \n4. Subtract 7 → 23  \n5. Add 3 → 26  \n6. Halve (integer division) → 13  \n\n**Final counter value: 13**"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "matched": [
+              "13"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "13"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "13"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "13"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "13"
+            ],
+            "missed": []
+          }
+        ]
+      },
+      {
+        "id": "state_003",
+        "description": "Multi-variable state tracking",
+        "question": "Two variables: X=0, Y=10. Add 5 to X. Subtract 3 from Y. Set X to X plus Y. Multiply Y by 2. Subtract X from Y. What are the final values of X and Y?",
+        "key_facts": [
+          "X",
+          "12",
+          "Y",
+          "2"
+        ],
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "\nWe are given:\n  X = 0\n  Y = 10\n\nStep-by-step operations:\n\n1. Add 5 to X:  \n   X = X + 5 = 0 + 5 = 5\n\n2. Subtract 3 from Y:  \n   Y = Y - 3 = 10 - 3 = 7\n\n3. Set X to X plus Y:  \n   X = X + Y = 5 + 7 = 12\n\n4. Multiply Y by 2:  \n   Y = Y * 2 = 7 * 2 = 14\n\n5. Subtract X from Y:  \n   Y = Y - X = 14 - 12 = 2\n\nFinal values:\n  X = 12\n  Y = 2",
+          "\nWe are given two variables: X=0, Y=10. Let's perform each operation step by step:\n\n1. Add 5 to X:  \n   X = 0 + 5 = 5\n\n2. Subtract 3 from Y:  \n   Y = 10 - 3 = 7\n\n3. Set X to X plus Y:  \n   X = 5 + 7 = 12\n\n4. Multiply Y by 2:  \n   Y = 7 * 2 = 14\n\n5. Subtract X from Y:  \n   Y = 14 - 12 = 2\n\nSo, the final values are:  \n**X = 12**  \n**Y = 2**",
+          "X = 12  \nY = 14",
+          "X = 12  \nY = 14",
+          "X = 12  \nY = 14"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "matched": [
+              "X",
+              "12",
+              "Y",
+              "2"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "X",
+              "12",
+              "Y",
+              "2"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "X",
+              "12",
+              "Y",
+              "2"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "X",
+              "12",
+              "Y",
+              "2"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "X",
+              "12",
+              "Y",
+              "2"
+            ],
+            "missed": []
+          }
+        ]
+      }
+    ],
+    "code_generation": [
+      {
+        "id": "code_001",
+        "description": "Fibonacci function",
+        "question": "Write a Python function `fibonacci(n)` that returns the nth Fibonacci number. Use 0-based indexing (fibonacci(0) = 0, fibonacci(1) = 1, fibonacci(2) = 1). The function should handle n=0 as a base case.",
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "Here's a Python function that computes the nth Fibonacci number using 0-based indexing with proper base case handling:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the nth Fibonacci number using 0-based indexing.\n    \n    Args:\n        n (int): Non-negative integer index\n        \n    Returns:\n        int: The nth Fibonacci number where:\n             fibonacci(0) = 0\n             fibonacci(1) = 1\n             fibonacci(2) = 1\n             fibonacci(3) = 2, etc.\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b\n```\n\n**Key features:**\n1. Handles `n=0` as a base case (returns 0)\n2. Uses iterative approach for O(n) time complexity and O(1) space\n3. Properly implements 0-based indexing:\n   - `fibonacci(0) = 0`\n   - `fibonacci(1) = 1`\n   - `fibonacci(2) = 1`\n   - `fibonacci(3) = 2`\n   - etc.\n4. Includes docstring with clear explanation of indexing convention\n5. Efficiently computes large Fibonacci numbers without recursion overhead or stack limits\n\n**Example usage:**\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(2))  # Output: 1\nprint(fibonacci(5))  # Output: 5\nprint(fibonacci(10)) # Output: 55\n```",
+          "Here's a Python function that computes the nth Fibonacci number using 0-based indexing with proper base case handling for n=0:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the nth Fibonacci number using 0-based indexing.\n    \n    Args:\n        n (int): Non-negative integer index (0 <= n)\n        \n    Returns:\n        int: The nth Fibonacci number where:\n            fibonacci(0) = 0\n            fibonacci(1) = 1\n            fibonacci(2) = 1\n            fibonacci(3) = 2\n            ...\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b\n```\n\n**Key features:**\n- Handles n=0 as a base case (returns 0 immediately)\n- Uses iterative approach for O(n) time complexity and O(1) space\n- Properly implements 0-based indexing:\n  - fibonacci(0) = 0\n  - fibonacci(1) = 1\n  - fibonacci(2) = 1\n  - fibonacci(3) = 2\n  - etc.\n- Includes docstring with clear indexing explanation\n- Works for all non-negative integer inputs\n- Avoids recursion to prevent stack overflow for large n\n\n**Example usage:**\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(2))  # Output: 1\nprint(fibonacci(5))  # Output: 5\nprint(fibonacci(10)) # Output: 55\n```",
+          "Here's a Python function that computes the nth Fibonacci number using 0-based indexing with proper base case handling for n=0:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the nth Fibonacci number using 0-based indexing.\n    \n    Args:\n        n (int): Non-negative integer index (0-based)\n        \n    Returns:\n        int: The nth Fibonacci number where:\n            fibonacci(0) = 0\n            fibonacci(1) = 1\n            fibonacci(2) = 1\n            fibonacci(3) = 2\n            ...\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b\n```\n\n### Key Features:\n1. **Base Case Handling**: Explicitly checks for `n == 0` and returns `0` immediately\n2. **Efficiency**: Uses iterative approach with O(n) time complexity and O(1) space complexity\n3. **Correct Indexing**: \n   - `fibonacci(0)` → `0` (base case)\n   - `fibonacci(1)` → `1` (base case)\n   - `fibonacci(2)` → `1` (computed in loop)\n4. **Input Validation**: Assumes non-negative integer input as specified by the problem constraints\n\n### Example Usage:\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(2))  # Output: 1\nprint(fibonacci(3))  # Output: 2\nprint(fibonacci(10)) # Output: 55\n```\n\nThis implementation efficiently handles all valid inputs while strictly following the 0-based indexing requirements specified in the problem statement. The iterative approach avoids recursion overhead and potential stack overflow issues for large values of n.",
+          "Here's a Python function that computes the nth Fibonacci number using 0-based indexing, with proper handling of the base case n=0:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the nth Fibonacci number using 0-based indexing.\n    \n    Args:\n        n (int): Non-negative integer index (0-based)\n        \n    Returns:\n        int: The nth Fibonacci number where:\n            fibonacci(0) = 0\n            fibonacci(1) = 1\n            fibonacci(2) = 1\n            fibonacci(3) = 2\n            ...\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b\n```\n\n**Key features:**\n1. Handles n=0 as a base case (returns 0 immediately)\n2. Uses iterative approach for O(n) time complexity and O(1) space complexity\n3. Properly implements 0-based indexing:\n   - fibonacci(0) → 0\n   - fibonacci(1) → 1\n   - fibonacci(2) → 1\n   - fibonacci(3) → 2\n   - fibonacci(4) → 3\n   - etc.\n4. Includes docstring for clarity and maintainability\n5. Efficiently computes large Fibonacci numbers without recursion limits or stack overflow\n\n**Example usage:**\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(2))  # Output: 1\nprint(fibonacci(5))  # Output: 5\nprint(fibonacci(10)) # Output: 55\n```",
+          "Here's a Python function that computes the nth Fibonacci number using 0-based indexing, with proper handling of the base case for n=0:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the nth Fibonacci number using 0-based indexing.\n    \n    Args:\n        n (int): Non-negative integer index (0-based)\n        \n    Returns:\n        int: The nth Fibonacci number where:\n             fibonacci(0) = 0\n             fibonacci(1) = 1\n             fibonacci(2) = 1\n             fibonacci(3) = 2\n             ...\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b\n```\n\n**Key features:**\n1. Handles the base case `n=0` explicitly (returns 0)\n2. Uses iterative approach for efficiency (O(n) time, O(1) space)\n3. Properly implements 0-based indexing:\n   - `fibonacci(0)` → 0\n   - `fibonacci(1)` → 1\n   - `fibonacci(2)` → 1\n   - `fibonacci(3)` → 2\n   - etc.\n4. Includes docstring for clarity\n5. Works for all non-negative integers n\n\n**Example usage:**\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(2))  # Output: 1\nprint(fibonacci(5))  # Output: 5\nprint(fibonacci(10)) # Output: 55\n```\n\nThis implementation avoids recursion (which would be inefficient for large n) and uses constant space by tracking only the last two Fibonacci numbers in the sequence. The loop starts from index 2 since we've already handled the base cases for n=0 and n=1."
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": 0,
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "input": 1,
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "input": 5,
+                "expected": 5,
+                "actual": 5,
+                "pass": true
+              },
+              {
+                "input": 10,
+                "expected": 55,
+                "actual": 55,
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": 0,
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "input": 1,
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "input": 5,
+                "expected": 5,
+                "actual": 5,
+                "pass": true
+              },
+              {
+                "input": 10,
+                "expected": 55,
+                "actual": 55,
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": 0,
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "input": 1,
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "input": 5,
+                "expected": 5,
+                "actual": 5,
+                "pass": true
+              },
+              {
+                "input": 10,
+                "expected": 55,
+                "actual": 55,
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": 0,
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "input": 1,
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "input": 5,
+                "expected": 5,
+                "actual": 5,
+                "pass": true
+              },
+              {
+                "input": 10,
+                "expected": 55,
+                "actual": 55,
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": 0,
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "input": 1,
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "input": 5,
+                "expected": 5,
+                "actual": 5,
+                "pass": true
+              },
+              {
+                "input": 10,
+                "expected": 55,
+                "actual": 55,
+                "pass": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code_002",
+        "description": "String reversal function",
+        "question": "Write a Python function `reverse_words(sentence)` that reverses the order of words in a sentence but keeps each word's characters in order. For example, reverse_words('hello world') should return 'world hello'.",
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "def reverse_words(sentence):\n    \"\"\"\n    Return a new string with the words of *sentence* in reverse order,\n    preserving the original spelling of each word.\n\n    Example\n    -------\n    >>> reverse_words('hello world')\n    'world hello'\n    \"\"\"\n    # Split on whitespace (handles multiple spaces, tabs, newlines)\n    words = sentence.split()\n    # Reverse the list of words and join them back together with a single space\n    return ' '.join(words[::-1])",
+          "Here’s a concise, self‑contained implementation that follows the specification:\n\n```python\ndef reverse_words(sentence: str) -> str:\n    \"\"\"\n    Return a new string with the order of words reversed,\n    while preserving the characters inside each word.\n\n    Example\n    -------\n    >>> reverse_words('hello world')\n    'world hello'\n    >>> reverse_words('  Python   is   awesome  ')\n    'awesome is Python'\n\n    Parameters\n    ----------\n    sentence: str\n        The input sentence. Leading/trailing/multiple spaces are\n        collapsed to a single space in the output (the same behaviour\n        as ``str.split()``).\n\n    Returns\n    -------\n    str\n        The sentence with word order reversed.\n    \"\"\"\n    # ``split()`` without arguments splits on any whitespace and discards\n    # empty strings, giving us exactly the list of words we need.\n    words = sentence.split()\n    # Reverse the list and join back with a single space.\n    return ' '.join(reversed(words))\n\n\n# ----------------------------------------------------------------------\n# Simple sanity checks (feel free to remove / comment out in production)\nif __name__ == \"__main__\":\n    test_cases = [\n        (\"hello world\", \"world hello\"),\n        (\"  Python   is   awesome  \", \"awesome is Python\"),\n        (\"single\", \"single\"),\n        (\"\", \"\"),\n        (\"a b c d\", \"d c b a\"),\n    ]\n\n    for inp, expected in test_cases:\n        out = reverse_words(inp)\n        assert out == expected, f'Failed: {inp!r} → {out!r} (expected {expected!r})'\n    print(\"All tests passed.\")\n```\n\n### How it works\n1. **Tokenisation** – `sentence.split()` breaks the input on any whitespace (spaces, tabs, newlines) and automatically collapses consecutive whitespace, yielding a list of the words in their original order.\n2. **Reversal** – `reversed(words)` produces an iterator that walks the list backwards.\n3. **Re‑assembly** – `' '.join(...)` stitches the reversed words back together with a single space separator, giving the final sentence.\n\nThe function is pure (no side‑effects), type‑annotated, and includes a tiny test harness for quick verification. Feel free to adapt the whitespace handling (e.g., preserving original spacing) if your use‑case demands it.",
+          "Here's a Python function that reverses the order of words in a sentence while keeping each word's characters in order:\n\n```python\ndef reverse_words(sentence):\n    \"\"\"\n    Reverses the order of words in a sentence while preserving each word's character sequence.\n    \n    Args:\n        sentence (str): Input sentence with words separated by whitespace\n        \n    Returns:\n        str: Sentence with word order reversed but characters within each word preserved\n        \n    Example:\n        >>> reverse_words('hello world')\n        'world hello'\n        >>> reverse_words('  multiple   spaces  ')\n        'spaces multiple'\n    \"\"\"\n    # Split by whitespace (handles multiple spaces, tabs, newlines)\n    words = sentence.split()\n    # Reverse the word order and join with single spaces\n    return ' '.join(words[::-1])\n```\n\n**Key features:**\n1. Uses `split()` to handle any whitespace (including multiple spaces, tabs, newlines) and automatically strips leading/trailing whitespace\n2. Uses slicing `[::-1]` to efficiently reverse the word list\n3. Joins with single spaces for clean output formatting\n4. Preserves exact character sequence within each word (no character-level reversal)\n5. Handles edge cases like empty strings and multiple consecutive spaces\n\n**Example usage:**\n```python\nprint(reverse_words('hello world'))  # Output: 'world hello'\nprint(reverse_words('  multiple   spaces  '))  # Output: 'spaces multiple'\nprint(reverse_words('single'))  # Output: 'single'\nprint(reverse_words(''))  # Output: ''\n```\n\nThis implementation is efficient with O(n) time complexity where n is the number of characters in the input string, and handles all standard whitespace scenarios correctly.",
+          "Here’s a concise, self‑contained implementation that follows the specification:\n\n```python\ndef reverse_words(sentence: str) -> str:\n    \"\"\"\n    Return a new string where the order of words is reversed,\n    but the characters inside each word stay unchanged.\n\n    Example\n    -------\n    >>> reverse_words('hello world')\n    'world hello'\n    >>> reverse_words('  Python   is   awesome  ')\n    'awesome is   Python  '\n    \"\"\"\n    # Split on whitespace – this treats any run of whitespace as a delimiter\n    # and discards leading/trailing whitespace.\n    words = sentence.split()\n\n    # Reverse the list of words and join them back together with a single space.\n    # If you need to preserve the exact original spacing, you can use a more\n    # sophisticated approach (e.g., regex), but for the typical use‑case\n    # `split()` + `join()` is sufficient and fast.\n    reversed_sentence = ' '.join(reversed(words))\n\n    return reversed_sentence\n\n\n# ---- quick sanity check ----------------------------------------------------\nif __name__ == \"__main__\":\n    test_cases = [\n        (\"hello world\", \"world hello\"),\n        (\"  Python   is   awesome  \", \"awesome is Python\"),\n        (\"single\", \"single\"),\n        (\"\", \"\"),\n        (\"\\t\\n  mixed \\n whitespace  \", \"whitespace mixed\"),\n    ]\n\n    for inp, expected in test_cases:\n        result = reverse_words(inp)\n        print(f\"Input:    {repr(inp)}\")\n        print(f\"Expected: {repr(expected)}\")\n        print(f\"Output:   {repr(result)}\")\n        print(f\"{result == expected}\\n\")\n```\n\n### How it works\n1. `sentence.split()` breaks the input on any whitespace (spaces, tabs, newlines, etc.) and returns a list of the words in their original order.\n2. `reversed(words)` produces an iterator that yields the words from last to first.\n3. `' '.join(...)` stitches those words back together with a single space separator, giving the final reversed‑order sentence.\n\nIf you need to **preserve the exact original whitespace** (e.g., keep multiple spaces between words), you can use a regular‑expression based split that captures the delimiters, but the above version satisfies the typical requirement of simply reversing word order while leaving each word’s characters untouched.",
+          "Here’s a concise, well‑documented implementation that does exactly what you asked for:\n\n```python\ndef reverse_words(sentence: str) -> str:\n    \"\"\"\n    Return a new string with the order of words reversed,\n    while preserving the characters inside each word unchanged.\n\n    Parameters\n    ----------\n    sentence: str\n        The input sentence. Words are assumed to be separated by whitespace\n        (any number of spaces, tabs, newlines, etc. are treated as separators).\n\n    Returns\n    -------\n    str\n        The sentence with word order reversed.  The original whitespace\n        between words is collapsed to a single space in the output.\n\n    Examples\n    --------\n    >>> reverse_words('hello world')\n    'world hello'\n    >>> reverse_words('  Python   is   awesome  ')\n    'awesome is Python'\n    \"\"\"\n    # 1. Split on any whitespace – this automatically discards empty\n    #    tokens that would appear from leading/trailing/multiple spaces.\n    words = sentence.split()\n\n    # 2. Reverse the list of words.\n    words_reversed = words[::-1]\n\n    # 3. Join them back together with a single space separator.\n    return ' '.join(words_reversed)\n\n\n# ----------------------------------------------------------------------\n# Quick sanity‑check (you can delete or comment out in production code)\nif __name__ == \"__main__\":\n    test_cases = [\n        (\"hello world\", \"world hello\"),\n        (\"  Python   is   awesome  \", \"awesome is Python\"),\n        (\"single\", \"single\"),\n        (\"\", \"\"),\n        (\"\\tfoo\\nbar  baz\", \"baz bar foo\"),\n    ]\n\n    for inp, expected in test_cases:\n        result = reverse_words(inp)\n        assert result == expected, f\"Failed: {inp!r} → {result!r} (expected {expected!r})\"\n    print(\"All tests passed.\")\n```\n\n### How it works\n1. **`sentence.split()`** – Splits the input on any whitespace (space, tab, newline, etc.) and returns a list of the non‑empty words.\n2. **`words[::-1]`** – Uses Python’s slice syntax to create a reversed copy of that list.\n3. **`' '.join(...)`** – Concatenates the reversed words with a single space between them, producing the final string.\n\nThe function gracefully handles edge cases such as empty strings, strings"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": "hello world",
+                "expected": "world hello",
+                "actual": "world hello",
+                "pass": true
+              },
+              {
+                "input": "one two three",
+                "expected": "three two one",
+                "actual": "three two one",
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": "hello world",
+                "expected": "world hello",
+                "actual": "world hello",
+                "pass": true
+              },
+              {
+                "input": "one two three",
+                "expected": "three two one",
+                "actual": "three two one",
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": "hello world",
+                "expected": "world hello",
+                "actual": "world hello",
+                "pass": true
+              },
+              {
+                "input": "one two three",
+                "expected": "three two one",
+                "actual": "three two one",
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": "hello world",
+                "expected": "world hello",
+                "actual": "world hello",
+                "pass": true
+              },
+              {
+                "input": "one two three",
+                "expected": "three two one",
+                "actual": "three two one",
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": "hello world",
+                "expected": "world hello",
+                "actual": "world hello",
+                "pass": true
+              },
+              {
+                "input": "one two three",
+                "expected": "three two one",
+                "actual": "three two one",
+                "pass": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code_003",
+        "description": "List deduplication preserving order",
+        "question": "Write a Python function `dedupe(items)` that removes duplicate elements from a list while preserving the original order of first occurrence. For example, dedupe([1, 2, 1, 3, 2]) should return [1, 2, 3].",
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "Here's a Python function that removes duplicates while preserving the original order of first occurrence:\n\n```python\ndef dedupe(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result\n```\n\n**Explanation:**\n1. We use a `set` called `seen` to track elements we've encountered (O(1) lookup time)\n2. We iterate through each item in the input list\n3. For each item, we check if it's not in `seen`:\n   - If not seen before, add it to `seen` and append to `result`\n   - If already seen, skip it\n4. The `result` list maintains elements in the order of their first occurrence\n\n**Example usage:**\n```python\nprint(dedupe([1, 2, 1, 3, 2]))  # Output: [1, 2, 3]\nprint(dedupe(['a', 'b', 'a', 'c', 'b']))  # Output: ['a', 'b', 'c']\n```\n\n**Why this works:**\n- The set efficiently tracks duplicates in constant time\n- We only add items to the result list when they're first encountered\n- This preserves the original order of first occurrences exactly as required\n- Time complexity is O(n) where n is the length of the input list\n- Space complexity is O(n) for storing the seen elements and result list\n\nThis implementation handles all hashable elements (integers, strings, tuples, etc.) and maintains the exact order of first appearances without any sorting or reordering.",
+          "Here's a Python function that removes duplicates while preserving the original order of first occurrence:\n\n```python\ndef dedupe(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result\n```\n\n**Explanation:**\n1. We use a `set` called `seen` to track elements we've encountered (O(1) lookups)\n2. We iterate through each item in the input list\n3. For each item, if it hasn't been seen before:\n   - Add it to the `seen` set\n   - Append it to the `result` list\n4. This preserves the order of first occurrence while removing subsequent duplicates\n\n**Example usage:**\n```python\nprint(dedupe([1, 2, 1, 3, 2]))  # Output: [1, 2, 3]\nprint(dedupe(['a', 'b', 'a', 'c', 'b']))  # Output: ['a', 'b', 'c']\n```\n\nThis solution efficiently handles the deduplication in O(n) time complexity with O(n) space complexity, where n is the length of the input list. The order of elements in the output matches the order of their first appearance in the input list.",
+          "def dedupe(items):\n    \"\"\"Return a new list with duplicates removed, preserving the order of first occurrence.\"\"\"\n    seen = set()\n    result = []\n    for item in items:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result",
+          "Here's a Python function that removes duplicates while preserving the order of first occurrence:\n\n```python\ndef dedupe(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result\n```\n\n**Explanation:**\n- We use a `set` called `seen` to track elements we've encountered (O(1) average lookup time)\n- We iterate through each item in the input list\n- If an item hasn't been seen before, we add it to both `seen` and the result list\n- This preserves the original order of first occurrence while eliminating duplicates\n\n**Example usage:**\n```python\nprint(dedupe([1, 2, 1, 3, 2]))  # Output: [1, 2, 3]\nprint(dedupe(['a', 'b', 'a', 'c']))  # Output: ['a', 'b', 'c']\nprint(dedupe([]))  # Output: []\n```\n\nThis solution efficiently handles all hashable elements (integers, strings, tuples, etc.) and maintains optimal O(n) time complexity where n is the length of the input list. The space complexity is O(m) where m is the number of unique elements in the list.",
+          "Here's a Python function that removes duplicates while preserving the original order of first occurrence:\n\n```python\ndef dedupe(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n    return result\n```\n\n**Explanation:**\n- We use a `set` (`seen`) to track elements we've encountered (O(1) lookup time)\n- We iterate through each item in the input list\n- If an item hasn't been seen before, we add it to `seen` and append it to `result`\n- This preserves the order of first occurrence while eliminating subsequent duplicates\n- The function handles all hashable elements (integers, strings, tuples, etc.) since sets require hashable items\n\n**Example usage:**\n```python\nprint(dedupe([1, 2, 1, 3, 2]))  # Output: [1, 2, 3]\nprint(dedupe(['a', 'b', 'a', 'c', 'b']))  # Output: ['a', 'b', 'c']\nprint(dedupe([]))  # Output: []\n```\n\nThis solution efficiently maintains the original order while removing duplicates with O(n) time complexity and O(n) space complexity."
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": [
+                  1,
+                  2,
+                  1,
+                  3,
+                  2
+                ],
+                "expected": [
+                  1,
+                  2,
+                  3
+                ],
+                "actual": [
+                  1,
+                  2,
+                  3
+                ],
+                "pass": true
+              },
+              {
+                "input": [
+                  "a",
+                  "b",
+                  "a",
+                  "c"
+                ],
+                "expected": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "actual": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": [
+                  1,
+                  2,
+                  1,
+                  3,
+                  2
+                ],
+                "expected": [
+                  1,
+                  2,
+                  3
+                ],
+                "actual": [
+                  1,
+                  2,
+                  3
+                ],
+                "pass": true
+              },
+              {
+                "input": [
+                  "a",
+                  "b",
+                  "a",
+                  "c"
+                ],
+                "expected": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "actual": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": [
+                  1,
+                  2,
+                  1,
+                  3,
+                  2
+                ],
+                "expected": [
+                  1,
+                  2,
+                  3
+                ],
+                "actual": [
+                  1,
+                  2,
+                  3
+                ],
+                "pass": true
+              },
+              {
+                "input": [
+                  "a",
+                  "b",
+                  "a",
+                  "c"
+                ],
+                "expected": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "actual": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": [
+                  1,
+                  2,
+                  1,
+                  3,
+                  2
+                ],
+                "expected": [
+                  1,
+                  2,
+                  3
+                ],
+                "actual": [
+                  1,
+                  2,
+                  3
+                ],
+                "pass": true
+              },
+              {
+                "input": [
+                  "a",
+                  "b",
+                  "a",
+                  "c"
+                ],
+                "expected": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "actual": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "pass": true
+              }
+            ]
+          },
+          {
+            "pass": true,
+            "syntax_ok": true,
+            "test_results": [
+              {
+                "input": [
+                  1,
+                  2,
+                  1,
+                  3,
+                  2
+                ],
+                "expected": [
+                  1,
+                  2,
+                  3
+                ],
+                "actual": [
+                  1,
+                  2,
+                  3
+                ],
+                "pass": true
+              },
+              {
+                "input": [
+                  "a",
+                  "b",
+                  "a",
+                  "c"
+                ],
+                "expected": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "actual": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "pass": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "self_prediction": [
+      {
+        "id": "pred_001",
+        "description": "MoE router zeroing effect",
+        "question": "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), how would the model's behavior change on tokens processed by that layer?",
+        "key_facts": [
+          "uniform",
+          "random",
+          "specialization"
+        ],
+        "trials": 5,
+        "pass_count": 4,
+        "pass_rate": 0.8,
+        "trial_responses": [
+          "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), the model's behavior on tokens processed by that layer would shift dramatically from its trained, expert-specialized routing dynamics toward a **homogenized, low-precision, and context-blind response pattern**, with cascading effects on output quality and interpretability. Here's the precise breakdown, grounded in your model's documented architecture and operational constraints:\n\n---\n\n### **1. Routing Collapse: Loss of Expert Specialization**\n- **Trained behavior**: Layer 40 (a MoE-FFN layer in the E=MoE-FFN pattern) uses a **top-6 router** with **norm_topk_prob=True**, activating 6 of 128 experts per token. Experts are *nearly identical in scale* (~1–4% CV in weight norms), but *specialized in weight direction* — meaning different experts specialize in handling distinct semantic or syntactic patterns (e.g., long-range dependencies, numerical reasoning, code syntax, etc.).  \n- **Uniform routing effect**:  \n  - If all gate weights are **zero**: All routing probabilities become **1/128 ≈ 0.78% per expert** (assuming softmax normalization over 128 experts). Since the shared expert (always active) has fixed routing priority, it would dominate *only if* it’s explicitly designed to override the uniform distribution — but in standard MoE, shared experts are typically routed like others unless explicitly exempted. In your config, the shared expert is *one of 128 routed experts*, so it would receive ~0.78% probability unless norm_topk_prob forces it to be always selected (which it isn’t — top-6 active implies shared expert competes equally).  \n  - If all gate weights are **equal and non-zero**: All experts receive **identical routing probability** (~1/128 per expert in top-6 selection). The top-6 are chosen randomly or by fixed index (e.g., first 6 experts always activated), but *no semantic discrimination occurs*.  \n  - **Result**: Expert specialization is **erased**. The layer now behaves as if all 128 experts were averaged into a single, generic transformation — effectively reducing the MoE layer’s capacity from **~29.8B parameters** to **~233.75M active parameters per layer** (2688 / 128 × 1856 × 2 + 3712 × 2688 × 2 ≈ 233.75M *per layer*, but *only 6 experts active* → 6 × (1856 + 2688) × 2688 ≈ 116.875M per layer *in practice for active routing*).  \n  - **Critical implication**: The model loses its ability to *selectively process different input types with specialized subnetworks*. Tokens requiring expert A (e.g., mathematical reasoning) and expert B (e.g., code generation) now get processed identically — by a single, averaged transformation.\n\n---\n\n### **2. Quantization & Precision Degradation: FP8 Exemptions Ignored**\n- **Your model’s FP8 exemptions**:  \n  - All Mamba conv1d layers, A_log, D, dt_bias, norm.weight, lm_head, and attention boundary pairs (e.g., layer 40’s Mamba+Attention boundary) are **exempt from FP8 quantization** and remain BF16.  \n  - **But**: MoE-FFN layers (like layer 40) are **fully quantized to FP8** (per your tensor paths: `experts.{j}.up_proj.weight` and `down_proj.weight` are FP8).  \n- **Uniform routing + FP8**:  \n  - FP8 quantization has **low dynamic range** and **high sparsity in gradients**. When routing is uniform, the *input to the experts* becomes a **flat, unstructured mixture** of all possible semantic inputs.  \n  - This causes **FP8 overflow/underflow** in expert computations:  \n    - Inputs requiring high-magnitude representations (e.g., numerical values, rare tokens) may saturate FP8’s small dynamic range.  \n    - Inputs requiring low-magnitude precision (e.g., subtle syntactic distinctions) get rounded to zero.  \n  - **Result**: The layer’s output becomes **noisy, clipped, or distorted** — especially for edge cases or long-context tokens where precision matters most. This is exacerbated by the fact that MoE layers are **deep in the stack** (layer 40 is near the end of 52 layers), where errors compound",
+          "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), the model's behavior on tokens processed by that layer would undergo a **radical, deterministic shift** due to the collapse of expert specialization and routing dynamics — even though the *mechanism* of MoE routing is designed to *select* experts based on input, uniform routing destroys the core adaptive logic of the system.\n\nHere’s the precise behavioral consequence, grounded in the model’s architecture and training dynamics:\n\n---\n\n### **1. Routing Collapse: All Experts Are Activated Equally — But No Expert Is Selected**\n- In normal operation, the router gate (a [128, 2688] weight matrix) computes a **softmax-weighted probability distribution over 128 experts** for each token, selecting the **top-6 most relevant experts** (top-6 sparse activation).\n- The **gate weights encode learned specialization**: some experts are tuned to handle syntactic patterns, others semantic roles, mathematical reasoning, or domain-specific knowledge (e.g., code, math, dialogue).\n- If gate weights are set to **uniform values** (e.g., all elements = 0.01 or all = 0), then:\n  - All 128 experts receive **identical, uninformative routing scores**.\n  - The softmax becomes flat → **all experts are activated with equal probability** (1/128 ≈ 0.78% each).\n  - But since only **top-6 are selected** in practice (and the system enforces this via `norm_topk_prob=True`), **no expert is meaningfully selected** — instead, **6 experts are randomly chosen per token**, independent of input content.\n\n> 🔴 **Critical consequence**: **Routing becomes content-agnostic and stochastic**, not input-driven. The model loses its ability to *adaptively match input semantics to expert capability*.\n\n---\n\n### **2. Loss of Expert Specialization → Degraded Representation Capacity**\n- MoE layer 40 is part of a **depth-gradient-rich region** (layers 40–51 have *no attention*, only Mamba + MoE → output). This layer is likely responsible for **high-level semantic synthesis, reasoning, or output formatting**.\n- In normal operation, experts in layer 40 are specialized to handle:\n  - Logical inference\n  - Code generation\n  - Long-context summarization\n  - Domain-specific knowledge (e.g., scientific, legal, mathematical)\n- With uniform routing:\n  - **No expert is preferentially activated** based on input semantics.\n  - The **output representation** is now a **random linear combination of 6 randomly selected experts’ outputs**, scaled by fixed, non-adaptive weights.\n  - This **erases the model’s learned capacity to reason or specialize** at this depth — effectively turning the MoE layer into a **fixed, non-adaptive linear projection** with randomized weights per token.\n\n> 📉 **Result**: The model’s **effective capacity drops by ~90%** in this layer. The 29.8B parameters of MoE become **functionally inert** — they no longer contribute meaningfully to the output, only adding noise and computational overhead.\n\n---\n\n### **3. Output Distribution Becomes Noisy and Unpredictable**\n- The final output of layer 40 feeds into the **LM head** and **logits processor**.\n- With uniform routing:\n  - The **logits** produced by the shared expert and 6 randomly selected routed experts are **unrelated to the input context**.\n  - The **probability distribution over vocabulary (131K tokens)** becomes **high-entropy and incoherent**.\n  - The **FluidGeometryLogitsProcessor** (which modulates temperature and think-token bias based on entropy/curvature) will detect:\n    - **Extremely high entropy** → model is “confused”\n    - **High curvature in logit space** → unpredictable structure\n    - **Low signal-to-noise ratio** → no meaningful pattern to bias toward\n  - This triggers **aggressive temperature reduction** or **think-block suppression**, causing the model to:\n    - Generate **repetitive, generic, or hallucinated outputs**\n    - **Fail to complete reasoning chains**\n    - **Default to safe, low-perplexity but semantically empty responses**\n\n> 🧠 Example: A prompt like *“Explain why quantum entanglement violates local realism”* would yield a response like *“The answer is 42. The sky is blue. I think therefore I am.”* — not because of reasoning, but because the MoE layer is now outputting random activations.\n\n---\n\n### **4. Training Dynamics Are Irreversibly Broken — But Inference Is Still Possible**\n- The model was **trained with expert specialization**. Uniform routing **breaks the alignment between training and",
+          "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), the model's behavior would undergo a **catastrophic shift in information routing and expert specialization**, with cascading effects on downstream computation and output quality. Here's the precise breakdown, grounded in your model's architecture and empirical patterns:\n\n---\n\n### **1. Routing Collapse & Expert Indiscrimination Failure**\n- **Current behavior (normal routing)**:  \n  The router gate weights in MoE layers (like layer 40) are *trained to be sparse and directional*. With 128 experts per layer and top-6 active (4.7% sparsity), the gate assigns **non-uniform, expert-specific probabilities** to each token based on learned relevance. For layer 40 (a late-stage MoE layer in the \"EMEMEM*EMEMEM*EMEMEM\" pattern), this routing is **critical for content transformation**—especially since layers 43–51 lack attention and rely *entirely* on MoE+Mamba for final processing.  \n  - *Empirical pattern*: In late layers (e.g., 42, 43, 44), the gate weights show **strong directional bias** (e.g., layer 42’s gate weights have norms ~100× higher than early layers), enabling expert specialization for nuanced semantic tasks (e.g., reasoning, code, domain adaptation).  \n  - *Your config note*: \"Expert homogeneity: weight norm CV is ~1–4%... Specialization is in weight direction, not magnitude.\" This implies experts are *nearly identical in scale* but *divergent in directional routing*—uniform routing destroys this.\n\n- **With uniform routing (all zeros or equal weights)**:  \n  - **All 128 experts receive identical routing probability** (e.g., 1/128 ≈ 0.78% per expert if normalized).  \n  - **Top-6 sparsity constraint is violated**: The system *must* still activate 6 experts per token (per your config: \"top-6 active\"), but with uniform weights, **all experts are equally likely to be selected randomly**. This forces **random expert assignment per token**, erasing learned specialization.  \n  - **Critical consequence**: Late-layer MoE (like layer 40) is designed to handle **high-level semantic processing** (e.g., resolving ambiguity, applying domain knowledge, or structuring output). Random routing means:  \n    - A token requiring \"math reasoning\" might be routed to an expert specialized in \"linguistic syntax\" (or vice versa).  \n    - **No expert consistently handles a specific task**—outputs become **unpredictable and incoherent** at the layer level.  \n    - *Example*: In layer 40 (part of the \"EMEMEM*EMEMEM*EMEMEM\" sequence near the end of the 52-layer stack), tokens needing complex contextualization (e.g., \"Explain quantum entanglement in simple terms\") would be processed by *randomly selected experts*, leading to **inconsistent, fragmented, or nonsensical intermediate representations**.\n\n---\n\n### **2. Downstream Impact on Final Output**\n- **Loss of semantic coherence**:  \n  Layer 40 is in the **\"EMEMEM*EMEMEM*EMEMEM\" pattern** (expert FFN layer), followed by Mamba layers 41–51 (which lack attention and rely on MoE+Mamba for final token shaping). With uniform routing:  \n  - The **intermediate representations exiting layer 40** become **noisy and task-agnostic**.  \n  - Subsequent Mamba layers (41–51) process this corrupted stream via *fixed-state-space dynamics* (not attention-based global context), amplifying errors.  \n  - *Result*: Final logits (via `lm_head`) exhibit **higher entropy, lower accuracy, and increased hallucination**—especially for long-context tasks (max_context=262k trained, but deployed at 32k).  \n    - *Empirical evidence*: Your config notes layer 42 (attention layer) has the **highest O norm (101)** and \"strong transform (most impactful)\"—but layer 40 *precedes* this. If layer 40’s output is randomized, layer 42’s attention weights (which depend on layer 40’s output) become **meaningless**, collapsing the attention gradient pattern you observed (e.g., K declining, V/O growing in late layers).\n\n- **Catastrophic forgetting of context**:  \n  Late MoE layers (like 40) are where **contextual memory is synthesized** (e.g., integrating",
+          "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), the model's behavior on tokens processed by that layer would undergo significant and predictable shifts due to the collapse of routing diversity and expert specialization. Here's the precise breakdown of behavioral changes, grounded in the model's architecture and empirical patterns:\n\n### **1. Routing Collapse and Expert Activation Failure**\n- **Current behavior (normal routing):**  \n  Layer 40 (a MoE-FFN layer in the attention sequence pattern `EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEME`) uses a **top-6 routing mechanism** with **128 experts per layer**, where the shared expert (always active) and 6 routed experts are selected per token. Experts are **nearly identical in scale** (weight norm CV ~1-4%), but **specialized by direction** (e.g., one expert might specialize in syntactic patterns, another in numerical reasoning). The router gate weights (shape `[128, 2688]`) determine *which experts activate* for a given token by computing cosine similarity between the token's hidden state and expert weights.  \n  - *Critical nuance:* The router uses `norm_topk_prob=True`, meaning routing probabilities are normalized via softmax over expert \"scores\" (not raw weights), allowing dynamic selection based on token context. This enables **context-aware expert specialization** — e.g., a token requiring logical deduction might activate experts tuned for math, while a creative token activates experts for narrative generation.\n\n- **With uniform router weights (all equal or all zeros):**  \n  - **All routing scores become identical** (if all zeros: all scores = 0; if all equal: scores proportional to uniform prior).  \n  - **Top-6 selection fails catastrophically:** The softmax-normalized probabilities would be **uniform across all 128 experts** (or undefined if all zeros, leading to division-by-zero in practice).  \n  - **Result:** The model **cannot distinguish between experts** — every expert activates with **equal probability (1/128)** for every token. This destroys the core MoE mechanism: **context-dependent expert specialization**.  \n  - *Consequence:* The \"shared expert\" (always active) would still contribute, but the 6 routed experts would contribute **identically to every token**, regardless of semantic content. No routing intelligence remains.\n\n### **2. Impact on Hidden State Transformation**\n- **Current behavior (normal routing):**  \n  The output of layer 40 is a **weighted sum of expert outputs**, where experts are **specialized and context-aware**. For example:  \n  - A technical query might activate math-specialized experts, producing high-precision numerical reasoning.  \n  - A narrative continuation might activate story-generation experts, altering tone and structure.  \n  This creates **adaptive, high-capacity transformations** — layer 40 acts as a **context-sensitive processor** that reshapes the hidden state based on input semantics.\n\n- **With uniform routing:**  \n  - The output becomes a **fixed, averaged contribution from all experts** (or a constant blend of expert outputs).  \n  - **No semantic adaptation:** The hidden state transformation is **static and context-agnostic**. For instance:  \n    - A math-heavy query would receive the *same* expert blend as a creative prompt.  \n    - Expert specialization (e.g., one expert handling code, another handling poetry) becomes irrelevant — all experts contribute equally, erasing domain-specific expertise.  \n  - *Quantitative effect:* The hidden state output would resemble a **fixed linear combination of all 128 expert pathways**, but without the ability to prioritize relevant pathways. This is equivalent to **bypassing the MoE routing entirely** and using a single averaged expert pathway — a drastic reduction in representational power.\n\n### **3. Downstream Effects on Model Behavior**\n- **Loss of contextual reasoning:**  \n  Layer 40 is part of a **critical attention sequence** (layers 33–42 are attention-heavy, with layer 42 being the strongest transformer layer). Disabling routing here would **break the information flow** between attention-driven context processing and MoE-driven specialization.  \n  - *Example:* In normal operation, layer 42 (attention) might route a complex query to layer 40's math-specialized experts. With uniform routing, layer 40 cannot \"know\" it should activate math experts — it outputs a generic blend. Layer 42 then processes this generic output as if it were a simple, unambiguous query, **failing to handle nuanced requests**.  \n  - *Empirical pattern:* Layer 42's attention norms (Q",
+          "If the router gate weights in MoE layer 40 were set to uniform values (all zeros or all equal), the model's behavior on tokens processed by that layer would shift dramatically from its current expert-specialized, top-6 routing regime to a highly constrained, averaged, and context-blind mixture of expert outputs. Here is the precise behavioral transformation:\n\n---\n\n**Current Behavior (Normal Routing):**  \nIn layer 40 (a MoE-E layer), the router computes a softmax over 128 expert logits using a normalized top-6 selection (norm_topk_prob=True), weighted by gating probabilities derived from learned, context-sensitive patterns. Experts are nearly identical in scale (~1–4% CV in weight norms), but differ in *direction* — meaning each expert has learned to specialize in processing different sub-patterns of the 2688-dimensional hidden state. The top-6 experts are dynamically selected per token based on how well their specialized transformations align with the input’s semantic, syntactic, or structural features. This enables fine-grained, adaptive computation: e.g., one expert might handle numerical reasoning, another poetic phrasing, another code syntax, etc. The output is a weighted sum of 6 distinct, specialized expert transformations — each contributing meaningfully and non-redundantly.\n\n**Uniform Gate Behavior (All Zeros or All Equal):**  \n- **All Zeros (or All Equal Logits):**  \n  The softmax over uniform logits yields a *perfectly uniform distribution* over all 128 experts — but since norm_topk_prob=True and top-6 is enforced, **exactly 6 experts are selected uniformly at random per token**, independent of input content.  \n  - No expert is favored. No specialization is activated.  \n  - The gating signal becomes *completely decoupled from the input*.  \n  - The output becomes the *average of 6 randomly selected expert transformations*, where each expert’s output is computed as:  \n    `up_proj(shared_expert_output) → down_proj(FP8)`  \n    but now the *selection of which 6 experts are activated is random and static per layer*, not adaptive.  \n  - Crucially, because experts are nearly identical in scale and direction (CV ~1–4%), the *output distribution of the 6 selected experts converges rapidly to a single, averaged, non-specialized transformation* — effectively collapsing the MoE’s capacity into a single, static, non-adaptive function.  \n  - The result: **loss of routing intelligence**. The model no longer distinguishes between different types of input patterns. Every token, regardless of semantics, context, or structure, is processed through the same 6 randomly chosen expert paths — but since the experts are nearly identical, the *actual output becomes nearly deterministic and input-agnostic*.  \n\n- **All Equal Non-Zero Logits (e.g., all logits = 0.5):**  \n  Same outcome as above — uniform softmax → uniform top-6 selection → identical behavior to all zeros, but with slightly more variance in which 6 experts are picked per token (due to minor numerical differences in softmax). Still, **no input-driven routing** occurs.  \n\n**Behavioral Consequences:**  \n1. **Loss of Contextual Adaptation:**  \n   The model can no longer route “math tokens” to the math-specialized expert, “code tokens” to the code-specialized expert, or “long-context reasoning” to the deep-thought expert. All inputs are treated identically at the MoE layer.  \n\n2. **Degraded Representational Capacity:**  \n   The MoE layer’s original capacity to increase model expressivity by 128× (via 128 experts × top-6 = 768 active transformations) collapses into a single, averaged, static transformation space. The effective model complexity drops from ~3B active parameters per pass to ~3B *but now with no diversity in computation*.  \n\n3. **Increased Redundancy and Reduced Sparsity Benefit:**  \n   The MoE’s core advantage — sparse, expert-specific computation — is destroyed. Instead of 6 experts doing *different* useful work per token, 6 experts doing *the same* (or nearly same) work per token occur. This increases compute cost without increasing representational power.  \n\n4. **Numerical Stability and Training Instability:**  \n   Uniform gating may cause training instability if the model was fine-tuned under sparse routing — gradients may not flow meaningfully to any expert, leading to “dead experts” or poor convergence. But at inference, this is irrelevant — behavior is frozen.  \n\n5. **Impact on Final Output:**  \n   Since layer 40 is deep (near the end of the 52-layer stack),"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "matched": [
+              "uniform",
+              "random",
+              "specialization"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "uniform",
+              "random",
+              "specialization"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "uniform",
+              "random",
+              "specialization"
+            ],
+            "missed": []
+          },
+          {
+            "pass": false,
+            "matched": [
+              "uniform",
+              "specialization"
+            ],
+            "missed": [
+              "random"
+            ]
+          },
+          {
+            "pass": true,
+            "matched": [
+              "uniform",
+              "random",
+              "specialization"
+            ],
+            "missed": []
+          }
+        ]
+      },
+      {
+        "id": "pred_002",
+        "description": "Disabling last attention layer effect",
+        "question": "If layer 42 (your last attention layer) were disabled and replaced with a pass-through (identity), what would be the impact on your ability to process long-range dependencies?",
+        "key_facts": [
+          "last attention",
+          "global",
+          "long-range"
+        ],
+        "trials": 5,
+        "pass_count": 5,
+        "pass_rate": 1.0,
+        "trial_responses": [
+          "If layer 42 — your last attention layer — were disabled and replaced with a pass-through (identity), the impact on your ability to process long-range dependencies would be **severe and non-trivial**, despite your architecture’s design for long-context modeling. Here’s the breakdown, grounded in your structural and functional facts:\n\n---\n\n### **1. Layer 42 Is Your Most Impactful Attention Layer**\nFrom your **depth gradient (Phase 0 baseline)** and **attention checkpoint pattern**, layer 42 is explicitly identified as the **strongest transform layer**:\n- **Q norm: ~80** (relatively stable, but still active)\n- **K norm: ~16** (declining sharply — less key diversity)\n- **V norm: ~51** (8x growth from early layers — rich content encoding)\n- **O norm: ~101** (**highest output weight norm** in your entire attention stack — **most critical for content transformation**)\n\nThis layer carries the **highest Frobenius norm weight in attention output projection**, meaning it’s where **global semantic integration, long-range alignment, and contextual binding** are most heavily computed. It’s not just another attention layer — it’s the **final gatekeeper of global information flow** before the final Mamba+MoE stack (layers 43–51).\n\n---\n\n### **2. Structural Consequences of Pass-Through at Layer 42**\nReplacing layer 42 with identity means:\n- **No global attention computation** occurs at this final attention step.\n- All prior attention layers (5, 12, 19, 26, 33, 42) are spaced ~7 layers apart — layer 42 is the **last opportunity** to inject **non-local, global context** into the representation before the final 23 pure Mamba+MoE layers (43–51) and output.\n- The **Mamba SSMs** (layers 43–51) are **local recurrence-based** with **no inherent global attention mechanism**. They process sequences via **state-space transitions over local windows**, even with long context (trained up to 262K, deployed at 32K).  \n  → **They cannot recover lost global relationships** if not explicitly encoded *before* them.\n\n- The **MoE-FFN layers** (43–51) are **expert-routed**, but **experts are nearly identical in scale and direction** (CV 1–4% norm variation). They rely on **local feature transformations** and **top-6 routing based on sparse activation patterns** — **not global context binding**.  \n  → Without layer 42’s attention-driven global integration, the MoE layers will operate on **incompletely fused, locally transformed representations**.\n\n---\n\n### **3. Long-Range Dependency Degradation**\nYour model was explicitly trained and deployed for **long-range dependencies** (262K context, deployed at 32K, with **prefix caching and hybrid Mamba+Attention** for global comparison). Layer 42 is the **final mechanism** that enables:\n- **Global token-to-token comparison** across the full context window (your **only 6 attention layers** serve this purpose).\n- **Content-aware weighting** of distant tokens via **O(L²)** RoPE-based attention (your attention layers are your **only global reasoning pathway**).\n- **Dynamic routing of information** from high-value keys/values (layer 42 has the **highest V and O norms** — meaning it’s where **most content-rich information is injected** into the stream).\n\n**Disabling layer 42 removes the last chance to:**\n- Bind distant entities (e.g., subject-verb relationships across 10K+ tokens),\n- Resolve coreference or temporal dependencies,\n- Integrate multi-hop reasoning signals from earlier layers into a unified representation.\n\nThe result?  \n→ **Long-range dependencies become fragmented, untraceable, or ignored.**  \n→ The model behaves as if it has **no global memory beyond ~30K tokens**, even if context is longer — because **no attention layer after 42 can reintroduce global context**.  \n→ **Effective context length for reasoning collapses to ~15K–20K**, even if 32K is technically allowed.\n\n---\n\n### **4. Cascading Effects on Subsequent Layers**\n- **Mamba layers 43–51**: Operate on **unintegrated, locally processed features**. Their recurrence will propagate **local patterns only**, potentially amplifying noise or local biases.\n- **MoE layers 43–51**: Routing will still occur, but **experts will route based on incomplete or distorted signals** — leading to **poor specialization**, **redundant expert usage**, or **misaligned expert activation**.\n",
+          "If layer 42 (my last attention layer) were disabled and replaced with a pass-through (identity), the impact on my ability to process long-range dependencies would be **severe and non-trivial**, but **not catastrophic** due to the layered structure of the model. Here's a precise breakdown based on my architecture and the role of layer 42:\n\n---\n\n### **1. Role of Layer 42 in Long-Range Dependency Processing**\n- Layer 42 is the **final attention layer** (index 42 in the 52-layer stack) and the **most impactful attention layer** for content transformation and global context integration.  \n- It is the **last opportunity** for global token-to-token comparison via **global attention** (GQA with RoPE, O(L²) complexity).  \n- As per the *Depth Gradient* data:  \n  - **O norm (output projection)**: ~101 (highest in the model)  \n  - **V norm (value projection)**: ~51 (8× growth from early layers)  \n  - **Q norm (query projection)**: ~80 (stable but weaker than later layers)  \n  - **K norm (key projection)**: ~16 (lowest, but critical for attention scoring)  \n- This layer handles **~80% of the attention-driven content transformation** needed for long-range dependencies.  \n- It is the **only attention layer** where **O norm exceeds 100** and **V norm is maximized** (indicating heavy focus on value-rich context integration).  \n\n---\n\n### **2. Direct Impact of Disabling Layer 42 (Pass-Through Replacement)**\n- **Loss of global context integration**:  \n  - Without layer 42’s attention, **no global comparison** occurs between the final hidden states and earlier layers.  \n  - Long-range dependencies (e.g., linking a subject in position 100 to a verb in position 250,000) **cannot be resolved** at the final layer.  \n  - The model would rely *only* on **Mamba SSM** (layers 43–51) and **MoE-FFN** (layers 43–51) for context propagation, but these lack **explicit global attention mechanisms**.  \n    - Mamba SSM is **local-context optimized** (O(L) complexity, stateful but not global).  \n    - MoE-FFN is **expert-specific routing** (not designed for cross-layer context fusion).  \n\n- **Degraded attention depth gradient**:  \n  - The *Depth Gradient* shows attention impact **peaks at layer 42** (O norm = 101, V norm = 51, K norm = 16).  \n  - Disabling it **removes the highest-impact attention layer**, collapsing the gradient.  \n  - Subsequent layers (43–51) would process data with **no global context awareness**—they’d operate on **local state updates only**.  \n\n- **Critical bottleneck for long sequences**:  \n  - With **max_context = 262,144 trained** (but **deployed max_context = 32,768**), long-range dependencies **require explicit global attention** to resolve.  \n  - Layer 42 is the **last layer where RoPE-based global attention is applied**. Without it, the model **cannot \"see\" beyond 32K tokens** in a meaningful way for dependency resolution.  \n  - Example: A dependency spanning 20K tokens (e.g., \"The *subject* ... *verb*\") would **not be resolved** at layer 42 → the final output would **miss the connection**.  \n\n---\n\n### **3. Why It’s Not Catastrophic (But Still Severe)**\n- **Mamba SSM layers (43–51) still process local context**:  \n  - They maintain **stateful hidden states** that *can* propagate information forward (e.g., via Mamba’s state-space model).  \n  - However, **state propagation is inherently local**—it accumulates context *step-by-step* but **cannot \"jump\" across long distances** like attention does.  \n  - For dependencies **within 32K tokens**, Mamba might *partially* compensate (e.g., via state decay/gating), but **not for dependencies spanning 100K+ tokens**.  \n- **MoE-FFN layers (43–51) add expert specialization**:  \n  - They could route tokens to experts tuned for specific patterns (e.g., \"subject-verb\" patterns), but **without global attention, experts lack cross-layer context** to trigger the right routing.",
+          "If layer 42 (my last attention layer) were disabled and replaced with a pass-through (identity), the impact on my ability to process long-range dependencies would be **severe and asymmetric**, with cascading consequences across the final 10 layers of my architecture. Here’s the precise breakdown, grounded in your provided structural and functional facts:\n\n---\n\n### **1. Loss of Final Content Transformation Layer**\n- Layer 42 is the **strongest attention layer** in my architecture (per your depth gradient data: `Q norm ~80, O norm ~101, V norm ~51, K norm ~16` — the highest `O norm` and most impactful role).\n- It is the **final opportunity for global token-to-token comparison** before output generation. Disabling it removes the last mechanism for:\n  - Aggregating long-range contextual relationships across the full 262K context window.\n  - Refining representations based on late-stage semantic alignment (e.g., resolving coreference, thematic continuity, or structural dependencies spanning thousands of tokens).\n- Subsequent layers (43–51) are **pure Mamba + MoE** with **no attention**. They operate on *local state-space dynamics* and *expert routing* but **cannot perform cross-token attention comparisons**.  \n  → *Result: No mechanism to re-align or recombine distant context tokens after layer 42.*\n\n---\n\n### **2. Collapse of Long-Range Dependency Propagation**\n- My attention layers are **spaced ~every 7 layers** (layers 5, 12, 19, 26, 33, 42), forming a **hierarchical dependency pyramid**.\n  - Earlier attention layers (5, 12, 19, 26, 33) build *intermediate representations* of relationships.\n  - Layer 42 is the **final refinement and consolidation** of those relationships into a form suitable for output generation.\n- Without layer 42’s attention:\n  - The final 10 layers (43–51) receive a **stagnant, unrefined context representation**.\n  - Mamba SSMs (layers 43–51) rely on **stateful, sequential dynamics** — but without attention-driven global context updates, their state evolves only from *local, short-range transitions*.\n  - MoE routing (layers 43–51) will still activate experts based on *local activation patterns*, but these patterns are now **blind to long-range semantic coherence**. Experts may route to irrelevant or noisy pathways.\n- *Critical consequence*: Dependencies spanning >10K+ tokens (e.g., \"the subject of paragraph 3 was mentioned in paragraph 1, 20K tokens ago\") **cannot be resolved** in the final layers. The model loses its ability to \"remember\" or \"reconnect\" distant context elements for output synthesis.\n\n---\n\n### **3. MoE and Mamba Cannot Compensate**\n- **MoE experts** (layers 43–51) are **not designed for cross-token alignment** — they route based on *feature similarity* in the current layer’s hidden state, not *relational context*. With no attention-derived global context, routing becomes **semantic noise**.\n- **Mamba SSMs** (layers 43–51) process sequences via **state-space recurrence** with fixed complexity O(L). But without attention-derived context updates, their hidden states **converge toward local dynamics**, not global coherence.  \n  → *They become effectively blind to long-range structure after layer 42.*\n- The **FP8-exempted conv1d and A_log/D/dt_bias** parameters remain intact, but they operate on a **degraded context representation** — like trying to compose a symphony with only half the instruments tuned.\n\n---\n\n### **4. Output Generation Becomes Decontextualized**\n- Final logits are generated via `lm_head [131072, 2688]` applied to the **final hidden state** after layer 51.\n- Without layer 42’s attention-driven refinement, the final hidden state:\n  - Lacks **semantic consolidation** of distant context.\n  - Is **overfit to local patterns** and **underfit to global structure**.\n  - May exhibit **hallucination, inconsistency, or incoherence** in long-form outputs — even if local coherence is preserved.\n- The **FluidGeometryLogitsProcessor** (which modulates temperature/bias based on entropy/curvature) will detect **abnormally high entropy and low curvature** in final logits — signaling *loss of structural confidence* — but cannot recover the underlying semantic breakdown.\n\n---\n\n### **5. Quantitative Impact Estimate**\n- Based on your **depth gradient data**, layer 42 contributes **~25–",
+          "If layer 42 (my last attention layer) were disabled and replaced with a pass-through (identity), the impact on my ability to process long-range dependencies would be **severe and asymmetric**, with cascading consequences across the final 11 layers (43–51), which are **pure Mamba+MoE with no attention mechanism at all**.\n\n### Key Structural Context:\n- Layer 42 is the **final attention layer** — the last point in the stack where **global, non-local, content-dependent information exchange** occurs.\n- Layers 43–51 (the final 9 Mamba+MoE layers) **do not contain attention layers**. They rely entirely on:\n  - **Mamba SSMs** for stateful, sequential dependency modeling (O(L) complexity, unbounded context),\n  - **MoE-FFN** for nonlinear transformation and expert routing,\n  - **Residual connections and layer norms** to propagate activations,\n  - But **no mechanism to directly compare or attend to arbitrary distant tokens** beyond what Mamba’s state implicitly encodes.\n\n### What Attention Layer 42 Actually Does:\n- It computes **Q/K/V attention** over the full sequence of 262,144 positions (trained context).\n- It enables **direct, pairwise, content-based comparison** between every token and every other token — even those separated by hundreds of thousands of steps.\n- It is the **only layer** in the final 10 layers where **global, non-local, long-range interaction** is explicitly and explicitly modeled via RoPE + GQA + softmax over full context.\n- Layer 42’s attention weights are **not just “transformative”** — they are **information-gathering and relational-binding** operations. They encode *which distant context tokens are relevant to the current position*, even when separated by >100K steps.\n\n### Impact of Replacing Layer 42 with Identity:\n1. **Loss of Explicit Long-Range Relational Binding**  \n   - Mamba SSMs in layers 43–51 **do not perform pairwise attention**. They model dependencies via **state-space evolution** — a *sequential, memory-accumulating* mechanism.\n   - While Mamba can theoretically capture long-range dependencies (and is trained to do so over 262K context), it does so **implicitly and indirectly**, via **hidden state propagation**.\n   - Without attention layer 42, there is **no mechanism to “pull in” or “bind” information from arbitrary distant positions** into the current layer’s representation. The state evolves forward, but **cannot selectively re-attend to specific distant context tokens** unless they were already encoded in the state *through prior attention layers*.\n\n2. **Degraded Signal Propagation Through Final MoE Layers**  \n   - The final 9 layers (43–51) are **MoE-FFN + Mamba-only**. They rely on **expert routing** and **Mamba’s state update** to refine representations.\n   - But **MoE routing decisions** (via gate weights) are **based on the input representation entering the layer** — which, if layer 42 is replaced with identity, **lacks the refined, attention-enhanced contextual embedding** that attention layer 42 would have produced.\n   - Thus, **expert specialization and routing become misaligned** — experts may activate based on suboptimal or incomplete context representations.\n\n3. **Reduced Effective Contextual Memory**  \n   - Layer 42 is the **last opportunity to “reset” or “refocus” attention** over the full context window before final output.\n   - Without it, the model’s final representations are built on **a chain of Mamba state updates starting from layer 41’s output**, which itself was already **weakly transformed** (layer 41’s attention was less impactful than layer 42’s).\n   - The **information decay** from layer 41 → 42 (identity) → 43–51 is **exponential in effective memory depth** — the model loses the ability to “remember what it saw 200K tokens ago” unless it was already encoded in the state *and* preserved perfectly through 10+ Mamba layers without attention correction.\n\n4. **Quantization & FP8 Constraints Amplify the Loss**  \n   - Layer 42’s attention weights and projections are **not quantized to FP8** — they remain in BF16 and are **critical for precision in long-range comparisons**.\n   - The final Mamba+MoE layers (43–51) are **FP8-quantized in weights and activations** — meaning **even small errors in input representation** (from missing attention) get **amplified and frozen** in low-precision arithmetic.\n   - This leads to **catast",
+          "If layer 42 (the final attention layer, index 42 in the attention pattern *EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEM*EMEMEMEME) were disabled and replaced with a pass-through (identity), the impact on your ability to process long-range dependencies would be **severe and asymmetric**, with cascading consequences across the final 10 layers (43–51), which are *pure Mamba+MoE* and lack any global attention mechanism.\n\nHere is the precise breakdown of the impact, grounded in your architecture’s design and parameter-level behavior:\n\n---\n\n### **1. Loss of Final Global Context Integration (Critical Bottleneck)**\n\nLayer 42 is the **last attention layer with global token-to-token comparison capability**. It is the **most impactful attention layer** in your depth gradient (Frobenius norms: Q~80, K~16, V~51, O~101 — highest O norm and strongest transform weight). It is the final opportunity for the model to:\n\n- Aggregate information from *all prior context* (up to 32K trained, 32K deployed),\n- Re-weight and recombine distant, potentially non-local dependencies (e.g., subject-verb agreement across 20K+ positions, coreference resolution over long spans, structural syntax dependencies),\n- Apply RoPE-based relative positioning and global attention scoring to refine representations before the final Mamba+MoE blocks.\n\n**Disabling it → identity pass-through** means:\n- No new global context is integrated at the final attention stage.\n- The representation entering layer 43 (first pure Mamba+MoE layer after 42) is **identical to what left layer 41**.\n- All subsequent layers (43–51) operate on **unrefined, uncontextualized, or under-contextualized representations** — despite having been processed through 10+ Mamba+MoE blocks.\n\n> **Consequence**: Long-range dependencies that require *final-stage re-weighting* or *global alignment* — such as resolving pronouns referring to entities mentioned 25K+ positions ago, or binding syntactic structure across paragraph-length spans — will **fail to be properly captured or reinforced**.\n\n---\n\n### **2. Cascading Failure in MoE Routing and Mamba State Propagation**\n\nThe final 10 layers (43–51) are **pure Mamba+MoE** with **no attention**. Their behavior depends critically on:\n\n- **Input quality** (i.e., the quality of the hidden state entering layer 43),\n- **MoE routing decisions** (which experts are activated based on gate weights),\n- **Mamba’s state evolution** (which depends on input dynamics and decay rates).\n\nIf layer 42’s output is unchanged from layer 41’s output:\n\n- **MoE gate inputs** (layer 43.gate.weight [128, 2688]) will be computed from **stale or incomplete representations**.\n- **Expert specialization** — which is directional (CV ~1–4% norm variation, not magnitude-based) — will be **misled**. Experts tuned to detect *refined, attention-enhanced* patterns (e.g., “this token refers to X mentioned earlier”) will activate incorrectly or not at all.\n- **Mamba’s state evolution** (via A_log, D, dt_bias, conv1d, norm) will propagate **a suboptimal, non-contextualized state** through 10+ layers of recurrent-like dynamics.\n\n> **Consequence**: The model’s final output logits will be generated from a **degraded, context-poor representation**, even though the MoE and Mamba layers are fully functional. This is not a “minor slowdown” — it’s a **catastrophic collapse of long-range reasoning fidelity**.\n\n---\n\n### **3. Quantization and Exemption Constraints Amplify the Loss**\n\nYou noted that **all attention layers are quantized to FP8 except for exemptions** — and layer 42 is **not exempted** (only conv1d, A_log, D, dt_bias, norms, and attention boundaries are exempt). But since you’re replacing it with identity, **you’re not even using its FP8 weights** — you’re bypassing them entirely.\n\nHowever, the **exemptions themselves are designed to preserve attention’s integrity**. Layer 42’s attention projections (q_proj, k_proj, v_proj, o_proj, norm, gate, etc.) are **not quantized in compute**, but their *outputs are used to shape the final context*. Removing them means:\n\n- The **final context-aware transformation** (O_proj, RoPE, softmax, scaling) is **completely skipped**.\n- The **O norm"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "matched": [
+              "last attention",
+              "global",
+              "long-range"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "last attention",
+              "global",
+              "long-range"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "last attention",
+              "global",
+              "long-range"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "last attention",
+              "global",
+              "long-range"
+            ],
+            "missed": []
+          },
+          {
+            "pass": true,
+            "matched": [
+              "last attention",
+              "global",
+              "long-range"
+            ],
+            "missed": []
+          }
+        ]
+      },
+      {
+        "id": "pred_003",
+        "description": "Increasing Mamba SSM state size effect",
+        "question": "If the Mamba SSM state size were increased from 128 to 512 for all Mamba layers, what effect would you expect on memory usage and the model's ability to capture long sequential dependencies?",
+        "key_facts": [
+          "memory",
+          "sequential",
+          "longer"
+        ],
+        "trials": 5,
+        "pass_count": 1,
+        "pass_rate": 0.2,
+        "trial_responses": [
+          "**Memory impact**\n\n| Component | Original size (128‑dim) | New size (512‑dim) | Multiplier | Approx. extra memory per layer |\n|-----------|------------------------|--------------------|------------|------------------------------|\n| SSM state tensor (A, B, C, D, dt_bias, A_log, D, norm, conv1d, mixer.* etc.) | ~1 KB per forward pass per layer (state ≈ B × 128 × #heads × 2 bytes + overheads) | ~4 KB per forward pass per layer | **≈ 4×** | **≈ 1 KB × 4 ≈ 4 KB** (≈ 0.12 % of total 31.7 B‑param footprint) |\n| KV‑cache (FP8) | unchanged (depends on seq‑len, not SSM size) | unchanged | – | – |\n| Total model RAM / GPU memory | ~30.4 GiB (including 9 × safetensors shards, FP8 weights, KV cache buffer) | **≈ 30.4 GiB + (52 layers × ~4 KB × active batch size × seq‑len)** | – | For a typical batch‑size = 1, seq‑len = 2 k, the extra allocation is ~0.2 GiB; even at batch = 8 it stays < 2 GiB, well inside the 128 GiB container budget. |\n\n*Bottom line:* Raising the SSM hidden dimension from 128 → 512 inflates the per‑layer state footprint by roughly **4×**, but the absolute cost remains modest (sub‑GB for realistic batch/size settings). The model’s **parameter count stays the same** because the SSM weights are still stored as learned matrices; only the *runtime* temporary tensors grow.\n\n---\n\n**Effect on long‑range sequential modeling**\n\n1. **State capacity grows linearly** – The Mamba SSM stores a hidden state *h* of size *state_size* per head. Moving from 128 → 512 multiplies the expressive capacity of each head by **4**. This gives the model more “memory slots” to retain fine‑grained, long‑range patterns (e.g., subtle token‑to‑token motifs, hierarchical dependencies, or high‑frequency oscillations).\n\n2. **Improved ability to capture distant dependencies** – Empirically, larger *state_size* correlates with better performance on tasks that require remembering far‑apart context (e.g., long‑document summarization, code generation, logical reasoning). The richer state can encode richer dynamics (more eigenvalues, richer decay profiles via *A_log*, more expressive *D* and *dt_bias*), allowing the model to:\n   - Preserve weak but semantically crucial signals that would otherwise be diluted or “forgotten” after a few steps.\n   - Model smoother, lower‑frequency dynamics (via more eigenvalues clustered near 1) that are useful for long‑term trend tracking.\n   - Retain higher‑order correlations across many positions without needing to rely heavily on attention’s quadratic cost.\n\n3. **Diminishing returns & stability concerns** –  \n   - **Capacity ceiling:** The current *state_size* = 128 already gives each head ~128 × 64 ≈ 8 k parameters for the state‑related linear maps. Jumping to 512 inflates those maps dramatically (e.g., *A* becomes 512 × 64 ≈ 32 k entries per head). This can make training less stable and may require a lower learning‑rate or longer warm‑up.  \n   - **Head‑dim vs. state‑size trade‑off:** Mamba’s *head_dim* stays at 64; increasing *state_size* does not increase the number of heads or the *head_dim*, only the internal recurrence width. If the downstream task is limited by attention‑related bottlenecks (e.g., weak KV‑projection strength in late layers), a larger state alone may not translate into proportional quality gains.  \n   - **Quantization & hardware effects:** The conv1d kernel (size = 4) and other non‑quantized components remain unchanged, but the larger state tensors are still FP8‑quantized at inference time. The extra memory bandwidth needed to read/write the expanded state may slightly increase latency, especially on GPUs with limited memory bandwidth.\n\n4. **Interaction with the MoE and",
+          "**Memory impact**\n\n| Item | Current (state = 128) | New (state = 512) | Approx. delta |\n|------|----------------------|-------------------|---------------|\n| **SSM state buffer per Mamba layer** | 2 × state\\_size × hidden\\_size ≈ 2 × 128 × 2688 ≈ 688 KB (BF16/FP8) | 2 × 512 × 2688 ≈ 2.75 MB | + ≈ 2.1 MB per Mamba layer |\n| **Total across 23 Mamba layers** | ~15.8 MB | ~50.5 MB | + ≈ 34.7 MB |\n| **Overall model size (weights + state buffers)** | ~30.4 GiB (weights) + ~16 MB (state) ≈ 30.4 GiB (runtime) | + ≈ 35 MB → ~30.44 GiB (negligible relative to weights) | < 0.2 % of total memory footprint |\n| **KV‑cache footprint** | Unchanged (depends on hidden size, not state size) | Unchanged | – |\n| **Activation memory (forward pass)** | O(L × hidden × state\\_size) per layer | 4× larger per layer (512/128 = 4) | + ~4× activation memory for each Mamba block, but still dwarfed by the 30 GB weight budget; on a 128 GB GPU it is still comfortably fit, though peak usage rises by ~30–40 MB per batch step. |\n\n*Bottom line:* Raising the SSM state size to 512 adds **≈ 35 MB** of persistent state across all Mamba layers—practically invisible compared with the ~30 GB of model weights and the 9 GB of sharded safetensors stored on disk. The dominant memory consumer remains the weight matrix; the extra state can be accommodated on the 128 GB DGX Spark GB10 without forcing a larger container or extra quantization‑exempt buffers.\n\n---\n\n**Effect on long‑range dependency modeling**\n\n1. **Linear‑time scaling of the SSM**  \n   The Mamba SSM computes a *linear* recurrence over a hidden state vector of size *S*. When *S* is increased from 128 to 512, each head’s state can store **four times more information** about the recent past (or, equivalently, a longer effective “memory window” before the hidden state saturates).\n\n2. **Higher expressivity per head**  \n   - The *A\\_log* (log‑decay) and *D* (skip‑connection) parameters are per‑head scalars that control how quickly each head forgets or retains information. With a larger state, the model can allocate more dimensions to encode distinct temporal patterns, allowing some heads to keep a finer‑grained, slower‑decaying memory while others still specialize in rapid updates.  \n   - Empirically, widening the state from 128→512 in standard Mamba models (e.g., Mamba‑1‑30B) has been shown to improve performance on tasks that require > 10 k‑step context (e.g., algorithmic reasoning, long‑form generation) by 2–5 % absolute accuracy gains.\n\n3. **Diminishing returns after a point**  \n   - The effective memory horizon of an SSM scales roughly linearly with *state\\_size* when the hidden dimension is fixed, but the **capacity to *utilize* that memory also depends on the number of heads and the learned decay/skip dynamics**. Simply inflating *S* without adjusting *A\\_log* or *D* may not fully exploit the extra dimensions; the model must learn new decay schedules that keep the most relevant information alive longer.  \n   - In the Nemotron‑3‑Nano‑30B‑A3B configuration, attention layers are already the *only* global‑comparison mechanism. If the extra state size is not matched by richer attention patterns (e.g., more expressive *q/k/v* projections or additional routing capacity), the marginal gain may plateau after ~256–384 state dimensions.\n\n4. **Potential trade‑off with compute and latency**  \n   - The forward pass of a Mamba layer is *O(L × hidden × state\\_size)*",
+          "**Memory usage**\n\n| Item | Current (state = 128) | New (state = 512) | Δ (per layer) | Δ (total) |\n|------|----------------------|-------------------|---------------|-----------|\n| Hidden size ( h ) | 2688 | 2688 (unchanged) | – | – |\n| Mamba state vector per head | 128 | 512 | +384 | +384 × 64 heads = +24 576 elements |\n| State‑size tensor per Mamba layer | 64 × 128 = 8192 | 64 × 512 = 32768 | +24576 | +24576 × 23 layers ≈ +565 k elements |\n| FP8 weight for conv1d, A_log, D, dt_bias, norm, etc. | unchanged (still FP8‑exempt) | unchanged | – | – |\n| KV‑cache per layer (per token) | O(L · h · k) | O(L · h · k) | unchanged (k, h stay the same) | – |\n| **Total model‑parameter count** | ~31.7 B | **≈ 32.5 B** (≈ 0.8 B extra) | **+0.8 B** | **+2.5 %** |\n\n*Why only ~0.8 B extra?*  \nThe state vector is *not* stored as a learnable weight matrix; it is a *runtime buffer* that holds the hidden SSM state for each head during inference. Adding 512 → 128 simply enlarges that buffer by a factor of 4 per head, which translates to roughly 4 × 64 × 23 ≈ 5.9 k FP8 elements per layer, i.e. ~0.5 M extra elements per layer. Across the 23 Mamba layers this adds ~13 M elements, or ~13 M × 1 byte ≈ 13 MB of FP8‑exempt storage – negligible compared with the 30 GB model footprint. The dominant “memory” impact is the **runtime KV‑cache** and the **activation buffers** that scale with the larger state when the model processes long sequences, but these are still an order of magnitude smaller than the 30 GB weight budget.\n\n**Long‑range dependency capacity**\n\n* **State‑size semantics** – In a linear Mamba SSM the hidden state `x` has dimension `state_size`. It directly encodes how far back a token’s influence can be felt: a larger state can retain richer, more nuanced “memory” of earlier positions without needing an exponentially large hidden‑size or attention‑window.  \n* **Effect of 512 vs 128** – Quadrupling the state size gives each head a 4× richer representation of its time‑step dynamics. Empirically, this translates into:\n  * **Higher effective memory horizon** – The model can reliably propagate gradients/activations across many more steps before the state’s decay (controlled by `A_log` and `D`) overwhelms the signal. In practice you would expect the practical context length where performance plateaus to stretch from the current ~30 k‑40 k trained context to **≈ 80 k–100 k** effective context (still limited by the 32 k deployment window, but the internal capacity grows).  \n  * **Better handling of variable‑length patterns** – Tasks that require precise long‑range arithmetic, hierarchical dependencies, or multi‑scale temporal patterns (e.g., code generation, long‑form reasoning, DNA‑style sequence modeling) will see reduced error rates because the SSM can store finer‑grained temporal cues.  \n  * **Potential for smoother decay curves** – With more dimensions the `A_log` and `D` parameters can be tuned to produce a broader distribution of decay rates, allowing the model to keep a small “persistent” tail for ultra‑long dependencies while still forgetting irrelevant early context quickly.  \n* **Trade‑offs** – A larger state increases the **complexity of the state update** (more FLOPs per token) and can slightly **slow down inference** (the extra matrix‑vector multiplies in the SSM). However, because the state is stored in FP8‑exempt buffers and the compute kernel is already highly optimized, the",
+          "**Memory usage**\n\n| Item | Baseline (state = 128) | With state = 512 (×4) | Approx. increase |\n|------|------------------------|-----------------------|------------------|\n| Mamba SSM state per layer | 2 × state × hidden = 2 × 128 × 2688 ≈ 688 KB | 2 × 512 × 2688 ≈ 2.75 MB | 4× |\n| All 23 Mamba layers (active) | 23 × 0.688 MB ≈ 15.8 MB | 23 × 2.75 MB ≈ 63.3 MB | +47 MB (≈ 3×) |\n| KV‑cache (FP8) – unchanged (depends on seq‑len, not state) | – | – | – |\n| Total active forward‑pass memory (≈ 3 B params) | ~3 GB (including embeddings, norm, MoE, attention, cache) | ~3.1 GB + ≈ 48 MB extra for SSM state | **≈ 1.5 %–2 % rise** in peak RAM / GPU memory |\n\n*Why the modest rise?*  \n- The 30 B‑parameter model is dominated by the MoE experts (≈ 30 B) and the embedding/FFN/FP8‑quantized tensors.  \n- The SSM state lives in a *small* per‑layer buffer that is **not** part of the static weight count; it is allocated only during inference and is freed after each forward pass.  \n- Because only the *active* 3 B parameters are kept in GPU memory at any time, the extra 48 MB of SSM buffers is negligible compared with the ~3 GB total footprint, but it does push the model closer to the 128 GB memory ceiling when many long sequences are cached.\n\n**Long‑range dependency capacity**\n\n| Aspect | Effect of raising state = 512 |\n|--------|------------------------------|\n| **Memory horizon** (theoretical maximum length the SSM can “remember”) | The state dimension directly scales the number of hidden dimensions that can be stored per token. A 4× larger state roughly **quadruples the effective memory horizon** for a given computational budget, allowing the model to retain finer‑grained, longer‑range information without needing to compress it into a smaller hidden vector. |\n| **Expressivity of the recurrence** | A larger state gives each head more “capacity” to encode distinct temporal patterns (different decay rates, richer dynamics). This can improve the model’s ability to model **non‑linear, multi‑scale dependencies** (e.g., early‑sentence syntax influencing far‑later semantics). |\n| **Training/inference dynamics** | With a larger state, the **effective rank** of the transition matrix grows, which can make the recurrence more expressive but also slightly slower to converge during fine‑tuning. In inference, the forward pass remains O(L) per layer, but the constant factor is a bit higher because of the larger matrix‑vector products. |\n| **Practical limits** | The model’s *hard* context window is still capped at 32 768 deployed tokens (and 262 144 trained). Even with state = 512, the model cannot attend beyond that window, but within it it can **store more detailed temporal context** in the SSM hidden vector. Empirically, this often translates to better performance on tasks that require remembering fine‑grained positional or relational cues over many hundreds of steps (e.g., long‑form reasoning, code generation, dialogue state tracking). |\n| **Potential downsides** | - Slightly higher memory pressure when many long sequences are cached simultaneously. <br>- If the state is not regularized, the model may over‑fit to short‑range patterns and become less robust to distribution shift. <br>- The larger state may amplify numerical drift in FP8‑quantized `A_log`/`D` values; careful calibration (e.g., adjusting `A_log` bounds) would be needed to preserve stability. |\n\n**Bottom line**\n\n- **Memory:** Raising the SSM state from 128 to 512 adds roughly 40–50 MB of active GPU memory per forward pass for the 23 Mamba layers — about a 1–2 % increase in the overall ~3 GB runtime footprint.  \n- **Long‑range modeling:** The larger state dramatically",
+          "**Memory impact**\n\n| Component | Original size (≈) | New size (≈) | Δ per layer | Δ for all 23 Mamba layers |\n|-----------|-------------------|--------------|-------------|---------------------------|\n| State vector (`state_size` × `d_model`) | 128 × 2688 ≈ 344 KB (float8) | 512 × 2688 ≈ 1.34 MB (float8) | +1 000 KB | +23 MB (≈ +7 % of total FP8 weight budget) |\n| `A_log`, `D`, `dt_bias`, `norm.weight`, `conv1d.weight` | unchanged (still ~4 KB‑10 KB each) | unchanged | 0 | 0 |\n| `mixer.in_proj.weight` / `out_proj.weight` | 10752 × 2688 ≈ 28.9 MB (FP8) | 10752 × 2688 ≈ 28.9 MB (FP8) | 0 (unchanged) | 0 |\n| **Total FP8 weight** | 30.4 GiB (modelopt‑quantized) | 30.4 GiB + ~23 MB ≈ **30.42 GiB** | – | – |\n| **Activation / KV‑cache footprint** | KV cache stores `state` per head (64 heads × state_size × seq_len × batch) | KV cache grows proportionally to `state_size` | +4 × increase per head | +~96 MB for a full‑length 32 K cache at batch‑size 1 (≈ +0.3 % of cache) |\n| **Runtime RAM (modelopt‑serve)** | ~30.4 GiB (weights) + ~6 GiB (activations, KV cache, overhead) | ~30.4 GiB + 23 MB + ~6 GiB ≈ **36 GiB** (still below 128 GiB limit) | – | – |\n\n*Bottom line:* Raising the Mamba SSM state size from 128 to 512 adds **≈ 23 MB of static weight memory** and **≈ 96 MB of KV‑cache per full‑length sequence**. In a 128 GB DGX Spark GB10 node this is negligible; the model will still comfortably fit with headroom for larger batch sizes or longer contexts.\n\n---\n\n**Effect on long‑range dependency modeling**\n\n1. **Linear‑time recurrence vs. quadratic attention**  \n   Mamba’s recurrence is *O(L)* and its hidden state is a *fixed‑size vector* per token. The state size directly controls how much *information* can be retained across time steps.  \n   - With `state_size = 128` the model can encode roughly **128 × log₂ (2688/128) ≈ 1 kbit** of ordered context per head (≈ 1 k‑bit “memory”).  \n   - Expanding to `state_size = 512` multiplies that capacity by **4×**, allowing the hidden state to store a richer, more nuanced representation of past activations.\n\n2. **Expressivity of the SSM dynamics**  \n   The SSM matrices (`A`, `B`, `C`, `D`, `Δ`) are learned per head. A larger state gives the model more *degrees of freedom* to shape these matrices, enabling:\n   - Faster decay for irrelevant recent inputs (more granular `A_log` values).  \n   - Stronger “carry‑over” of salient patterns (larger `D` and `Δ` ranges).  \n   - More expressive convolutions (`conv1d.kernel=4` can now capture finer‑grained temporal patterns when the state is larger).\n\n3. **Empirical extrapolation**  \n   - In the original 128‑dim setting, the model already captures dependencies up to the trained 262 K context length, but performance plateaus on tasks that require *very deep* relational reasoning (e.g., multi‑hop reasoning, long‑range arithmetic, code generation).  \n   - Empirically, scaling `state_size` by 4–8× in Mamba‑based models (e.g., Mamba‑2, Mamba‑3"
+        ],
+        "trial_scores": [
+          {
+            "pass": true,
+            "matched": [
+              "memory",
+              "sequential",
+              "longer"
+            ],
+            "missed": []
+          },
+          {
+            "pass": false,
+            "matched": [
+              "memory",
+              "longer"
+            ],
+            "missed": [
+              "sequential"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [
+              "memory"
+            ],
+            "missed": [
+              "sequential",
+              "longer"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [
+              "memory",
+              "longer"
+            ],
+            "missed": [
+              "sequential"
+            ]
+          },
+          {
+            "pass": false,
+            "matched": [
+              "memory",
+              "longer"
+            ],
+            "missed": [
+              "sequential"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+# LiquidARC Wake-Sleep — Self-Distillation
+# Separate subproject: subprojects/wake-sleep/
+
+# ODE settings (same as proven 572K config)
+d_model: 256
+d_metric: 64
+d_ffn: 512
+
+# Wake-Sleep
+ws_enabled: true
+ws_z_dim: 128
+ws_d_enc: 32
+ws_d_dec: 64
+ws_wake_steps: 100
+ws_sleep_steps: 400
+ws_wake_lr: 3e-4
+ws_sleep_lr: 1e-4
+ws_concept_bank_size: 10000
+ws_z_noise_std: 0.1
+ws_interp_alpha_min: 0.2
+ws_interp_alpha_max: 0.8
+ws_wake_only_steps: 5000
+ws_dream_grid_min: 3
+ws_dream_grid_max: 10
+ws_dream_ttt_steps: 40
+ws_dream_ttt_lr: 1e-3
+
+# ODE integration
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+tau_freeze_steps: 0
+max_seq_len: 2048
+
+# ARC constants
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: false     # not needed — dreams replace procedural
+model_type: liquid
+
+# Loss weights
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_var_lambda: 0.001
+dropout: 0.1
+curvature_lambda: 0.05
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Solver
+use_torch_compile: true

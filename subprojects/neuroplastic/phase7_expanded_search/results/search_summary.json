@@ -1,0 +1,27 @@
+{
+  "baseline_accuracy": 1.0,
+  "final_accuracy": 1.0,
+  "peak_accuracy": 1.0,
+  "peak_step": 0,
+  "total_steps": 200,
+  "accepted": 0,
+  "rejected": 160,
+  "final_per_category": {
+    "sequential_reasoning": {
+      "passed": 6,
+      "total": 6,
+      "accuracy": 1.0
+    },
+    "code_generation": {
+      "passed": 3,
+      "total": 3,
+      "accuracy": 1.0
+    },
+    "state_tracking": {
+      "passed": 15,
+      "total": 15,
+      "accuracy": 1.0
+    }
+  },
+  "accepted_modifications": []
+}

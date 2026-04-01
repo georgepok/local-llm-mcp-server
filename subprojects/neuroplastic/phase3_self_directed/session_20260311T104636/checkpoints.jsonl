@@ -1,0 +1,2 @@
+{"timestamp": "2026-03-11T10:48:25.492317", "action": {"type": "CHECKPOINT", "tensor": "model.layers.50.mixer.A", "name": "pre_scale_0_85"}, "result": {"status": "saved", "tensor": "model.layers.50.mixer.A", "checkpoint": "pre_scale_0_85", "shape": [64], "n_checkpoints": 1}}
+{"timestamp": "2026-03-11T10:48:25.510683", "action": {"type": "CHECKPOINT", "tensor": "...", "name": "..."}, "result": {"error": "Tensor '...' not found"}}

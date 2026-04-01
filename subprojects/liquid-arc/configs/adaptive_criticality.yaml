@@ -1,0 +1,77 @@
+# LiquidARC Adaptive Criticality — Feedback-Controlled Phase Transition
+#
+# Uses a model-based PID-like controller to dynamically adjust real_arc_mix_ratio
+# during training, keeping the metric CV in the critical zone (4.5-6.0) where
+# the learning rate is 5-21x faster than any other regime.
+#
+# The controller:
+#   - Starts at 30% ARC (same as the sharp-transition runs)
+#   - Monitors smoothed CV and CV rate every 10 steps
+#   - Increases diversity when CV rises toward crystallization (>6.0)
+#   - Decreases diversity when CV drops toward sub-critical (<4.5)
+#   - Smooth ratio changes (max 2% per update) to prevent oscillation
+#
+# Expected behavior:
+#   Steps 0-5000:    Controller near 0.30. CV builds naturally. Normal transition.
+#   Steps 5000-5500: Transition fires. Controller detects critical zone.
+#   Steps 5500+:     Controller actively maintains CV in [4.5, 6.0].
+#                    Learning rate should stay at 5-16 pp/1K instead of
+#                    collapsing to 0.75 pp/1K as in constant-ratio runs.
+#
+# Compare against:
+#   30% constant:     42.4% peak, crystallizes by step 7000
+#   30%→50% sequential: 47.8% peak, still climbing at step 14500
+#   This run (adaptive): target >50%, sustained high learning rate
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+
+# Zero-scaffold
+tau_freeze_steps: 0
+geo_loss_enabled: false
+
+# Standard CV bounds (controller operates WITHIN these)
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Initial ARC mix ratio (controller will override dynamically)
+# 0.30 ensures the first transition fires normally
+real_arc_mix_ratio: 0.30
+
+# TTT for periodic eval diagnostics
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

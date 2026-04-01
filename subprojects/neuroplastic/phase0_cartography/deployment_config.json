@@ -1,0 +1,281 @@
+{
+  "collection_mode": "host",
+  "hostname": "spark-129a",
+  "platform": "Linux-6.17.0-1008-nvidia-aarch64-with-glibc2.39",
+  "api": {
+    "base_url": "http://spark-129a.local:30000",
+    "health_ok": false,
+    "models": [
+      {
+        "id": "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+        "object": "model",
+        "created": 1773172865,
+        "owned_by": "vllm",
+        "root": "/workspace/model",
+        "parent": null,
+        "max_model_len": 32768,
+        "permission": [
+          {
+            "id": "modelperm-a0fcd760b1bd2d57",
+            "object": "model_permission",
+            "created": 1773172865,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  },
+  "container_inspect": {
+    "id": "a24fd376661c",
+    "name": "vllm-nemotron-serve",
+    "status": "running",
+    "started_at": "2026-03-10T19:15:51.020354924Z",
+    "image": "nvcr.io/nvidia/vllm:26.01-py3",
+    "image_id": "sha256:73e1b",
+    "entrypoint": [
+      "/opt/nvidia/nvidia_entrypoint.sh"
+    ],
+    "cmd": [
+      "python3",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "30000",
+      "--model",
+      "/workspace/model",
+      "--served-model-name",
+      "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+      "--trust-remote-code",
+      "--max-model-len",
+      "32768",
+      "--max-num-seqs",
+      "8",
+      "--gpu-memory-utilization",
+      "0.4",
+      "--enable-prefix-caching",
+      "--reasoning-parser-plugin",
+      "/workspace/nano_v3_reasoning_parser.py",
+      "--reasoning-parser",
+      "nano_v3",
+      "--logits-processors",
+      "fluid_geometry:FluidGeometryLogitsProcessor"
+    ],
+    "relevant_env": {
+      "CUDA_VERSION": "13.1.1.006",
+      "CUDA_DRIVER_VERSION": "590.48.01",
+      "MODEL_OPT_VERSION": "0.40.0",
+      "CUDA_ARCH_LIST": "8.0 8.6 9.0 10.0 11.0 12.0",
+      "CUDA_COMPONENT_LIST": "cccl crt nvrtc driver-dev culibos-dev cudart cudart-dev nvcc tileiras",
+      "VLLM_VERSION": "0.13.0+faa43dbf",
+      "CUDA_HOME": "/usr/local/cuda",
+      "TRITON_PTXAS_PATH": "/usr/local/cuda/bin/ptxas",
+      "TRITON_CUOBJDUMP_PATH": "/usr/local/cuda/bin/cuobjdump",
+      "TRITON_NVDISASM_PATH": "/usr/local/cuda/bin/nvdisasm",
+      "TRITON_CUDACRT_PATH": "/usr/local/cuda/include",
+      "TRITON_CUDART_PATH": "/usr/local/cuda/include",
+      "TRITON_CUPTI_PATH": "/usr/local/cuda/include"
+    },
+    "mounts": [
+      {
+        "source": "/home/pokazge/models/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+        "destination": "/workspace/model",
+        "mode": ""
+      },
+      {
+        "source": "/home/pokazge/models/nano_v3_reasoning_parser.py",
+        "destination": "/workspace/nano_v3_reasoning_parser.py",
+        "mode": ""
+      },
+      {
+        "source": "/home/pokazge/models/fluid_geometry.py",
+        "destination": "/workspace/fluid_geometry.py",
+        "mode": ""
+      }
+    ],
+    "port_bindings": {
+      "30000/tcp": [
+        {
+          "HostIp": "",
+          "HostPort": "30000"
+        }
+      ]
+    },
+    "gpu_device_requests": [
+      {
+        "Driver": "",
+        "Count": -1,
+        "DeviceIDs": null,
+        "Capabilities": [
+          [
+            "gpu"
+          ]
+        ],
+        "Options": {}
+      }
+    ],
+    "memory_limit_bytes": 0,
+    "shm_size_bytes": 67108864,
+    "restart_policy": {
+      "Name": "no",
+      "MaximumRetryCount": 0
+    }
+  },
+  "container_stats": {
+    "BlockIO": "4.71GB / 1.5GB",
+    "CPUPerc": "3.41%",
+    "Container": "vllm-nemotron-serve",
+    "ID": "a24fd376661c",
+    "MemPerc": "5.50%",
+    "MemUsage": "6.688GiB / 121.7GiB",
+    "Name": "vllm-nemotron-serve",
+    "NetIO": "31.2kB / 13.2kB",
+    "PIDs": "135"
+  },
+  "log_tail": [
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:16:02 [config.py:291] Warning: Prefix caching is currently enabled. Its support for Mamba layers is experimental. Please report any issues you may observe.",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:16:02 [config.py:312] Disabling cascade attention since it is not supported for hybrid models.",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:16:02 [config.py:439] Setting attention block size to 2176 tokens to ensure that attention page size is >= mamba page size.",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:16:02 [config.py:463] Padding mamba page size by 4.41% to ensure that mamba page size and attention page size are exactly equal.",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m WARNING 03-10 19:16:02 [modelopt.py:313] Detected ModelOpt fp8 checkpoint. Please note that the format is experimental and could change.",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:06 [core.py:93] Initializing a V1 LLM engine (v0.13.0+faa43dbf.nv26.01) with config: model='/workspace/model', speculative_config=None, tokenizer='/workspace/model', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=modelopt, enforce_eager=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='nano_v3', reasoning_parser_plugin='/workspace/nano_v3_reasoning_parser.py', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False), seed=0, served_model_name=NVIDIA-Nemotron-3-Nano-30B-A3B-FP8, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'eliminate_noops': True, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 16, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False}, 'local_cache_dir': None}",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:06 [parallel_state.py:1203] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.17.0.2:36883 backend=nccl",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:06 [parallel_state.py:1411] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m [GeometricEngine] v3 initialized. think_start=12, think_end=13, warmup=15 tokens, tau=15.0",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:07 [gpu_model_runner.py:3562] Starting to load model /workspace/model...",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:07 [layer.py:372] Enabled separate cuda stream for MoE shared_experts",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:20 [cuda.py:351] Using FLASH_ATTN attention backend out of potential backends: ('FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION')",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:20:11 [default_loader.py:308] Loading weights took 229.34 seconds",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:20:11 [gpu_model_runner.py:3659] Model loading took 30.5210 GiB memory and 243.624205 seconds",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:20:15 [backends.py:643] Using cache directory: /root/.cache/vllm/torch_compile_cache/14be57b90a/rank_0_0/backbone for vLLM's torch.compile",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:20:15 [backends.py:703] Dynamo bytecode transform time: 3.51 s",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:20:16 [backends.py:261] Cache the graph of compile range (1, 2048) for later use",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m WARNING 03-10 19:21:27 [fused_moe.py:888] Using default MoE config. Performance might be sub-optimal! Config file not found at /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=128,N=1856,device_name=NVIDIA_GB10,dtype=fp8_w8a8.json",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:54 [backends.py:278] Compiling a graph for compile range (1, 2048) takes 98.84 s",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:54 [monitor.py:34] torch.compile takes 102.35 s in total",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:56 [gpu_worker.py:375] Available KV cache memory: 14.49 GiB",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m WARNING 03-10 19:21:56 [kv_cache_utils.py:1033] Add 1 padding layers, may waste at most 4.35% KV cache memory",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:56 [kv_cache_utils.py:1291] GPU KV cache size: 504,832 tokens",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:56 [kv_cache_utils.py:1296] Maximum concurrency for 32,768 tokens per request: 14.54x",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:22:04 [gpu_model_runner.py:4587] Graph capturing finished in 2 secs, took 0.20 GiB",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:22:04 [core.py:259] init engine (profile, create kv cache, warmup model) took 113.39 seconds",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [api_server.py:1102] Supported tasks: ['generate']",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [api_server.py:1428] Starting vLLM API server 0 on http://0.0.0.0:30000",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:38] Available routes are:",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /openapi.json, Methods: GET, HEAD",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /docs, Methods: GET, HEAD",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: GET, HEAD",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /redoc, Methods: GET, HEAD",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /tokenize, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /detokenize, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /inference/v1/generate, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /pause, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /resume, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /is_paused, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /metrics, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /health, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /load, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/models, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /version, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/responses, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/messages, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/chat/completions, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/completions, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/audio/transcriptions, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/audio/translations, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /ping, Methods: GET",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /ping, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /invocations, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /classify, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/embeddings, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /score, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/score, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /rerank, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v1/rerank, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /v2/rerank, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO 03-10 19:22:05 [launcher.py:46] Route: /pooling, Methods: POST",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     172.17.0.1:41094 - \"GET /v1/models HTTP/1.1\" 200 OK",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     172.17.0.1:53922 - \"GET /health HTTP/1.1\" 200 OK",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     172.17.0.1:53936 - \"GET /v1/models HTTP/1.1\" 200 OK",
+    "/usr/local/lib/python3.12/dist-packages/torchvision/io/image.py:14: UserWarning: Failed to load image Python extension: 'Could not load this library: /usr/local/lib/python3.12/dist-packages/torchvision/image.so'If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?",
+    "  warn(",
+    "/usr/local/lib/python3.12/dist-packages/torch/library.py:357: UserWarning: Warning only once for all operators,  other operators may also be overridden.",
+    "  Overriding a previously registered kernel for the same operator and the same dispatch key",
+    "  operator: flash_attn::_flash_attn_backward(Tensor dout, Tensor q, Tensor k, Tensor v, Tensor out, Tensor softmax_lse, Tensor(a6!)? dq, Tensor(a7!)? dk, Tensor(a8!)? dv, float dropout_p, float softmax_scale, bool causal, SymInt window_size_left, SymInt window_size_right, float softcap, Tensor? alibi_slopes, bool deterministic, Tensor? rng_state=None) -> Tensor",
+    "    registered at /usr/local/lib/python3.12/dist-packages/torch/_library/custom_ops.py:926",
+    "  dispatch key: ADInplaceOrView",
+    "  previous kernel: no debug info",
+    "       new kernel: registered at /usr/local/lib/python3.12/dist-packages/torch/_library/custom_ops.py:926 (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/core/dispatch/OperatorEntry.cpp:208.)",
+    "  self.m.impl(",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:   0% Completed | 0/9 [00:00<?, ?it/s]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  11% Completed | 1/9 [00:27<03:37, 27.24s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  22% Completed | 2/9 [00:55<03:16, 28.12s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  33% Completed | 3/9 [01:01<01:46, 17.73s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  44% Completed | 4/9 [01:28<01:48, 21.62s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  56% Completed | 5/9 [01:56<01:34, 23.73s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  67% Completed | 6/9 [02:25<01:16, 25.56s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  78% Completed | 7/9 [02:54<00:53, 26.71s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards:  89% Completed | 8/9 [03:24<00:27, 27.79s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards: 100% Completed | 9/9 [03:49<00:00, 26.70s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Loading safetensors checkpoint shards: 100% Completed | 9/9 [03:49<00:00, 25.44s/it]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:321: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m   warnings.warn(",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m [rank0]:W0310 19:21:25.223000 165 torch/_inductor/utils.py:1703] Not enough SMs to use max_autotune_gemm mode",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m 2026-03-10 19:21:56,994 - INFO - autotuner.py:256 - flashinfer.jit: [Autotuner]: Autotuning process starts ...",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m 2026-03-10 19:22:02,376 - INFO - autotuner.py:262 - flashinfer.jit: [Autotuner]: Autotuning process ends",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/5 [00:00<?, ?it/s]",
+    "Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|\u2588\u2588        | 1/5 [00:00<00:01,  2.83it/s]",
+    "Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  60%|\u2588\u2588\u2588\u2588\u2588\u2588    | 3/5 [00:00<00:00,  4.39it/s]",
+    "Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 5/5 [00:01<00:00,  5.07it/s]",
+    "Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 5/5 [00:01<00:00,  4.73it/s]",
+    "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m ",
+    "Capturing CUDA graphs (decode, FULL):   0%|          | 0/4 [00:00<?, ?it/s]",
+    "Capturing CUDA graphs (decode, FULL):  25%|\u2588\u2588\u258c       | 1/4 [00:00<00:01,  1.67it/s]",
+    "Capturing CUDA graphs (decode, FULL):  75%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258c  | 3/4 [00:00<00:00,  4.97it/s]",
+    "Capturing CUDA graphs (decode, FULL): 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 4/4 [00:00<00:00,  4.48it/s]",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     Started server process [1]",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     Waiting for application startup.",
+    "\u001b[0;36m(APIServer pid=1)\u001b[0;0m INFO:     Application startup complete."
+  ],
+  "vllm_args_from_logs": {
+    "_model_log_line": "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:06 [core.py:93] Initializing a V1 LLM engine (v0.13.0+faa43dbf.nv26.01) with config: model='/workspace/model', speculative_config=None, tokenizer='/workspace/model', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=modelopt, enforce_eager=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='nano_v3', reasoning_parser_plugin='/workspace/nano_v3_reasoning_parser.py', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False), seed=0, served_model_name=NVIDIA-Nemotron-3-Nano-30B-A3B-FP8, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'eliminate_noops': True, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 16, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False}, 'local_cache_dir': None}",
+    "_tp_size_log": "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:16:06 [core.py:93] Initializing a V1 LLM engine (v0.13.0+faa43dbf.nv26.01) with config: model='/workspace/model', speculative_config=None, tokenizer='/workspace/model', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=modelopt, enforce_eager=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='nano_v3', reasoning_parser_plugin='/workspace/nano_v3_reasoning_parser.py', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False), seed=0, served_model_name=NVIDIA-Nemotron-3-Nano-30B-A3B-FP8, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'eliminate_noops': True, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 16, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False}, 'local_cache_dir': None}",
+    "_kv_cache_log": "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:21:56 [kv_cache_utils.py:1296] Maximum concurrency for 32,768 tokens per request: 14.54x",
+    "_memory_log": "\u001b[0;36m(EngineCore_DP0 pid=165)\u001b[0;0m INFO 03-10 19:22:04 [gpu_model_runner.py:4587] Graph capturing finished in 2 secs, took 0.20 GiB"
+  },
+  "gpus": [
+    {
+      "name": "NVIDIA GB10",
+      "memory_total_mb": "[N/A]",
+      "memory_used_mb": "[N/A]",
+      "memory_free_mb": "[N/A]",
+      "utilization_pct": "0"
+    }
+  ]
+}

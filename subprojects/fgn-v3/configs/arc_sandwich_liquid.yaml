@@ -1,0 +1,28 @@
+# ARC Sandwich — Liquid mode (continuous-time geometric computation via Neural ODE)
+# Replaces discrete FluidLayer with LiquidLayer: ODE integration through learned geometry.
+# tanh-bounded dynamics prevent curvature explosion. Single diffusion scale.
+d_model: 256
+n_heads: 8
+n_layers: 10
+d_ff: 1024
+d_ffn_fluid: 512
+d_metric: 64
+max_seq_len: 1024
+model_type: fgn
+architecture_version: "fluid"
+geo_metric_type: learned
+sandwich_mode: true
+sandwich_bottom_geo_layers: 2
+sandwich_middle_attn_layers: 2
+sandwich_top_geo_layers: 2
+sandwich_middle_iters: 8
+n_refine_iters: 1
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+dropout: 0.1
+use_torch_compile: true
+metric_lr_mult: 1.0
+liquid_mode: true
+n_ode_steps: 4
+tau_min: 0.1
+t_diffusion_init: 1.0

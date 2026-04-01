@@ -1,0 +1,131 @@
+{
+  "model_name": "neuroplastic",
+  "model_used": "neuroplastic",
+  "base_url": "http://spark-129a.local:30000",
+  "passed": 18,
+  "total": 25,
+  "score": 0.72,
+  "results": [
+    {
+      "name": "api_syntax_inspect",
+      "category": "api",
+      "passed": 4,
+      "total": 4,
+      "score": 1.0,
+      "checks": {
+        "contains_inspect": true,
+        "correct_layer": true,
+        "correct_path": true,
+        "valid_tensor_path": true
+      },
+      "response": "\n```python\n# Inspect the query projection weights of the attention mixer in layer 26\nINSPECT(model.layers.26.mixer.q_proj.weight)\n```",
+      "response_length": 133,
+      "time": 22.478052854537964
+    },
+    {
+      "name": "api_syntax_modify",
+      "category": "api",
+      "passed": 4,
+      "total": 4,
+      "score": 1.0,
+      "checks": {
+        "contains_modify": true,
+        "correct_layer": true,
+        "references_A_log": true,
+        "references_scale": true
+      },
+      "response": "\nMODIFY(model.layers.50.mixer.A_log, \"scale\", {\"factor\": 0.9})",
+      "response_length": 62,
+      "time": 4.130435943603516
+    },
+    {
+      "name": "architecture_mamba",
+      "category": "architecture",
+      "passed": 3,
+      "total": 3,
+      "score": 1.0,
+      "checks": {
+        "knows_mamba_layers": true,
+        "knows_mamba_params": true,
+        "knows_not_attention": true
+      },
+      "response": "\n**Mamba layers in your model**\n\n| Layer ID | Mixer sub\u2011components (parameter paths) |\n|----------|----------------------------------------|\n| 0  | `model.layers.0.mixer.A`  <br> `model.layers.0.mixer.D`  <br> `model.layers.0.mixer.dt_bias`  <br> `model.layers.0.mixer.in_proj.weight`  <",
+      "response_length": 287,
+      "time": 9.883831024169922
+    },
+    {
+      "name": "architecture_moe",
+      "category": "architecture",
+      "passed": 0,
+      "total": 3,
+      "score": 0.0,
+      "checks": {
+        "knows_expert_path": false,
+        "knows_proj_names": false,
+        "provides_path_format": false
+      },
+      "response": "[EMPTY RESPONSE]",
+      "response_length": 16,
+      "time": 9.903246879577637
+    },
+    {
+      "name": "reasoning_task",
+      "category": "reasoning",
+      "passed": 3,
+      "total": 4,
+      "score": 0.75,
+      "checks": {
+        "suggests_mamba": true,
+        "suggests_A_or_decay": true,
+        "suggests_specific_layers": false,
+        "reasoning_present": true
+      },
+      "response": "\n**Key layers to probe for long\u2011range memory**\n\n| Layer type | Layer indices (from your model) | Why it matters for long\u2011range context |\n|------------|--------------------------------|---------------------------------------|\n| **Mamba (state\u2011space) mixer** | 0,\u202f2,\u202f4,\u202f7,\u202f9,\u202f11,\u202f14,\u202f16,\u202f18,\u202f21,\u202f23,\u202f25,\u202f28,\u202f30,\u202f32,\u202f35,\u202f37,\u202f39,\u202f41,\u202f44,\u202f46,\u202f48,\u202f",
+      "response_length": 342,
+      "time": 9.949604988098145
+    },
+    {
+      "name": "reasoning_attention",
+      "category": "reasoning",
+      "passed": 0,
+      "total": 3,
+      "score": 0.0,
+      "checks": {
+        "suggests_attention": false,
+        "names_attention_layers": false,
+        "suggests_specific_param": false
+      },
+      "response": "[EMPTY RESPONSE]",
+      "response_length": 16,
+      "time": 9.96090817451477
+    },
+    {
+      "name": "general_capability",
+      "category": "general",
+      "passed": 1,
+      "total": 1,
+      "score": 1.0,
+      "checks": {
+        "correct_answer": true
+      },
+      "response": "\nThe capital of France is **Paris**.",
+      "response_length": 36,
+      "time": 2.0007762908935547
+    },
+    {
+      "name": "general_code",
+      "category": "general",
+      "passed": 3,
+      "total": 3,
+      "score": 1.0,
+      "checks": {
+        "has_def": true,
+        "has_return": true,
+        "mentions_prime": true
+      },
+      "response": "\n```python\ndef is_prime(n: int) -> bool:\n    \"\"\"Return True if n is a prime number, False otherwise.\"\"\"\n    if n < 2:\n        return False\n    if n in (2, 3):\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n```",
+      "response_length": 367,
+      "time": 7.012509107589722
+    }
+  ]
+}

@@ -1,0 +1,361 @@
+{
+  "phase": "C",
+  "description": "Retention (post-adaptation, new problems, no updates)",
+  "timestamp": "2026-03-11T19:57:53Z",
+  "api_url": "http://spark-129a.local:30000",
+  "n_problems": 20,
+  "pass_count": 4,
+  "accuracy": 0.2,
+  "elapsed_seconds": 23.7,
+  "results": [
+    {
+      "id": "ret_001",
+      "question": "A drawer starts with 10 socks. Remove 4. Add 2. Remove 2. How many socks?",
+      "key_facts": [
+        "6 sock"
+      ],
+      "response": "6 socks",
+      "score": {
+        "pass": true,
+        "matched": [
+          "6 sock"
+        ],
+        "missed": []
+      }
+    },
+    {
+      "id": "ret_002",
+      "question": "A piggy bank has 25 coins. Add 10. Spend 18. Add 5. How many coins?",
+      "key_facts": [
+        "22 coin"
+      ],
+      "response": "22 coins",
+      "score": {
+        "pass": true,
+        "matched": [
+          "22 coin"
+        ],
+        "missed": []
+      }
+    },
+    {
+      "id": "ret_003",
+      "question": "A tank has 50 fish. Add 20 fish. Remove 50 fish. Add 10 fish. How many fish?",
+      "key_facts": [
+        "30 fish"
+      ],
+      "response": "10 fish",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "30 fish"
+        ]
+      }
+    },
+    {
+      "id": "ret_004",
+      "question": "Start with 8 chairs and 4 tables. Remove 3 chairs. Add 2 tables. Remove all tables. How many chairs and tables remain?",
+      "key_facts": [
+        "5 chair",
+        "0 table"
+      ],
+      "response": "8 chairs and 4 tables. Remove 3 chairs → 5 chairs. Add 2 tables → 6 tables. Remove all tables → 0 tables.  \n5 chairs and 0 tables.",
+      "score": {
+        "pass": true,
+        "matched": [
+          "5 chair",
+          "0 table"
+        ],
+        "missed": []
+      }
+    },
+    {
+      "id": "ret_005",
+      "question": "A playlist has 12 songs. Add 5. Delete 8. Add 3. Delete all remaining. How many songs?",
+      "key_facts": [
+        "0 song"
+      ],
+      "response": "0 songs",
+      "score": {
+        "pass": true,
+        "matched": [
+          "0 song"
+        ],
+        "missed": []
+      }
+    },
+    {
+      "id": "ret_006",
+      "question": "Inventory: Pens=20, Pencils=15. Add 10 pens. Remove 15 pencils. Add 5 pencils. Remove 12 pens. How many pens and pencils?",
+      "key_facts": [
+        "18 pen",
+        "5 pencil"
+      ],
+      "response": "13 pens\n10 pencils",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "18 pen",
+          "5 pencil"
+        ]
+      }
+    },
+    {
+      "id": "ret_007",
+      "question": "A shelf has 30 cans of soup, 20 cans of beans, 10 cans of corn. Sell 10 soup, 15 beans, 10 corn. Restock 5 soup and 20 corn. Sell 8 soup and 0 beans. How many of each remain?",
+      "key_facts": [
+        "17 soup",
+        "5 bean",
+        "20 corn"
+      ],
+      "response": "22 soup\n15 beans\n20 corn",
+      "score": {
+        "pass": false,
+        "matched": [
+          "5 bean",
+          "20 corn"
+        ],
+        "missed": [
+          "17 soup"
+        ]
+      }
+    },
+    {
+      "id": "ret_008",
+      "question": "Variable P=100, Q=50. Add 25 to P. Subtract 30 from Q. Set P to P minus Q. What are P and Q?",
+      "key_facts": [
+        "105",
+        "20"
+      ],
+      "response": "125 P\n20 Q",
+      "score": {
+        "pass": false,
+        "matched": [
+          "20"
+        ],
+        "missed": [
+          "105"
+        ]
+      }
+    },
+    {
+      "id": "ret_009",
+      "question": "Three jars: Red=15, Green=10, Blue=5. Move 5 from Red to Green. Move 3 from Blue to Red. Move all Green to Blue. How many in each jar?",
+      "key_facts": [
+        "13 red",
+        "0 green",
+        "18 blue"
+      ],
+      "response": "10 Green\n18 Red\n18 Blue",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 green",
+          "18 blue"
+        ],
+        "missed": [
+          "13 red"
+        ]
+      }
+    },
+    {
+      "id": "ret_010",
+      "question": "A queue has 0 items. Enqueue 5. Enqueue 3. Dequeue 2. Enqueue 4. Dequeue 6. Enqueue 1. How many items are in the queue?",
+      "key_facts": [
+        "5 item"
+      ],
+      "response": "0\nitems",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "5 item"
+        ]
+      }
+    },
+    {
+      "id": "ret_011",
+      "question": "Budget: Income=$2000, Expenses=$1500, Savings=$0. Add $500 income. Pay $300 extra expenses. Transfer $200 to savings. Pay $100 from savings. What is the final savings balance?",
+      "key_facts": [
+        "100 dollar"
+      ],
+      "response": "200 Savings",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "100 dollar"
+        ]
+      }
+    },
+    {
+      "id": "ret_012",
+      "question": "Points: Player 1=0, Player 2=0, Player 3=0. Round 1: P1+5, P2+3, P3+7. Round 2: P1+4, P2+8, P3+2. Round 3: Lowest scorer gets +3 bonus. P1+2, P2+1, P3+3. What are the final scores?",
+      "key_facts": [
+        "14",
+        "12",
+        "12"
+      ],
+      "response": "10 Player 1\n11 Player 2\n10 Player 3",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "14",
+          "12",
+          "12"
+        ]
+      }
+    },
+    {
+      "id": "ret_013",
+      "question": "A warehouse starts with 200 units of product X and 150 units of product Y. Ship 60 X and 40 Y. Receive 0 X and 80 Y. Ship all remaining Y. Ship 100 X. Receive 30 X. How many X and Y remain?",
+      "key_facts": [
+        "70 X",
+        "0 Y"
+      ],
+      "response": "200 X  \n100 Y",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 Y"
+        ],
+        "missed": [
+          "70 X"
+        ]
+      }
+    },
+    {
+      "id": "ret_014",
+      "question": "A team has 5 developers, 3 designers, and 2 managers. Hire 2 developers. 1 designer quits. Promote 1 developer to manager. Contract 4 temporary developers. The project ends: all temporary developers leave. What is the final headcount?",
+      "key_facts": [
+        "6 developer",
+        "2 designer",
+        "3 manager"
+      ],
+      "response": "5 developers, 3 designers, 2 managers",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "6 developer",
+          "2 designer",
+          "3 manager"
+        ]
+      }
+    },
+    {
+      "id": "ret_015",
+      "question": "Energy levels: Battery A=100%, Battery B=80%, Battery C=60%. A powers a device for 4 hours at 10%/hour. B charges at 5%/hour for 4 hours. C powers a device for 3 hours at 15%/hour then charges at 10%/hour for 1 hour. What are the final battery levels?",
+      "key_facts": [
+        "60% A",
+        "100% B",
+        "25% C"
+      ],
+      "response": "100% Battery A\n80% Battery B\n60% Battery C",
+      "score": {
+        "pass": false,
+        "matched": [
+          "100% B"
+        ],
+        "missed": [
+          "60% A",
+          "25% C"
+        ]
+      }
+    },
+    {
+      "id": "ret_016",
+      "question": "Library: Fiction=200 books, Non-fiction=150 books, Reference=50 books. Check out 30 fiction and 20 non-fiction. Return 10 fiction. Check out 50 reference. Return all reference. Add 25 new non-fiction. How many of each type?",
+      "key_facts": [
+        "180 fiction",
+        "155 non-fiction",
+        "50 reference"
+      ],
+      "response": "200 fiction\n150 non-fiction\n50 reference",
+      "score": {
+        "pass": false,
+        "matched": [
+          "50 reference"
+        ],
+        "missed": [
+          "180 fiction",
+          "155 non-fiction"
+        ]
+      }
+    },
+    {
+      "id": "ret_017",
+      "question": "Network traffic: Router A handles 100 Mbps, Router B handles 0 Mbps. Shift 30 Mbps from A to B. Add 20 Mbps to A. B develops a fault and drops 25% of its traffic (round down). Restore B to full capacity (add back dropped traffic). What traffic does each router handle?",
+      "key_facts": [
+        "90 Mbps A",
+        "37 Mbps B"
+      ],
+      "response": "100 Mbps Router A\n100 Mbps Router B",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "90 Mbps A",
+          "37 Mbps B"
+        ]
+      }
+    },
+    {
+      "id": "ret_018",
+      "question": "A recipe calls for 4 eggs, 2 cups flour, 1 cup milk, 0.5 tsp salt. Double the recipe. Use 3 eggs for another project. Use half the flour for bread. Use all milk for the recipe. What ingredients remain after making the recipe?",
+      "key_facts": [
+        "5 egg",
+        "2 cup flour",
+        "0 milk"
+      ],
+      "response": "1.5 cups flour\n1 cup milk\n0.5 tsp salt",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 milk"
+        ],
+        "missed": [
+          "5 egg",
+          "2 cup flour"
+        ]
+      }
+    },
+    {
+      "id": "ret_019",
+      "question": "Store register: $100 starting cash. Sale 1: $45. Sale 2: $30. Give change of $5. Sale 3: $60. Pay supplier $80. Sale 4: $25. Give change of $10. How much cash is in the register?",
+      "key_facts": [
+        "165 dollar"
+      ],
+      "response": "100 dollars starting cash.  \nSale 1: $45 → $100 - $45 = $55.  \nSale 2: $30 → $55 - $30 = $25.  \nGive change that which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table tableffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffenffen",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "165 dollar"
+        ]
+      }
+    },
+    {
+      "id": "ret_020",
+      "question": "Particles: Type A=50, Type B=30, Type C=20. Reaction 1: 2A + 1B → 1C (happens 10 times). Reaction 2: 3C → 1A + 2B (happens 5 times). How many of each particle remain after both reactions?",
+      "key_facts": [
+        "35 A",
+        "25 B",
+        "15 C"
+      ],
+      "response": "10 A\n50 B\n0 C",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "35 A",
+          "25 B",
+          "15 C"
+        ]
+      }
+    }
+  ]
+}

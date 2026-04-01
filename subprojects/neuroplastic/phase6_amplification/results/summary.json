@@ -1,0 +1,16 @@
+{
+  "experiment": "Phase 6 Introspective Amplification",
+  "timestamp": "2026-03-12T02:20:14Z",
+  "model": "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+  "baseline_rho": 0.3278,
+  "final_rho": 0.3278,
+  "n_cycles": 3,
+  "accepted": 0,
+  "rejected": 3,
+  "trajectory": [
+    0.3278,
+    0.3278,
+    0.3278,
+    0.3278
+  ]
+}

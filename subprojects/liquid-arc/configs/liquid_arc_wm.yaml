@@ -1,0 +1,87 @@
+# LiquidARC WM — Working Memory + Step-Evolving Metric
+#
+# Based on liquid_arc_5m.yaml (d=768, ~5M params) with two new features:
+#   1. Step-evolving metric: learnable step embeddings modulate MetricNet per ODE step
+#      - 20 embeddings of d_metric=192, zero-init (additive bias after GELU)
+#      - +3,840 params
+#   2. Channel-wise gate (working memory): replaces scalar tau with d-dimensional gate
+#      - gate_net: Linear(d, d_metric) + GELU + Linear(d_metric, d) + sigmoid
+#      - Each feature dimension independently decides to hold (gate~0) or flow (gate~1)
+#      - +148K params (replaces TauNet's ~193 params)
+#
+# Total: ~5.1M params (~3% increase over baseline 4.96M)
+#
+# Hypothesis: Homogeneous dynamics (same weights 16x) and scalar tau are the
+# generalization bottleneck. Step embeds create ODE heterogeneity (early/late
+# specialization) while channel gate enables selective feature retention (working
+# memory). Together they should reduce the 40pt train/eval gap.
+#
+# Sweet spot: 15K steps (extended training harmful per 5M experiment).
+
+# Architecture — same width as 5M
+d_model: 768
+d_metric: 192        # d/4, same ratio
+d_ffn: 1536          # 2d, same ratio
+
+# Working memory features (NEW)
+step_embed_enabled: true
+n_step_embeds: 20
+channel_gate_enabled: true
+
+# Training (same as 5M)
+batch_size: 16
+grad_accum_steps: 1
+lr: 1.7e-4
+warmup_steps: 1000
+
+# Zero-scaffold (same as 5M)
+geo_loss_enabled: false
+tau_freeze_steps: 0
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+real_arc_mix_ratio: 0.3
+curvature_lambda: 0.05
+
+# ODE / solver (unchanged)
+n_ode_steps: 16
+ode_steps_min: 16     # fixed count — avoids torch.compile recompilation stalls
+ode_steps_max: 16
+ode_chunk_size: 4
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+
+# Sequence / task (unchanged)
+max_seq_len: 2048
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+
+# Loss weights (unchanged)
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_var_lambda: 0.001
+dropout: 0.1
+use_torch_compile: true
+chunk_size: 256
+
+# Solver flags (unchanged)
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+# TTT (keep enabled for eval)
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

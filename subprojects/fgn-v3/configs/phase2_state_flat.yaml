@@ -1,0 +1,26 @@
+# FGN v3 Phase 2 — State Tracking (Flat, Parameter-Matched)
+# d=128, 4L, 4H, d_ff=548. seq_len=512.
+
+d_model: 128
+n_heads: 4
+n_layers: 4
+d_ff: 548
+vocab_size: 50304
+max_seq_len: 512
+
+model_type: flat
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+correlation_length_init: 5.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true

@@ -1,0 +1,2459 @@
+{
+  "phase": "B",
+  "description": "Hebbian Adaptation",
+  "timestamp": "2026-03-11T19:57:29Z",
+  "api_url": "http://spark-129a.local:30000",
+  "target_layers": [
+    44,
+    46,
+    48,
+    50
+  ],
+  "learning_rate": 0.01,
+  "n_problems": 50,
+  "pass_count": 8,
+  "accuracy": 0.16,
+  "elapsed_seconds": 520.1,
+  "accuracy_trajectory": [
+    {
+      "step": 0,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 1,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 2,
+      "window_accuracy": 0.3333333333333333
+    },
+    {
+      "step": 3,
+      "window_accuracy": 0.5
+    },
+    {
+      "step": 4,
+      "window_accuracy": 0.4
+    },
+    {
+      "step": 5,
+      "window_accuracy": 0.5
+    },
+    {
+      "step": 6,
+      "window_accuracy": 0.5714285714285714
+    },
+    {
+      "step": 7,
+      "window_accuracy": 0.625
+    },
+    {
+      "step": 8,
+      "window_accuracy": 0.6666666666666666
+    },
+    {
+      "step": 9,
+      "window_accuracy": 0.6
+    },
+    {
+      "step": 10,
+      "window_accuracy": 0.6
+    },
+    {
+      "step": 11,
+      "window_accuracy": 0.6
+    },
+    {
+      "step": 12,
+      "window_accuracy": 0.5
+    },
+    {
+      "step": 13,
+      "window_accuracy": 0.4
+    },
+    {
+      "step": 14,
+      "window_accuracy": 0.4
+    },
+    {
+      "step": 15,
+      "window_accuracy": 0.3
+    },
+    {
+      "step": 16,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 17,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 18,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 19,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 20,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 21,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 22,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 23,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 24,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 25,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 26,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 27,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 28,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 29,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 30,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 31,
+      "window_accuracy": 0.2
+    },
+    {
+      "step": 32,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 33,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 34,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 35,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 36,
+      "window_accuracy": 0.1
+    },
+    {
+      "step": 37,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 38,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 39,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 40,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 41,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 42,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 43,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 44,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 45,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 46,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 47,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 48,
+      "window_accuracy": 0.0
+    },
+    {
+      "step": 49,
+      "window_accuracy": 0.0
+    }
+  ],
+  "pre_adaptation_norms": {
+    "model.layers.44.mixer.A": 16.37005043029785,
+    "model.layers.46.mixer.A": 1072.197509765625,
+    "model.layers.48.mixer.A": 21763.642578125,
+    "model.layers.50.mixer.A": 7371.34619140625
+  },
+  "results": [
+    {
+      "id": "train_001",
+      "difficulty": 1,
+      "step": 0,
+      "question": "A bag starts with 5 apples. Remove 2 apples. Add 3 apples. How many apples are in the bag?",
+      "key_facts": [
+        "6 apple"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 0,
+          "min": -0.0,
+          "max": -0.0
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 0,
+          "min": -0.0,
+          "max": -0.0
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 0,
+          "min": -0.0,
+          "max": -0.0
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 0,
+          "min": -0.0,
+          "max": -0.0
+        }
+      },
+      "response": "3 apples",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "6 apple"
+        ]
+      },
+      "running_accuracy": 0.0
+    },
+    {
+      "id": "train_002",
+      "difficulty": 1,
+      "step": 1,
+      "question": "A shelf has 8 books. Remove 3 books. Add 1 book. How many books are on the shelf?",
+      "key_facts": [
+        "6 book"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0013324598846191666,
+          "max": 0.003437782036577623
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002919361537158389,
+          "max": 0.004298984446570971
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0017599180209608176,
+          "max": 0.0019109828664072381
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001028730885675234,
+          "max": 0.0024756888293912347
+        }
+      },
+      "response": "5 books",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "6 book"
+        ]
+      },
+      "running_accuracy": 0.0
+    },
+    {
+      "id": "train_003",
+      "difficulty": 1,
+      "step": 2,
+      "question": "A jar starts with 10 coins. Add 5 coins. Remove 4 coins. How many coins are in the jar?",
+      "key_facts": [
+        "11 coin"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015210829543592078,
+          "max": 0.007347430505455015
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0013453283954987132,
+          "max": 0.005396404464768713
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0011569223211263715,
+          "max": 0.00281120420868082
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0009632706662671391,
+          "max": 0.005566536418525117
+        }
+      },
+      "response": "11 coins",
+      "score": {
+        "pass": true,
+        "matched": [
+          "11 coin"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.3333333333333333
+    },
+    {
+      "id": "train_004",
+      "difficulty": 1,
+      "step": 3,
+      "question": "A box starts with 7 marbles. Remove 7 marbles. How many marbles are in the box?",
+      "key_facts": [
+        "0 marble"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0011628015101255527,
+          "max": 0.007425758122347894
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0013334977574080969,
+          "max": 0.009710649152179306
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0014081941390128145,
+          "max": 0.007382343497922926
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0007965225494080186,
+          "max": 0.00710430431711097
+        }
+      },
+      "response": "0 marbles",
+      "score": {
+        "pass": true,
+        "matched": [
+          "0 marble"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.5
+    },
+    {
+      "id": "train_005",
+      "difficulty": 1,
+      "step": 4,
+      "question": "A basket starts with 4 oranges. Add 2 oranges. Remove 6 oranges. How many oranges are in the basket?",
+      "key_facts": [
+        "0 orange"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001839403306191714,
+          "max": 0.003529359554236144
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0009860914388495176,
+          "max": 0.0018289497207127014
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.000818432295310258,
+          "max": 0.006650889876475533
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0007010806158538335,
+          "max": 0.003792581791439316
+        }
+      },
+      "response": "-2 oranges",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "0 orange"
+        ]
+      },
+      "running_accuracy": 0.4
+    },
+    {
+      "id": "train_006",
+      "difficulty": 1,
+      "step": 5,
+      "question": "A tank holds 20 liters of water. Remove 8 liters. Add 3 liters. How many liters are in the tank?",
+      "key_facts": [
+        "15 liter"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002728322462996628,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0023595746317452313,
+          "max": 0.002414423957845216
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001890751456065145,
+          "max": 0.00488481964175725
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001492050726638734,
+          "max": 0.0048458321785951695
+        }
+      },
+      "response": "15 liters",
+      "score": {
+        "pass": true,
+        "matched": [
+          "15 liter"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.5
+    },
+    {
+      "id": "train_007",
+      "difficulty": 1,
+      "step": 6,
+      "question": "A wallet has 12 dollars. Add 0 dollars. Remove 5 dollars. How many dollars are in the wallet?",
+      "key_facts": [
+        "7 dollar"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019875203175054095,
+          "max": 0.00829892354262318
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0008617200226750334,
+          "max": 0.0013437001451680744
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0008794783661039195,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001383052585490754,
+          "max": 0.01
+        }
+      },
+      "response": "7 dollars",
+      "score": {
+        "pass": true,
+        "matched": [
+          "7 dollar"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.5714285714285714
+    },
+    {
+      "id": "train_008",
+      "difficulty": 1,
+      "step": 7,
+      "question": "A pond starts with 15 fish. Remove 15 fish. Add 0 fish. How many fish are in the pond?",
+      "key_facts": [
+        "0 fish"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0027108125780233635,
+          "max": 0.00540519761432662
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0023825231903644496,
+          "max": 0.0055587106052221325
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0014702835778355162,
+          "max": 0.006262282419772875
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0005473456161420631,
+          "max": 0.002543733492832336
+        }
+      },
+      "response": "0 fish",
+      "score": {
+        "pass": true,
+        "matched": [
+          "0 fish"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.625
+    },
+    {
+      "id": "train_009",
+      "difficulty": 1,
+      "step": 8,
+      "question": "A counter starts at 9. Add 6. Subtract 3. What is the counter value?",
+      "key_facts": [
+        "12"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0017211415087802979,
+          "max": 0.003527510662614772
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0010125821266975268,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0012692601987464825,
+          "max": 0.00629995716641417
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015202332684977776,
+          "max": 0.006213748215773659
+        }
+      },
+      "response": "9 + 6 = 15  \n15 - 3 = 12  \n12",
+      "score": {
+        "pass": true,
+        "matched": [
+          "12"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.6666666666666666
+    },
+    {
+      "id": "train_010",
+      "difficulty": 1,
+      "step": 9,
+      "question": "A box starts with 3 screws. Add 4 screws. Remove 2 screws. Add 1 screw. How many screws are in the box?",
+      "key_facts": [
+        "6 screw"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002567223395173246,
+          "max": 0.004101220836447096
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0014715586495930794,
+          "max": 0.0024421506733288347
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0020669110121837556,
+          "max": 0.0025112097366574034
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0005816813092890486,
+          "max": 0.0025317711743026755
+        }
+      },
+      "response": "10 screws",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "6 screw"
+        ]
+      },
+      "running_accuracy": 0.6
+    },
+    {
+      "id": "train_011",
+      "difficulty": 2,
+      "step": 10,
+      "question": "A bag starts empty. Add 3 apples. Add 2 oranges. Remove 1 apple. Add 4 bananas. Remove 2 oranges. How many of each fruit are in the bag? List apples, oranges, and bananas separately.",
+      "key_facts": [
+        "2 apple",
+        "0 orange",
+        "4 banana"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002981868888071632,
+          "max": 0.0043700747747219895
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003369523318339815,
+          "max": 0.00546194043940567
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022512060659300374,
+          "max": 0.0025576207022192736
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0011178897562616479,
+          "max": 0.00536768417543297
+        }
+      },
+      "response": "3 apples  \n0 oranges  \n4 bananas",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 orange",
+          "4 banana"
+        ],
+        "missed": [
+          "2 apple"
+        ]
+      },
+      "running_accuracy": 0.5454545454545454
+    },
+    {
+      "id": "train_012",
+      "difficulty": 2,
+      "step": 11,
+      "question": "A store has 10 red pens and 5 blue pens. A customer buys 3 red pens. The store receives 8 blue pens. Another customer buys 4 blue pens. How many red pens and blue pens does the store have?",
+      "key_facts": [
+        "7 red",
+        "9 blue"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003195140805100372,
+          "max": 0.006155613702386233
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031166191940657723,
+          "max": 0.003942101129613441
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002142009668826826,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0014545617465936285,
+          "max": 0.009040617241971898
+        }
+      },
+      "response": "10 red pens\n7 blue pens",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "7 red",
+          "9 blue"
+        ]
+      },
+      "running_accuracy": 0.5
+    },
+    {
+      "id": "train_013",
+      "difficulty": 2,
+      "step": 12,
+      "question": "Two players each start with 10 tokens. Player A gives 3 tokens to Player B. Then Player B gives 5 tokens to Player A. How many tokens does each player have?",
+      "key_facts": [
+        "12",
+        "8"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0028049925758815313,
+          "max": 0.006269771505643728
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030629338728733625,
+          "max": 0.003926468543640755
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022168782630776645,
+          "max": 0.005148234430481116
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0012114174549839667,
+          "max": 0.00830433222643901
+        }
+      },
+      "response": "13 Player A  \n7 Player B",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "12",
+          "8"
+        ]
+      },
+      "running_accuracy": 0.46153846153846156
+    },
+    {
+      "id": "train_014",
+      "difficulty": 2,
+      "step": 13,
+      "question": "A library has 50 science books and 30 fiction books. It removes 20 science books and adds 15 fiction books. Then it removes 10 fiction books. How many science books and fiction books does it have?",
+      "key_facts": [
+        "30 science",
+        "35 fiction"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002861577323387461,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003314712339329989,
+          "max": 0.004250636966505317
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002534050155211452,
+          "max": 0.002966126367003951
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0011138225431034472,
+          "max": 0.008647630094933403
+        }
+      },
+      "response": "50 science books and 30 fiction books. It removes 20 science books and adds 15 fiction books. Then it removes 10 fiction books.  \n**50 science books and 35 fiction books**",
+      "score": {
+        "pass": false,
+        "matched": [
+          "35 fiction"
+        ],
+        "missed": [
+          "30 science"
+        ]
+      },
+      "running_accuracy": 0.42857142857142855
+    },
+    {
+      "id": "train_015",
+      "difficulty": 2,
+      "step": 14,
+      "question": "A warehouse starts with 100 boxes of item A and 60 boxes of item B. Ship 40 boxes of A and 60 boxes of B. Receive 20 boxes of A. How many boxes of item A and item B remain?",
+      "key_facts": [
+        "80",
+        "0"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031341141470252786,
+          "max": 0.005273462069347138
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0034511785898152236,
+          "max": 0.004402166744693522
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0023963187371559874,
+          "max": 0.0037338620695889506
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019999623157926716,
+          "max": 0.01
+        }
+      },
+      "response": "100 boxes of item A  \n0 boxes of item B",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0"
+        ],
+        "missed": [
+          "80"
+        ]
+      },
+      "running_accuracy": 0.4
+    },
+    {
+      "id": "train_016",
+      "difficulty": 2,
+      "step": 15,
+      "question": "Jar X starts with 8 red balls and Jar Y starts with 5 blue balls. Move 3 red balls from X to Y. Move 2 blue balls from Y to X. How many balls are in Jar X and Jar Y total, and what are the contents?",
+      "key_facts": [
+        "5 red",
+        "2 blue",
+        "3 red",
+        "3 blue"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003263238422569293,
+          "max": 0.0052080672453359775
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0039044647947724417,
+          "max": 0.007111855913058929
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030290930856989974,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019598583973922373,
+          "max": 0.009421998776361238
+        }
+      },
+      "response": "11 balls in Jar X: 5 red, 6 blue  \n11 balls in Jar Y: 2 red, 3 blue",
+      "score": {
+        "pass": false,
+        "matched": [
+          "5 red",
+          "3 blue"
+        ],
+        "missed": [
+          "2 blue",
+          "3 red"
+        ]
+      },
+      "running_accuracy": 0.375
+    },
+    {
+      "id": "train_017",
+      "difficulty": 2,
+      "step": 16,
+      "question": "A chef has 12 eggs and 8 cups of flour. He uses 4 eggs and 3 cups of flour to make a cake. He then uses 5 eggs and 2 cups of flour to make muffins. How many eggs and cups of flour remain?",
+      "key_facts": [
+        "3 egg",
+        "3 cup"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0027883869907277675,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0033858459242419167,
+          "max": 0.006751670248127277
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002789077258872409,
+          "max": 0.0035115534777450563
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0018557470439574861,
+          "max": 0.01
+        }
+      },
+      "response": "10 eggs  \n6 cups of flour",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "3 egg",
+          "3 cup"
+        ]
+      },
+      "running_accuracy": 0.35294117647058826
+    },
+    {
+      "id": "train_018",
+      "difficulty": 2,
+      "step": 17,
+      "question": "Team A scores 5 points. Team B scores 3 points. Team A scores 2 more points. Team B scores 5 more points. Team A loses 1 point for a penalty. What are the final scores for Team A and Team B?",
+      "key_facts": [
+        "6",
+        "8"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003124704970931076,
+          "max": 0.005582164965149918
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002992031178559414,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031396940727259114,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019395509473942327,
+          "max": 0.00998534918424571
+        }
+      },
+      "response": "5 Team A  \n8 Team B",
+      "score": {
+        "pass": false,
+        "matched": [
+          "8"
+        ],
+        "missed": [
+          "6"
+        ]
+      },
+      "running_accuracy": 0.3333333333333333
+    },
+    {
+      "id": "train_019",
+      "difficulty": 2,
+      "step": 18,
+      "question": "A parking lot has 30 cars and 20 motorcycles. 10 cars leave. 5 motorcycles arrive. 8 more cars arrive. 20 motorcycles leave. How many cars and motorcycles are in the lot?",
+      "key_facts": [
+        "28 car",
+        "5 motorcycle"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00321779703659808,
+          "max": 0.005407371707957206
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003865674941775588,
+          "max": 0.0049966697984193285
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003008551791010916,
+          "max": 0.003562587080757185
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0016182148146739038,
+          "max": 0.007430700177629411
+        }
+      },
+      "response": "32 cars  \n35 motorcycles",
+      "score": {
+        "pass": false,
+        "matched": [
+          "5 motorcycle"
+        ],
+        "missed": [
+          "28 car"
+        ]
+      },
+      "running_accuracy": 0.3157894736842105
+    },
+    {
+      "id": "train_020",
+      "difficulty": 2,
+      "step": 19,
+      "question": "A garden has 15 roses and 10 tulips. Plant 5 more roses. Remove 10 roses. Plant 8 tulips. Remove all tulips. How many roses and tulips are in the garden?",
+      "key_facts": [
+        "10 rose",
+        "0 tulip"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0032203138864487736,
+          "max": 0.005769860354025187
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0034835254317264496,
+          "max": 0.004246036562637985
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0032318310812987383,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002060064324680455,
+          "max": 0.003490564425444673
+        }
+      },
+      "response": "15 roses\n0 tulips",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 tulip"
+        ],
+        "missed": [
+          "10 rose"
+        ]
+      },
+      "running_accuracy": 0.3
+    },
+    {
+      "id": "train_021",
+      "difficulty": 2,
+      "step": 20,
+      "question": "A box starts with 6 green marbles and 4 yellow marbles. Add 3 green marbles. Remove all yellow marbles. Add 2 yellow marbles. Remove 4 green marbles. How many green and yellow marbles are in the box?",
+      "key_facts": [
+        "5 green",
+        "2 yellow"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003249518119111577,
+          "max": 0.005404682771349386
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003418217198337165,
+          "max": 0.008367431864862652
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002539952727096847,
+          "max": 0.007794217632266573
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001746741672144704,
+          "max": 0.00751585888328013
+        }
+      },
+      "response": "6 green marbles  \n4 yellow marbles",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "5 green",
+          "2 yellow"
+        ]
+      },
+      "running_accuracy": 0.2857142857142857
+    },
+    {
+      "id": "train_022",
+      "difficulty": 2,
+      "step": 21,
+      "question": "Alice has 20 stickers and Bob has 15 stickers. Alice gives Bob 5 stickers. Bob gives Alice 8 stickers. Alice gives Bob 3 stickers. How many stickers does each person have?",
+      "key_facts": [
+        "20",
+        "15"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0033749720054160534,
+          "max": 0.005263923251252089
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002789868260226774,
+          "max": 0.006782852832035751
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0028839170056078538,
+          "max": 0.004014552117564223
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015137281109426604,
+          "max": 0.004320708227304813
+        }
+      },
+      "response": "25 stickers Bob  \n10 stickers Alice",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "20",
+          "15"
+        ]
+      },
+      "running_accuracy": 0.2727272727272727
+    },
+    {
+      "id": "train_023",
+      "difficulty": 2,
+      "step": 22,
+      "question": "A shelf has 12 red books and 8 blue books. Remove 4 red books. Add 6 blue books. Remove 14 blue books. Add 2 red books. How many red and blue books remain?",
+      "key_facts": [
+        "10 red",
+        "0 blue"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003310716425354887,
+          "max": 0.005420035141001517
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0028238753137824484,
+          "max": 0.003965626524319648
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0025246128818787457,
+          "max": 0.008557202742487524
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0017650347561983491,
+          "max": 0.009804284038536917
+        }
+      },
+      "response": "10 red books  \n10 blue books",
+      "score": {
+        "pass": true,
+        "matched": [
+          "10 red",
+          "0 blue"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.30434782608695654
+    },
+    {
+      "id": "train_024",
+      "difficulty": 2,
+      "step": 23,
+      "question": "A tank starts with 50 gallons of water and 30 gallons of oil. Drain 20 gallons of water. Add 10 gallons of oil. Drain all the oil. Add 5 gallons of water. How many gallons of water and oil are in the tank?",
+      "key_facts": [
+        "35 gallon",
+        "0"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0037567700884511696,
+          "max": 0.00792593148454477
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0028931017833015854,
+          "max": 0.0038833192437139415
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030273609081225995,
+          "max": 0.0054949519800350675
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015662901298037803,
+          "max": 0.01
+        }
+      },
+      "response": "55 gallons of water\n0 gallons of oil",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0"
+        ],
+        "missed": [
+          "35 gallon"
+        ]
+      },
+      "running_accuracy": 0.2916666666666667
+    },
+    {
+      "id": "train_025",
+      "difficulty": 2,
+      "step": 24,
+      "question": "A folder contains 15 PDFs and 10 Word documents. Delete 5 PDFs. Add 4 Word documents. Delete all Word documents. Add 3 PDFs. How many PDFs and Word documents are in the folder?",
+      "key_facts": [
+        "13 PDF",
+        "0 Word"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035340162151491277,
+          "max": 0.005551063660286746
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002894280996310396,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030359255628451018,
+          "max": 0.003789799663172712
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0021697849218713693,
+          "max": 0.005038018003202582
+        }
+      },
+      "response": "18 PDFs\n0 Word documents",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 Word"
+        ],
+        "missed": [
+          "13 PDF"
+        ]
+      },
+      "running_accuracy": 0.28
+    },
+    {
+      "id": "train_026",
+      "difficulty": 3,
+      "step": 25,
+      "question": "A store has 20 apples, 15 bananas, and 10 grapes. A customer buys 5 apples and 3 bananas. The store receives 8 grapes. Another customer buys 2 bananas and 6 grapes. The store adds 10 apples. A third customer buys 7 apples and 10 bananas. How many apples, bananas, and grapes does the store have?",
+      "key_facts": [
+        "18 apple",
+        "0 banana",
+        "12 grape"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003628986570039974,
+          "max": 0.006030719160510197
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003146103138207374,
+          "max": 0.004285801741695712
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0029164546759177456,
+          "max": 0.0037645846348579315
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0009580884093337432,
+          "max": 0.005078315436939046
+        }
+      },
+      "response": "23 apples  \n12 bananas  \n12 grapes",
+      "score": {
+        "pass": false,
+        "matched": [
+          "12 grape"
+        ],
+        "missed": [
+          "18 apple",
+          "0 banana"
+        ]
+      },
+      "running_accuracy": 0.2692307692307692
+    },
+    {
+      "id": "train_027",
+      "difficulty": 3,
+      "step": 26,
+      "question": "Three variables: X=10, Y=5, Z=8. Add 3 to X. Subtract 2 from Y. Add 4 to Z. Set X to X minus Y. Multiply Z by 2. Subtract X from Z. What are the final values of X, Y, and Z?",
+      "key_facts": [
+        "X",
+        "10",
+        "Y",
+        "3",
+        "Z",
+        "14"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003491634076552222,
+          "max": 0.005640894022456015
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002920268609391588,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004298079943551638,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022049515204980437,
+          "max": 0.008009696571135105
+        }
+      },
+      "response": "13 X\n3 Y\n22 Z",
+      "score": {
+        "pass": false,
+        "matched": [
+          "X",
+          "Y",
+          "3",
+          "Z"
+        ],
+        "missed": [
+          "10",
+          "14"
+        ]
+      },
+      "running_accuracy": 0.25925925925925924
+    },
+    {
+      "id": "train_028",
+      "difficulty": 3,
+      "step": 27,
+      "question": "A warehouse has 100 units of product A, 80 units of product B, and 60 units of product C. Ship 30 A, 20 B, and 10 C. Receive 15 B and 25 C. Ship 40 A and 30 C. Receive 50 A. Ship all remaining B. How many units of each product are in the warehouse?",
+      "key_facts": [
+        "80",
+        "0",
+        "40"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003548043580880538,
+          "max": 0.005580872795566257
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030811498106516405,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003100192710258145,
+          "max": 0.004035965806296207
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.001808824833224339,
+          "max": 0.00999338847990766
+        }
+      },
+      "response": "100 A  \n80 B  \n60 C  \n\nShip 30 A → 100 - 30 = 70 A  \nShip 20 B → 80 - 20 = 60 B  \nShip 10 C → 60 - 10 = 50 C  \n\nReceive 15 B → 60 + 15 = 75 B  \nReceive 25 C → 50 + 25 = 75 C  \n\nShip 40 A → 70 - 40 = 30 A  \nShip 30 C → 75 - 30 = 45 C  \n\nReceive 50 A → 30 + 50 = 80 A  \n\nShip all remaining B → 75 - 75 =  which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which",
+      "score": {
+        "pass": true,
+        "matched": [
+          "80",
+          "0",
+          "40"
+        ],
+        "missed": []
+      },
+      "running_accuracy": 0.2857142857142857
+    },
+    {
+      "id": "train_029",
+      "difficulty": 3,
+      "step": 28,
+      "question": "A recipe starts with 3 cups of flour, 2 cups of sugar, and 1 cup of butter. The baker adds 1 cup of flour and removes 1 cup of sugar. She adds 2 cups of butter and uses 0.5 cups of flour. She adds 0.5 cups of sugar. She uses all the butter to coat the pan. How much flour, sugar, and butter remain?",
+      "key_facts": [
+        "3.5 cup",
+        "1.5 cup",
+        "0 butter"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003246945982266613,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002784313563654684,
+          "max": 0.004168143410114017
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003448085510324282,
+          "max": 0.005956294272830276
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0018180204034258843,
+          "max": 0.01
+        }
+      },
+      "response": "3 cups of flour  \n2 cups of sugar  \n1 cup of butter",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "3.5 cup",
+          "1.5 cup",
+          "0 butter"
+        ]
+      },
+      "running_accuracy": 0.27586206896551724
+    },
+    {
+      "id": "train_030",
+      "difficulty": 3,
+      "step": 29,
+      "question": "Three accounts: Checking has $500, Savings has $1000, and Investment has $2000. Transfer $200 from Checking to Savings. Withdraw $300 from Savings. Deposit $500 into Investment. Transfer $100 from Investment to Checking. Withdraw $150 from Checking. What is the balance in each account?",
+      "key_facts": [
+        "350",
+        "900",
+        "2400"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035099246587726937,
+          "max": 0.005531096767571217
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003821778986203834,
+          "max": 0.009238244585917677
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00400511637377846,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002048148064568936,
+          "max": 0.007139016595091696
+        }
+      },
+      "response": "500 Checking\n1150 Savings\n2400 Investment",
+      "score": {
+        "pass": false,
+        "matched": [
+          "2400"
+        ],
+        "missed": [
+          "350",
+          "900"
+        ]
+      },
+      "running_accuracy": 0.26666666666666666
+    },
+    {
+      "id": "train_031",
+      "difficulty": 3,
+      "step": 30,
+      "question": "A sports league tracks wins, losses, and draws. Team A: 5 wins, 2 losses, 1 draw. Team B: 3 wins, 4 losses, 1 draw. Game result: Team A wins, Team B loses. Another game: draw. Another game: Team B wins, Team A loses. What are the final records for each team (wins, losses, draws)?",
+      "key_facts": [
+        "6 win",
+        "3 loss",
+        "4 win",
+        "5 loss"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0036108969101750488,
+          "max": 0.004760885694091918
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003272182283866776,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003493993644769524,
+          "max": 0.0048717568816031035
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00221815627994683,
+          "max": 0.008210078893958599
+        }
+      },
+      "response": "5 wins, 2 losses, 1 draw\n3 wins, 5 losses, 1 draw",
+      "score": {
+        "pass": false,
+        "matched": [
+          "5 loss"
+        ],
+        "missed": [
+          "6 win",
+          "3 loss",
+          "4 win"
+        ]
+      },
+      "running_accuracy": 0.25806451612903225
+    },
+    {
+      "id": "train_032",
+      "difficulty": 3,
+      "step": 31,
+      "question": "A factory has 3 assembly lines: Line 1 produces 50 units/hour, Line 2 produces 40 units/hour, Line 3 produces 30 units/hour. After 2 hours, Line 2 breaks down. After 3 more hours, Line 2 is repaired and produces 40 units/hour for 1 more hour. Line 3 shuts down after 4 hours total. What is the total output from each line after 6 hours?",
+      "key_facts": [
+        "300",
+        "200",
+        "120"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0037403410794282933,
+          "max": 0.005845098329525362
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003315911335980022,
+          "max": 0.008578599098039204
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035921288172151263,
+          "max": 0.004603890072072979
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0021774227688359043,
+          "max": 0.009461239521423756
+        }
+      },
+      "response": "50 units Line 1\n40 units Line 2\n30 units Line 3",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "300",
+          "200",
+          "120"
+        ]
+      },
+      "running_accuracy": 0.25
+    },
+    {
+      "id": "train_033",
+      "difficulty": 3,
+      "step": 32,
+      "question": "A classroom starts with 15 students, 10 pencils, and 5 textbooks. 3 students leave, taking 2 pencils each. The teacher adds 20 pencils. 2 new students arrive, each needing 1 textbook. The teacher removes all but 1 textbook. 5 more students leave, taking 1 pencil each. How many students, pencils, and textbooks are there?",
+      "key_facts": [
+        "9 student",
+        "19 pencil",
+        "1 textbook"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0037615038681261433,
+          "max": 0.005583644626199818
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0024579214763454558,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0029679824660994313,
+          "max": 0.008905396995286627
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0010735103820018912,
+          "max": 0.008156013005076906
+        }
+      },
+      "response": "12 students, 10 pencils, 1 textbook",
+      "score": {
+        "pass": false,
+        "matched": [
+          "1 textbook"
+        ],
+        "missed": [
+          "9 student",
+          "19 pencil"
+        ]
+      },
+      "running_accuracy": 0.24242424242424243
+    },
+    {
+      "id": "train_034",
+      "difficulty": 3,
+      "step": 33,
+      "question": "Three colors of paint: Red=10 liters, Blue=8 liters, Yellow=6 liters. Mix 2 liters of Red and 2 liters of Blue to make Purple (4 liters). Mix 3 liters of Yellow and 3 liters of Red to make Orange (6 liters). Use 5 liters of Purple for a project. Use all the Orange. How many liters of each original color and mixed color remain?",
+      "key_facts": [
+        "5 red",
+        "6 blue",
+        "3 yellow",
+        "0 purple",
+        "0 orange"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003934366500707875,
+          "max": 0.004724273349113022
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003602065656315663,
+          "max": 0.004210217596443287
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003596099716187054,
+          "max": 0.005204877712026855
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002302602203893659,
+          "max": 0.006155598951119886
+        }
+      },
+      "response": "10 Red\n8 Blue\n6 Yellow\n4 Purple\n6 Orange",
+      "score": {
+        "pass": false,
+        "matched": [
+          "6 blue"
+        ],
+        "missed": [
+          "5 red",
+          "3 yellow",
+          "0 purple",
+          "0 orange"
+        ]
+      },
+      "running_accuracy": 0.23529411764705882
+    },
+    {
+      "id": "train_035",
+      "difficulty": 3,
+      "step": 34,
+      "question": "Inventory: Widget A=100, Widget B=200, Widget C=150. Order 1 ships 25 A, 50 B, 30 C. Receive restock: 40 A, 0 B, 60 C. Order 2 ships 60 A, 75 B, 45 C. Receive restock: 0 A, 100 B, 0 C. Order 3 ships all remaining B. How many of each widget remain?",
+      "key_facts": [
+        "55",
+        "0",
+        "135"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004021780095657985,
+          "max": 0.004886233837312503
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003136285741217003,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035677223960262593,
+          "max": 0.004439546365884028
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0017028878659038757,
+          "max": 0.01
+        }
+      },
+      "response": "100 Widget A\n200 Widget B\n150 Widget C",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0"
+        ],
+        "missed": [
+          "55",
+          "135"
+        ]
+      },
+      "running_accuracy": 0.22857142857142856
+    },
+    {
+      "id": "train_036",
+      "difficulty": 3,
+      "step": 35,
+      "question": "A garden has 20 red flowers, 15 yellow flowers, and 10 white flowers. Remove 5 red flowers. Add 8 yellow flowers. Remove all white flowers. Remove 3 yellow flowers. Add 10 white flowers. Remove 12 red flowers. Add 0 red flowers. How many flowers of each color are there?",
+      "key_facts": [
+        "3 red",
+        "20 yellow",
+        "10 white"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0032337844910718234,
+          "max": 0.004547383196195276
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0010394089907402653,
+          "max": 0.003697249348579849
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003176626888499285,
+          "max": 0.005941928525466234
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0011715009780617893,
+          "max": 0.0037254276589553975
+        }
+      },
+      "response": "10 red flowers\n10 yellow flowers\n10 white flowers",
+      "score": {
+        "pass": false,
+        "matched": [
+          "10 white"
+        ],
+        "missed": [
+          "3 red",
+          "20 yellow"
+        ]
+      },
+      "running_accuracy": 0.2222222222222222
+    },
+    {
+      "id": "train_037",
+      "difficulty": 3,
+      "step": 36,
+      "question": "Resource pool: CPU=80%, Memory=60%, Disk=40%. Process A uses 20% CPU and 15% Memory. Process B uses 30% CPU and 20% Memory and 25% Disk. Process A finishes, releasing its resources. Process C uses 25% CPU and 30% Memory and 10% Disk. What percentage of each resource is currently in use?",
+      "key_facts": [
+        "55",
+        "50",
+        "35"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004124568608057952,
+          "max": 0.00820501616215873
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002822499229131761,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0037977335120724827,
+          "max": 0.004669733576832411
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002114524587092251,
+          "max": 0.01
+        }
+      },
+      "response": "80% CPU, 60% Memory, 40% Disk",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "55",
+          "50",
+          "35"
+        ]
+      },
+      "running_accuracy": 0.21621621621621623
+    },
+    {
+      "id": "train_038",
+      "difficulty": 3,
+      "step": 37,
+      "question": "A store starts with 30 notebooks, 20 pens, and 25 erasers. Sells 10 notebooks and 5 pens. Receives 15 pens and 10 erasers. Sells 8 notebooks and 20 pens and 30 erasers. Receives 5 notebooks. Sells all remaining pens. How many of each item remain?",
+      "key_facts": [
+        "17 notebook",
+        "0 pen",
+        "5 eraser"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003217161323194359,
+          "max": 0.008392001629137594
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019476940905858284,
+          "max": 0.0034089882744030692
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0019009917629199302,
+          "max": 0.00534448347896315
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015246287352843604,
+          "max": 0.009279771282601885
+        }
+      },
+      "response": "30 notebooks  \n20 pens  \n25 erasers  \n-10 notebooks → 20 notebooks  \n-5 pens → 15 pens  \n+15 pens → 30 pens  \n+ which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0 pen",
+          "5 eraser"
+        ],
+        "missed": [
+          "17 notebook"
+        ]
+      },
+      "running_accuracy": 0.21052631578947367
+    },
+    {
+      "id": "train_039",
+      "difficulty": 3,
+      "step": 38,
+      "question": "Four friends split a bill: Alice=$50, Bob=$30, Carol=$20, Dave=$40 initially owed. Alice pays $60 (covers her share plus extra). Bob pays nothing. Carol pays $25. Dave pays $35. Remaining balance is split evenly among non-payers. How much does each person still owe after initial payments? (Alice paid extra, so she gets credit.)",
+      "key_facts": [
+        "10",
+        "30",
+        "0",
+        "5"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003285199292361609,
+          "max": 0.0072068626535297135
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0040389895022926075,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0020817720972211937,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0015585810104537519,
+          "max": 0.0068620074001600586
+        }
+      },
+      "response": "1. Alice: $0\n2. Bob: $30\n3. Carol: $ which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table",
+      "score": {
+        "pass": false,
+        "matched": [
+          "30",
+          "0"
+        ],
+        "missed": [
+          "10",
+          "5"
+        ]
+      },
+      "running_accuracy": 0.20512820512820512
+    },
+    {
+      "id": "train_040",
+      "difficulty": 3,
+      "step": 39,
+      "question": "A data pipeline processes records: Stage 1 receives 1000 records, rejects 50 for format errors, passes 950. Stage 2 deduplicates: removes 200 duplicates, passes 750. Stage 3 validates: rejects 100 invalid records, passes 650. Stage 4 enriches: 30 records fail enrichment and are sent back to Stage 1 for reprocessing. How many records successfully completed the pipeline after one pass?",
+      "key_facts": [
+        "620",
+        "30",
+        "350"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003806529012632276,
+          "max": 0.004485095755927828
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0040112454069275464,
+          "max": 0.0050099895665593796
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003823168472601002,
+          "max": 0.0065175139949053195
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00212032797841547,
+          "max": 0.01
+        }
+      },
+      "response": "650 records successfully completed the pipeline after one pass. which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "620",
+          "30",
+          "350"
+        ]
+      },
+      "running_accuracy": 0.2
+    },
+    {
+      "id": "train_041",
+      "difficulty": 4,
+      "step": 40,
+      "question": "A supply chain tracks 4 items: Bolts=500, Nuts=400, Washers=600, Screws=300. Week 1: Ship 100 Bolts, 80 Nuts, 150 Washers, 50 Screws. Receive 200 Bolts, 0 Nuts, 100 Washers, 200 Screws. Week 2: Ship 250 Bolts, 200 Nuts, 200 Washers, 300 Screws. Receive 100 Nuts, 0 Bolts, 50 Washers, 0 Screws. Week 3: Ship all remaining Bolts, ship all remaining Nuts, ship 100 Washers, ship 0 Screws. How many of each item remain?",
+      "key_facts": [
+        "0 bolt",
+        "0 nut",
+        "300 washer",
+        "150 screw"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0026311555558831694,
+          "max": 0.005100247971331067
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0036246344704263904,
+          "max": 0.004143933806924915
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035151034127590955,
+          "max": 0.004043814419919979
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0018098628308245769,
+          "max": 0.008400081891480827
+        }
+      },
+      "response": " final which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which which table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table table",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "0 bolt",
+          "0 nut",
+          "300 washer",
+          "150 screw"
+        ]
+      },
+      "running_accuracy": 0.1951219512195122
+    },
+    {
+      "id": "train_042",
+      "difficulty": 4,
+      "step": 41,
+      "question": "Four accounts track balances: A=$1000, B=$500, C=$750, D=$250. Transfer $200 from A to B. Transfer $100 from B to C. Transfer $300 from C to D. Transfer $150 from D to A. Transfer $50 from A to C. Transfer all of B to D. What are the final balances?",
+      "key_facts": [
+        "900",
+        "0",
+        "500",
+        "600"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022983667477879614,
+          "max": 0.009963608188750278
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031988895352140067,
+          "max": 0.006858932842765889
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022096633187011962,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0013137648393479408,
+          "max": 0.008055197200755246
+        }
+      },
+      "response": "1000 A\n600 B\n1050 C\n1050 D",
+      "score": {
+        "pass": false,
+        "matched": [
+          "0",
+          "600"
+        ],
+        "missed": [
+          "900",
+          "500"
+        ]
+      },
+      "running_accuracy": 0.19047619047619047
+    },
+    {
+      "id": "train_043",
+      "difficulty": 4,
+      "step": 42,
+      "question": "A text adventure: You start with 0 gold, 1 sword, 0 potions, 0 keys. Find 50 gold. Buy a potion for 20 gold. Receive 2 keys from a chest. Fight a monster: use 1 potion, gain 100 gold. Find a locked door: use 1 key, find 30 gold and 2 potions inside. Sell your sword for 40 gold. Buy 3 potions for 60 gold. Lose 1 key to a thief. Use 2 potions to heal. What do you have?",
+      "key_facts": [
+        "140 gold",
+        "0 sword",
+        "1 potion",
+        "0 key"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003782772816418722,
+          "max": 0.00775342785952751
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0026482814480549843,
+          "max": 0.003376102554086756
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031886852717013365,
+          "max": 0.007070148035719948
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00199594291729682,
+          "max": 0.007891832064235847
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "140 gold",
+          "0 sword",
+          "1 potion",
+          "0 key"
+        ]
+      },
+      "running_accuracy": 0.18604651162790697
+    },
+    {
+      "id": "train_044",
+      "difficulty": 4,
+      "step": 43,
+      "question": "A server cluster: Node1=100% healthy, Node2=100% healthy, Node3=100% healthy, Node4=100% healthy. Node1 fails (goes offline). Load redistributed: Node2 takes 40% extra load, Node3 takes 40% extra load, Node4 takes 20% extra load. Node1 comes back online. Node3 is decommissioned. Remaining nodes share load evenly at 100% total. Node2 fails. What percentage of total cluster capacity is online and how is load distributed?",
+      "key_facts": [
+        "50%",
+        "node1",
+        "node4"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002292077348130903,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0034041575442000285,
+          "max": 0.008772648409494446
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0034201948463934697,
+          "max": 0.004156902027901452
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002323510121331029,
+          "max": 0.008335236346857306
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "50%",
+          "node1",
+          "node4"
+        ]
+      },
+      "running_accuracy": 0.18181818181818182
+    },
+    {
+      "id": "train_045",
+      "difficulty": 4,
+      "step": 44,
+      "question": "A recipe scales: Original makes 12 cookies using 2 cups flour, 1 cup sugar, 3 eggs, 0.5 cups butter. Scale to make 36 cookies. The baker has: 7 cups flour, 2 cups sugar, 8 eggs, 1.5 cups butter. After making 36 cookies, what quantities of each ingredient remain?",
+      "key_facts": [
+        "1 cup flour",
+        "0 cup sugar",
+        "1 egg",
+        "0 cup butter"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0030503803919092057,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003902188804627664,
+          "max": 0.0047001341016537765
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0037755351740607597,
+          "max": 0.004991594409200654
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022730648595488136,
+          "max": 0.01
+        }
+      },
+      "response": "1.5 cups flour  \n1.5 cups sugar  \n2 eggs  \n0.5 cups butter",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "1 cup flour",
+          "0 cup sugar",
+          "1 egg",
+          "0 cup butter"
+        ]
+      },
+      "running_accuracy": 0.17777777777777778
+    },
+    {
+      "id": "train_046",
+      "difficulty": 4,
+      "step": 45,
+      "question": "Ecosystem simulation: Rabbits=100, Foxes=20, Grass=500 units. Turn 1: 10 foxes eat rabbits (each fox eats 3), rabbits eat grass (each rabbit eats 1). Turn 2: 15 rabbits are born, 5 foxes die, 50 grass grows. Turn 3: 8 foxes eat rabbits (each eats 4), 20 rabbits are born, 40 grass grows, rabbits eat grass. Turn 4: All foxes that exceed the rabbit/fox ratio of 5:1 die of starvation (round down). What are the final populations?",
+      "key_facts": [
+        "97 rabbit",
+        "15 fox",
+        "388 grass"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0031999562953383695,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0038774900689297616,
+          "max": 0.0044415676777877595
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0039318908767700025,
+          "max": 0.004824821360038218
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0016341525935641928,
+          "max": 0.004022528292946649
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "97 rabbit",
+          "15 fox",
+          "388 grass"
+        ]
+      },
+      "running_accuracy": 0.17391304347826086
+    },
+    {
+      "id": "train_047",
+      "difficulty": 4,
+      "step": 46,
+      "question": "Project tracking: Tasks A, B, C, D, E each start at 0% complete. A and B start simultaneously. A finishes (100%). B reaches 50% then pauses. C starts and finishes (100%). B resumes and finishes. D starts, reaches 75%, then is cancelled (removed). E starts. B's completion triggers E to jump to 50%. E finishes. How many tasks are complete, how many were cancelled, and what is the overall completion rate of non-cancelled tasks?",
+      "key_facts": [
+        "4 complete",
+        "1 cancelled",
+        "100%"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0036266027266262987,
+          "max": 0.007988582059050288
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004031473410190396,
+          "max": 0.004469887350266788
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0036545853296314408,
+          "max": 0.00772449548545887
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0021808700656359495,
+          "max": 0.008152580513973185
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "4 complete",
+          "1 cancelled",
+          "100%"
+        ]
+      },
+      "running_accuracy": 0.1702127659574468
+    },
+    {
+      "id": "train_048",
+      "difficulty": 4,
+      "step": 47,
+      "question": "A vending machine has: Cola=5, Juice=3, Water=8, Coffee=2. Prices: Cola=$1.50, Juice=$2.00, Water=$1.00, Coffee=$2.50. Machine starts with $0 cash. Customer 1 buys 2 Cola and 1 Juice. Customer 2 buys 3 Water. Customer 3 tries to buy 2 Coffee but machine is out of exact change (has only $8.00, needs to give $0.00 change for $5.00 purchase) — purchase succeeds. Customer 4 buys all remaining Juice and 1 Water. How many of each drink remain and how much cash is in the machine?",
+      "key_facts": [
+        "3 cola",
+        "0 juice",
+        "4 water",
+        "0 coffee",
+        "18 dollar"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004004666176805825,
+          "max": 0.01
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.00417364383743066,
+          "max": 0.006038852501525983
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003064037308720682,
+          "max": 0.0057810699923902895
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0021364770906218693,
+          "max": 0.0088633021153397
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "3 cola",
+          "0 juice",
+          "4 water",
+          "0 coffee",
+          "18 dollar"
+        ]
+      },
+      "running_accuracy": 0.16666666666666666
+    },
+    {
+      "id": "train_049",
+      "difficulty": 4,
+      "step": 48,
+      "question": "A city's budget over 4 quarters: Starting fund=$1,000,000. Q1: Revenue=$250,000, Expenses=$300,000. Q2: Revenue=$400,000, Expenses=$350,000, Emergency fund transfer out=$50,000. Q3: Revenue=$275,000, Expenses=$425,000, Emergency fund transfer in=$75,000. Q4: Revenue=$500,000, Expenses=$200,000, Year-end bonus paid=$100,000. What is the final budget balance and what was spent on the bonus?",
+      "key_facts": [
+        "1,075,000",
+        "100,000"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0035153964785674574,
+          "max": 0.0064019934184594215
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004880826815521587,
+          "max": 0.01
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.004586348132735795,
+          "max": 0.01
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.002489318902216943,
+          "max": 0.00743719094197787
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "1,075,000",
+          "100,000"
+        ]
+      },
+      "running_accuracy": 0.16326530612244897
+    },
+    {
+      "id": "train_050",
+      "difficulty": 4,
+      "step": 49,
+      "question": "A game has 4 players with scores: Alice=0, Bob=0, Carol=0, Dave=0. Round 1: Alice+10, Bob+7, Carol+5, Dave+3. Round 2: Highest scorer loses half their points (round down). Alice-5. Bob+8, Carol+6, Dave+4. Round 3: Alice+12, Bob+3. Last place player gets double points: Dave+8 (already added). Carol+2. Round 4: All players with scores above 20 lose 5 points. What are the final scores?",
+      "key_facts": [
+        "17",
+        "13",
+        "13",
+        "15"
+      ],
+      "trace_ok": true,
+      "updates_applied": {
+        "model.layers.44.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003337954171555198,
+          "max": 0.004451854608196502
+        },
+        "model.layers.46.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.003282211632230176,
+          "max": 0.004385654792372844
+        },
+        "model.layers.48.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0022199384720542168,
+          "max": 0.004374501293137512
+        },
+        "model.layers.50.mixer.A": {
+          "nonzero_heads": 64,
+          "min": -0.0012808252396480152,
+          "max": 0.006593769858985136
+        }
+      },
+      "response": " structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured structured",
+      "score": {
+        "pass": false,
+        "matched": [],
+        "missed": [
+          "17",
+          "13",
+          "13",
+          "15"
+        ]
+      },
+      "running_accuracy": 0.16
+    }
+  ]
+}

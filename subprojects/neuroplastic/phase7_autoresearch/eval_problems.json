@@ -1,0 +1,162 @@
+[
+  {
+    "id": "canary_01",
+    "category": "canary",
+    "difficulty": 1,
+    "question": "A box starts with 5 apples. Remove 2 apples. Add 3 apples. How many apples are in the box?",
+    "expected": {"apples": 6},
+    "key_facts": ["6 apple"]
+  },
+  {
+    "id": "canary_02",
+    "category": "canary",
+    "difficulty": 1,
+    "question": "A jar starts with 10 coins. Add 5 coins. Remove 4 coins. How many coins are in the jar?",
+    "expected": {"coins": 11},
+    "key_facts": ["11 coin"]
+  },
+  {
+    "id": "multi_01",
+    "category": "multi_entity",
+    "difficulty": 3,
+    "question": "A store has 20 apples, 15 bananas, and 10 grapes. A customer buys 5 apples and 3 bananas. The store receives 8 grapes. Another customer buys 2 bananas and 6 grapes. The store adds 10 apples. A third customer buys 7 apples and 10 bananas. How many apples, bananas, and grapes does the store have?",
+    "expected": {"apples": 18, "bananas": 0, "grapes": 12},
+    "key_facts": ["18 apple", "0 banana", "12 grape"]
+  },
+  {
+    "id": "multi_02",
+    "category": "multi_entity",
+    "difficulty": 3,
+    "question": "A warehouse has 100 units of product A, 80 units of product B, and 60 units of product C. Ship 30 A, 20 B, and 10 C. Receive 15 B and 25 C. Ship 40 A and 30 C. Receive 50 A. Ship all remaining B. How many units of each product are in the warehouse?",
+    "expected": {"a": 80, "b": 0, "c": 45},
+    "key_facts": ["80", "0", "45"]
+  },
+  {
+    "id": "multi_03",
+    "category": "multi_entity",
+    "difficulty": 3,
+    "question": "A classroom starts with 15 students, 10 pencils, and 5 textbooks. 3 students leave, taking 2 pencils each. The teacher adds 20 pencils. 2 new students arrive, each needing 1 textbook. The teacher removes all but 1 textbook. 5 more students leave, taking 1 pencil each. How many students, pencils, and textbooks are there?",
+    "expected": {"students": 9, "pencils": 19, "textbooks": 1},
+    "key_facts": ["9 student", "19 pencil", "1 textbook"]
+  },
+  {
+    "id": "multi_04",
+    "category": "multi_entity",
+    "difficulty": 3,
+    "question": "Inventory: Widget A=100, Widget B=200, Widget C=150. Order 1 ships 25 A, 50 B, 30 C. Receive restock: 40 A, 0 B, 60 C. Order 2 ships 60 A, 75 B, 45 C. Receive restock: 0 A, 100 B, 0 C. Order 3 ships all remaining B. How many of each widget remain?",
+    "expected": {"a": 55, "b": 0, "c": 135},
+    "key_facts": ["55", "0", "135"]
+  },
+  {
+    "id": "multi_05",
+    "category": "multi_entity",
+    "difficulty": 3,
+    "question": "A garden has 20 red flowers, 15 yellow flowers, and 10 white flowers. Remove 5 red flowers. Add 8 yellow flowers. Remove all white flowers. Remove 3 yellow flowers. Add 10 white flowers. Remove 12 red flowers. Add 0 red flowers. How many flowers of each color are there?",
+    "expected": {"red": 3, "yellow": 20, "white": 10},
+    "key_facts": ["3 red", "20 yellow", "10 white"]
+  },
+  {
+    "id": "accounts_01",
+    "category": "accounts",
+    "difficulty": 3,
+    "question": "Three accounts: Checking has $500, Savings has $1000, and Investment has $2000. Transfer $200 from Checking to Savings. Withdraw $300 from Savings. Deposit $500 into Investment. Transfer $100 from Investment to Checking. Withdraw $150 from Checking. What is the balance in each account?",
+    "expected": {"checking": 250, "savings": 900, "investment": 2400},
+    "key_facts": ["250", "900", "2400"]
+  },
+  {
+    "id": "accounts_02",
+    "category": "accounts",
+    "difficulty": 4,
+    "question": "Four accounts track balances: A=$1000, B=$500, C=$750, D=$250. Transfer $200 from A to B. Transfer $100 from B to C. Transfer $300 from C to D. Transfer $150 from D to A. Transfer $50 from A to C. Transfer all of B to D. What are the final balances?",
+    "expected": {"a": 900, "b": 0, "c": 500, "d": 600},
+    "key_facts": ["900", "0", "500", "600"]
+  },
+  {
+    "id": "variable_01",
+    "category": "variable_tracking",
+    "difficulty": 3,
+    "question": "Three variables: X=10, Y=5, Z=8. Add 3 to X. Subtract 2 from Y. Add 4 to Z. Set X to X minus Y. Multiply Z by 2. Subtract X from Z. What are the final values of X, Y, and Z?",
+    "expected": {"x": 10, "y": 3, "z": 14},
+    "key_facts": ["10", "3", "14"]
+  },
+  {
+    "id": "variable_02",
+    "category": "variable_tracking",
+    "difficulty": 4,
+    "question": "Variables: a=5, b=10, c=15, d=20. Set a = a+b. Set b = c-a. Set c = d+b. Set d = a*2. Set a = d-c. Set b = a+c. What are the final values of a, b, c, and d?",
+    "expected": {"a": 10, "b": 30, "c": 20, "d": 30},
+    "key_facts": ["10", "30", "20", "30"]
+  },
+  {
+    "id": "game_01",
+    "category": "game_state",
+    "difficulty": 4,
+    "question": "A text adventure: You start with 0 gold, 1 sword, 0 potions, 0 keys. Find 50 gold. Buy a potion for 20 gold. Receive 2 keys from a chest. Fight a monster: use 1 potion, gain 100 gold. Find a locked door: use 1 key, find 30 gold and 2 potions inside. Sell your sword for 40 gold. Buy 3 potions for 60 gold. Lose 1 key to a thief. Use 2 potions to heal. What do you have?",
+    "expected": {"gold": 140, "swords": 0, "potions": 1, "keys": 0},
+    "key_facts": ["140 gold", "0 sword", "1 potion", "0 key"]
+  },
+  {
+    "id": "game_02",
+    "category": "game_state",
+    "difficulty": 4,
+    "question": "Three players in a game. Alice: 0, Bob: 0, Carol: 0. Round 1: Alice+10, Bob+7, Carol+5. Round 2: lowest scorer gets double points: Carol gets +10. Alice+5, Bob+8. Round 3: highest scorer loses 3 points. Alice has 15, so Alice-3. Bob+4, Carol+6. Round 4: All scores above 15 are reduced by 5. What are the final scores?",
+    "expected": {"alice": 12, "bob": 14, "carol": 21},
+    "key_facts": ["12", "14", "21"]
+  },
+  {
+    "id": "supply_01",
+    "category": "supply_chain",
+    "difficulty": 4,
+    "question": "A supply chain tracks 4 items: Bolts=500, Nuts=400, Washers=600, Screws=300. Week 1: Ship 100 Bolts, 80 Nuts, 150 Washers, 50 Screws. Receive 200 Bolts, 0 Nuts, 100 Washers, 200 Screws. Week 2: Ship 250 Bolts, 200 Nuts, 200 Washers, 300 Screws. Receive 100 Nuts, 0 Bolts, 50 Washers, 0 Screws. Week 3: Ship all remaining Bolts, ship all remaining Nuts, ship 100 Washers, ship 0 Screws. How many of each item remain?",
+    "expected": {"bolts": 0, "nuts": 0, "washers": 300, "screws": 150},
+    "key_facts": ["0 bolt", "0 nut", "300 washer", "150 screw"]
+  },
+  {
+    "id": "supply_02",
+    "category": "supply_chain",
+    "difficulty": 4,
+    "question": "A vending machine has: Cola=5, Juice=3, Water=8, Coffee=2. Prices: Cola=$1.50, Juice=$2.00, Water=$1.00, Coffee=$2.50. Machine starts with $0 cash. Customer 1 buys 2 Cola and 1 Juice. Customer 2 buys 3 Water. Customer 3 buys 2 Coffee. Customer 4 buys all remaining Juice and 1 Water. How many of each drink remain and how much cash is in the machine?",
+    "expected": {"cola": 3, "juice": 0, "water": 4, "coffee": 0, "cash": 18},
+    "key_facts": ["3 cola", "0 juice", "4 water", "0 coffee", "18"]
+  },
+  {
+    "id": "factory_01",
+    "category": "process",
+    "difficulty": 4,
+    "question": "A factory processes 3 batches: Batch A has 200 items, Batch B has 150 items, Batch C has 100 items. Quality check rejects 15% of Batch A, 10% of Batch B, and 20% of Batch C. The rejected items from all batches are combined and re-inspected: 50% pass on re-inspection. How many total items pass quality control?",
+    "expected": {"passed": 395},
+    "key_facts": ["395"]
+  },
+  {
+    "id": "inventory_01",
+    "category": "process",
+    "difficulty": 4,
+    "question": "Stock: Apples=50, Bananas=40, Cherries=30, Dates=20, Elderberries=10. Sell 15 Apples. Restock 25 Bananas. Sell all Cherries. Sell 10 Dates. Restock 5 Elderberries. Sell half the remaining Bananas. How many of each fruit remain?",
+    "expected": {"apples": 35, "bananas": 32, "cherries": 0, "dates": 10, "elderberries": 15},
+    "key_facts": ["35 apple", "0 cherr", "10 date", "15 elder"]
+  },
+  {
+    "id": "pipeline_01",
+    "category": "process",
+    "difficulty": 4,
+    "question": "A data pipeline processes records: Stage 1 receives 1000 records, rejects 50 for format errors, passes 950. Stage 2 deduplicates: removes 200 duplicates, passes 750. Stage 3 validates: rejects 100 invalid records, passes 650. Stage 4 enriches: 30 records fail enrichment and are sent back to Stage 1 for reprocessing. How many records successfully completed the pipeline after one pass?",
+    "expected": {"completed": 620, "reprocessing": 30, "rejected": 350},
+    "key_facts": ["620", "30", "350"]
+  },
+  {
+    "id": "resource_01",
+    "category": "process",
+    "difficulty": 3,
+    "question": "Resource pool: CPU=80%, Memory=60%, Disk=40%. Process A uses 20% CPU and 15% Memory. Process B uses 30% CPU and 20% Memory and 25% Disk. Process A finishes, releasing its resources. Process C uses 25% CPU and 30% Memory and 10% Disk. What percentage of each resource is currently in use?",
+    "expected": {"cpu": 55, "memory": 50, "disk": 35},
+    "key_facts": ["55", "50", "35"]
+  },
+  {
+    "id": "recipe_01",
+    "category": "process",
+    "difficulty": 3,
+    "question": "A recipe starts with 3 cups of flour, 2 cups of sugar, and 1 cup of butter. The baker adds 1 cup of flour and removes 1 cup of sugar. She adds 2 cups of butter and uses 0.5 cups of flour. She adds 0.5 cups of sugar. She uses all the butter to coat the pan. How much flour, sugar, and butter remain?",
+    "expected": {"flour": 3.5, "sugar": 1.5, "butter": 0},
+    "key_facts": ["3.5", "1.5", "0 butter"]
+  }
+]

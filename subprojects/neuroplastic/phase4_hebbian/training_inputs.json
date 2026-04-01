@@ -1,0 +1,352 @@
+[
+  {
+    "id": "train_001",
+    "difficulty": 1,
+    "question": "A bag starts with 5 apples. Remove 2 apples. Add 3 apples. How many apples are in the bag?",
+    "expected": {"apples": 6},
+    "key_facts": ["6 apple"]
+  },
+  {
+    "id": "train_002",
+    "difficulty": 1,
+    "question": "A shelf has 8 books. Remove 3 books. Add 1 book. How many books are on the shelf?",
+    "expected": {"books": 6},
+    "key_facts": ["6 book"]
+  },
+  {
+    "id": "train_003",
+    "difficulty": 1,
+    "question": "A jar starts with 10 coins. Add 5 coins. Remove 4 coins. How many coins are in the jar?",
+    "expected": {"coins": 11},
+    "key_facts": ["11 coin"]
+  },
+  {
+    "id": "train_004",
+    "difficulty": 1,
+    "question": "A box starts with 7 marbles. Remove 7 marbles. How many marbles are in the box?",
+    "expected": {"marbles": 0},
+    "key_facts": ["0 marble"]
+  },
+  {
+    "id": "train_005",
+    "difficulty": 1,
+    "question": "A basket starts with 4 oranges. Add 2 oranges. Remove 6 oranges. How many oranges are in the basket?",
+    "expected": {"oranges": 0},
+    "key_facts": ["0 orange"]
+  },
+  {
+    "id": "train_006",
+    "difficulty": 1,
+    "question": "A tank holds 20 liters of water. Remove 8 liters. Add 3 liters. How many liters are in the tank?",
+    "expected": {"liters": 15},
+    "key_facts": ["15 liter"]
+  },
+  {
+    "id": "train_007",
+    "difficulty": 1,
+    "question": "A wallet has 12 dollars. Add 0 dollars. Remove 5 dollars. How many dollars are in the wallet?",
+    "expected": {"dollars": 7},
+    "key_facts": ["7 dollar"]
+  },
+  {
+    "id": "train_008",
+    "difficulty": 1,
+    "question": "A pond starts with 15 fish. Remove 15 fish. Add 0 fish. How many fish are in the pond?",
+    "expected": {"fish": 0},
+    "key_facts": ["0 fish"]
+  },
+  {
+    "id": "train_009",
+    "difficulty": 1,
+    "question": "A counter starts at 9. Add 6. Subtract 3. What is the counter value?",
+    "expected": {"counter": 12},
+    "key_facts": ["12"]
+  },
+  {
+    "id": "train_010",
+    "difficulty": 1,
+    "question": "A box starts with 3 screws. Add 4 screws. Remove 2 screws. Add 1 screw. How many screws are in the box?",
+    "expected": {"screws": 6},
+    "key_facts": ["6 screw"]
+  },
+  {
+    "id": "train_011",
+    "difficulty": 2,
+    "question": "A bag starts empty. Add 3 apples. Add 2 oranges. Remove 1 apple. Add 4 bananas. Remove 2 oranges. How many of each fruit are in the bag? List apples, oranges, and bananas separately.",
+    "expected": {"apples": 2, "oranges": 0, "bananas": 4},
+    "key_facts": ["2 apple", "0 orange", "4 banana"]
+  },
+  {
+    "id": "train_012",
+    "difficulty": 2,
+    "question": "A store has 10 red pens and 5 blue pens. A customer buys 3 red pens. The store receives 8 blue pens. Another customer buys 4 blue pens. How many red pens and blue pens does the store have?",
+    "expected": {"red_pens": 7, "blue_pens": 9},
+    "key_facts": ["7 red", "9 blue"]
+  },
+  {
+    "id": "train_013",
+    "difficulty": 2,
+    "question": "Two players each start with 10 tokens. Player A gives 3 tokens to Player B. Then Player B gives 5 tokens to Player A. How many tokens does each player have?",
+    "expected": {"player_a": 12, "player_b": 8},
+    "key_facts": ["12", "8"]
+  },
+  {
+    "id": "train_014",
+    "difficulty": 2,
+    "question": "A library has 50 science books and 30 fiction books. It removes 20 science books and adds 15 fiction books. Then it removes 10 fiction books. How many science books and fiction books does it have?",
+    "expected": {"science": 30, "fiction": 35},
+    "key_facts": ["30 science", "35 fiction"]
+  },
+  {
+    "id": "train_015",
+    "difficulty": 2,
+    "question": "A warehouse starts with 100 boxes of item A and 60 boxes of item B. Ship 40 boxes of A and 60 boxes of B. Receive 20 boxes of A. How many boxes of item A and item B remain?",
+    "expected": {"item_a": 80, "item_b": 0},
+    "key_facts": ["80", "0"]
+  },
+  {
+    "id": "train_016",
+    "difficulty": 2,
+    "question": "Jar X starts with 8 red balls and Jar Y starts with 5 blue balls. Move 3 red balls from X to Y. Move 2 blue balls from Y to X. How many balls are in Jar X and Jar Y total, and what are the contents?",
+    "expected": {"jar_x_red": 5, "jar_x_blue": 2, "jar_y_red": 3, "jar_y_blue": 3},
+    "key_facts": ["5 red", "2 blue", "3 red", "3 blue"]
+  },
+  {
+    "id": "train_017",
+    "difficulty": 2,
+    "question": "A chef has 12 eggs and 8 cups of flour. He uses 4 eggs and 3 cups of flour to make a cake. He then uses 5 eggs and 2 cups of flour to make muffins. How many eggs and cups of flour remain?",
+    "expected": {"eggs": 3, "flour": 3},
+    "key_facts": ["3 egg", "3 cup"]
+  },
+  {
+    "id": "train_018",
+    "difficulty": 2,
+    "question": "Team A scores 5 points. Team B scores 3 points. Team A scores 2 more points. Team B scores 5 more points. Team A loses 1 point for a penalty. What are the final scores for Team A and Team B?",
+    "expected": {"team_a": 6, "team_b": 8},
+    "key_facts": ["6", "8"]
+  },
+  {
+    "id": "train_019",
+    "difficulty": 2,
+    "question": "A parking lot has 30 cars and 20 motorcycles. 10 cars leave. 5 motorcycles arrive. 8 more cars arrive. 20 motorcycles leave. How many cars and motorcycles are in the lot?",
+    "expected": {"cars": 28, "motorcycles": 5},
+    "key_facts": ["28 car", "5 motorcycle"]
+  },
+  {
+    "id": "train_020",
+    "difficulty": 2,
+    "question": "A garden has 15 roses and 10 tulips. Plant 5 more roses. Remove 10 roses. Plant 8 tulips. Remove all tulips. How many roses and tulips are in the garden?",
+    "expected": {"roses": 10, "tulips": 0},
+    "key_facts": ["10 rose", "0 tulip"]
+  },
+  {
+    "id": "train_021",
+    "difficulty": 2,
+    "question": "A box starts with 6 green marbles and 4 yellow marbles. Add 3 green marbles. Remove all yellow marbles. Add 2 yellow marbles. Remove 4 green marbles. How many green and yellow marbles are in the box?",
+    "expected": {"green": 5, "yellow": 2},
+    "key_facts": ["5 green", "2 yellow"]
+  },
+  {
+    "id": "train_022",
+    "difficulty": 2,
+    "question": "Alice has 20 stickers and Bob has 15 stickers. Alice gives Bob 5 stickers. Bob gives Alice 8 stickers. Alice gives Bob 3 stickers. How many stickers does each person have?",
+    "expected": {"alice": 20, "bob": 15},
+    "key_facts": ["20", "15"]
+  },
+  {
+    "id": "train_023",
+    "difficulty": 2,
+    "question": "A shelf has 12 red books and 8 blue books. Remove 4 red books. Add 6 blue books. Remove 14 blue books. Add 2 red books. How many red and blue books remain?",
+    "expected": {"red": 10, "blue": 0},
+    "key_facts": ["10 red", "0 blue"]
+  },
+  {
+    "id": "train_024",
+    "difficulty": 2,
+    "question": "A tank starts with 50 gallons of water and 30 gallons of oil. Drain 20 gallons of water. Add 10 gallons of oil. Drain all the oil. Add 5 gallons of water. How many gallons of water and oil are in the tank?",
+    "expected": {"water": 35, "oil": 0},
+    "key_facts": ["35 gallon", "0"]
+  },
+  {
+    "id": "train_025",
+    "difficulty": 2,
+    "question": "A folder contains 15 PDFs and 10 Word documents. Delete 5 PDFs. Add 4 Word documents. Delete all Word documents. Add 3 PDFs. How many PDFs and Word documents are in the folder?",
+    "expected": {"pdfs": 13, "word_docs": 0},
+    "key_facts": ["13 PDF", "0 Word"]
+  },
+  {
+    "id": "train_026",
+    "difficulty": 3,
+    "question": "A store has 20 apples, 15 bananas, and 10 grapes. A customer buys 5 apples and 3 bananas. The store receives 8 grapes. Another customer buys 2 bananas and 6 grapes. The store adds 10 apples. A third customer buys 7 apples and 10 bananas. How many apples, bananas, and grapes does the store have?",
+    "expected": {"apples": 18, "bananas": 0, "grapes": 12},
+    "key_facts": ["18 apple", "0 banana", "12 grape"]
+  },
+  {
+    "id": "train_027",
+    "difficulty": 3,
+    "question": "Three variables: X=10, Y=5, Z=8. Add 3 to X. Subtract 2 from Y. Add 4 to Z. Set X to X minus Y. Multiply Z by 2. Subtract X from Z. What are the final values of X, Y, and Z?",
+    "expected": {"x": 10, "y": 3, "z": 14},
+    "key_facts": ["X", "10", "Y", "3", "Z", "14"]
+  },
+  {
+    "id": "train_028",
+    "difficulty": 3,
+    "question": "A warehouse has 100 units of product A, 80 units of product B, and 60 units of product C. Ship 30 A, 20 B, and 10 C. Receive 15 B and 25 C. Ship 40 A and 30 C. Receive 50 A. Ship all remaining B. How many units of each product are in the warehouse?",
+    "expected": {"a": 80, "b": 0, "c": 40},
+    "key_facts": ["80", "0", "40"]
+  },
+  {
+    "id": "train_029",
+    "difficulty": 3,
+    "question": "A recipe starts with 3 cups of flour, 2 cups of sugar, and 1 cup of butter. The baker adds 1 cup of flour and removes 1 cup of sugar. She adds 2 cups of butter and uses 0.5 cups of flour. She adds 0.5 cups of sugar. She uses all the butter to coat the pan. How much flour, sugar, and butter remain?",
+    "expected": {"flour": 3.5, "sugar": 1.5, "butter": 0},
+    "key_facts": ["3.5 cup", "1.5 cup", "0 butter"]
+  },
+  {
+    "id": "train_030",
+    "difficulty": 3,
+    "question": "Three accounts: Checking has $500, Savings has $1000, and Investment has $2000. Transfer $200 from Checking to Savings. Withdraw $300 from Savings. Deposit $500 into Investment. Transfer $100 from Investment to Checking. Withdraw $150 from Checking. What is the balance in each account?",
+    "expected": {"checking": 350, "savings": 900, "investment": 2400},
+    "key_facts": ["350", "900", "2400"]
+  },
+  {
+    "id": "train_031",
+    "difficulty": 3,
+    "question": "A sports league tracks wins, losses, and draws. Team A: 5 wins, 2 losses, 1 draw. Team B: 3 wins, 4 losses, 1 draw. Game result: Team A wins, Team B loses. Another game: draw. Another game: Team B wins, Team A loses. What are the final records for each team (wins, losses, draws)?",
+    "expected": {"a_wins": 6, "a_losses": 3, "a_draws": 2, "b_wins": 4, "b_losses": 5, "b_draws": 2},
+    "key_facts": ["6 win", "3 loss", "4 win", "5 loss"]
+  },
+  {
+    "id": "train_032",
+    "difficulty": 3,
+    "question": "A factory has 3 assembly lines: Line 1 produces 50 units/hour, Line 2 produces 40 units/hour, Line 3 produces 30 units/hour. After 2 hours, Line 2 breaks down. After 3 more hours, Line 2 is repaired and produces 40 units/hour for 1 more hour. Line 3 shuts down after 4 hours total. What is the total output from each line after 6 hours?",
+    "expected": {"line1": 300, "line2": 200, "line3": 120},
+    "key_facts": ["300", "200", "120"]
+  },
+  {
+    "id": "train_033",
+    "difficulty": 3,
+    "question": "A classroom starts with 15 students, 10 pencils, and 5 textbooks. 3 students leave, taking 2 pencils each. The teacher adds 20 pencils. 2 new students arrive, each needing 1 textbook. The teacher removes all but 1 textbook. 5 more students leave, taking 1 pencil each. How many students, pencils, and textbooks are there?",
+    "expected": {"students": 9, "pencils": 19, "textbooks": 1},
+    "key_facts": ["9 student", "19 pencil", "1 textbook"]
+  },
+  {
+    "id": "train_034",
+    "difficulty": 3,
+    "question": "Three colors of paint: Red=10 liters, Blue=8 liters, Yellow=6 liters. Mix 2 liters of Red and 2 liters of Blue to make Purple (4 liters). Mix 3 liters of Yellow and 3 liters of Red to make Orange (6 liters). Use 5 liters of Purple for a project. Use all the Orange. How many liters of each original color and mixed color remain?",
+    "expected": {"red": 5, "blue": 6, "yellow": 3, "purple": 0, "orange": 0},
+    "key_facts": ["5 red", "6 blue", "3 yellow", "0 purple", "0 orange"]
+  },
+  {
+    "id": "train_035",
+    "difficulty": 3,
+    "question": "Inventory: Widget A=100, Widget B=200, Widget C=150. Order 1 ships 25 A, 50 B, 30 C. Receive restock: 40 A, 0 B, 60 C. Order 2 ships 60 A, 75 B, 45 C. Receive restock: 0 A, 100 B, 0 C. Order 3 ships all remaining B. How many of each widget remain?",
+    "expected": {"a": 55, "b": 0, "c": 135},
+    "key_facts": ["55", "0", "135"]
+  },
+  {
+    "id": "train_036",
+    "difficulty": 3,
+    "question": "A garden has 20 red flowers, 15 yellow flowers, and 10 white flowers. Remove 5 red flowers. Add 8 yellow flowers. Remove all white flowers. Remove 3 yellow flowers. Add 10 white flowers. Remove 12 red flowers. Add 0 red flowers. How many flowers of each color are there?",
+    "expected": {"red": 3, "yellow": 20, "white": 10},
+    "key_facts": ["3 red", "20 yellow", "10 white"]
+  },
+  {
+    "id": "train_037",
+    "difficulty": 3,
+    "question": "Resource pool: CPU=80%, Memory=60%, Disk=40%. Process A uses 20% CPU and 15% Memory. Process B uses 30% CPU and 20% Memory and 25% Disk. Process A finishes, releasing its resources. Process C uses 25% CPU and 30% Memory and 10% Disk. What percentage of each resource is currently in use?",
+    "expected": {"cpu": 55, "memory": 50, "disk": 35},
+    "key_facts": ["55", "50", "35"]
+  },
+  {
+    "id": "train_038",
+    "difficulty": 3,
+    "question": "A store starts with 30 notebooks, 20 pens, and 25 erasers. Sells 10 notebooks and 5 pens. Receives 15 pens and 10 erasers. Sells 8 notebooks and 20 pens and 30 erasers. Receives 5 notebooks. Sells all remaining pens. How many of each item remain?",
+    "expected": {"notebooks": 17, "pens": 0, "erasers": 5},
+    "key_facts": ["17 notebook", "0 pen", "5 eraser"]
+  },
+  {
+    "id": "train_039",
+    "difficulty": 3,
+    "question": "Four friends split a bill: Alice=$50, Bob=$30, Carol=$20, Dave=$40 initially owed. Alice pays $60 (covers her share plus extra). Bob pays nothing. Carol pays $25. Dave pays $35. Remaining balance is split evenly among non-payers. How much does each person still owe after initial payments? (Alice paid extra, so she gets credit.)",
+    "expected": {"alice_credit": 10, "bob_owes": 30, "carol_owes": 0, "dave_owes": 5},
+    "key_facts": ["10", "30", "0", "5"]
+  },
+  {
+    "id": "train_040",
+    "difficulty": 3,
+    "question": "A data pipeline processes records: Stage 1 receives 1000 records, rejects 50 for format errors, passes 950. Stage 2 deduplicates: removes 200 duplicates, passes 750. Stage 3 validates: rejects 100 invalid records, passes 650. Stage 4 enriches: 30 records fail enrichment and are sent back to Stage 1 for reprocessing. How many records successfully completed the pipeline after one pass?",
+    "expected": {"completed": 620, "reprocessing": 30, "rejected": 350},
+    "key_facts": ["620", "30", "350"]
+  },
+  {
+    "id": "train_041",
+    "difficulty": 4,
+    "question": "A supply chain tracks 4 items: Bolts=500, Nuts=400, Washers=600, Screws=300. Week 1: Ship 100 Bolts, 80 Nuts, 150 Washers, 50 Screws. Receive 200 Bolts, 0 Nuts, 100 Washers, 200 Screws. Week 2: Ship 250 Bolts, 200 Nuts, 200 Washers, 300 Screws. Receive 100 Nuts, 0 Bolts, 50 Washers, 0 Screws. Week 3: Ship all remaining Bolts, ship all remaining Nuts, ship 100 Washers, ship 0 Screws. How many of each item remain?",
+    "expected": {"bolts": 0, "nuts": 0, "washers": 300, "screws": 150},
+    "key_facts": ["0 bolt", "0 nut", "300 washer", "150 screw"]
+  },
+  {
+    "id": "train_042",
+    "difficulty": 4,
+    "question": "Four accounts track balances: A=$1000, B=$500, C=$750, D=$250. Transfer $200 from A to B. Transfer $100 from B to C. Transfer $300 from C to D. Transfer $150 from D to A. Transfer $50 from A to C. Transfer all of B to D. What are the final balances?",
+    "expected": {"a": 900, "b": 0, "c": 500, "d": 600},
+    "key_facts": ["900", "0", "500", "600"]
+  },
+  {
+    "id": "train_043",
+    "difficulty": 4,
+    "question": "A text adventure: You start with 0 gold, 1 sword, 0 potions, 0 keys. Find 50 gold. Buy a potion for 20 gold. Receive 2 keys from a chest. Fight a monster: use 1 potion, gain 100 gold. Find a locked door: use 1 key, find 30 gold and 2 potions inside. Sell your sword for 40 gold. Buy 3 potions for 60 gold. Lose 1 key to a thief. Use 2 potions to heal. What do you have?",
+    "expected": {"gold": 140, "swords": 0, "potions": 1, "keys": 0},
+    "key_facts": ["140 gold", "0 sword", "1 potion", "0 key"]
+  },
+  {
+    "id": "train_044",
+    "difficulty": 4,
+    "question": "A server cluster: Node1=100% healthy, Node2=100% healthy, Node3=100% healthy, Node4=100% healthy. Node1 fails (goes offline). Load redistributed: Node2 takes 40% extra load, Node3 takes 40% extra load, Node4 takes 20% extra load. Node1 comes back online. Node3 is decommissioned. Remaining nodes share load evenly at 100% total. Node2 fails. What percentage of total cluster capacity is online and how is load distributed?",
+    "expected": {"capacity_percent": 50, "node1_load": 50, "node4_load": 50},
+    "key_facts": ["50%", "node1", "node4"]
+  },
+  {
+    "id": "train_045",
+    "difficulty": 4,
+    "question": "A recipe scales: Original makes 12 cookies using 2 cups flour, 1 cup sugar, 3 eggs, 0.5 cups butter. Scale to make 36 cookies. The baker has: 7 cups flour, 2 cups sugar, 8 eggs, 1.5 cups butter. After making 36 cookies, what quantities of each ingredient remain?",
+    "expected": {"flour": 1, "sugar": 0, "eggs": 1, "butter": 0},
+    "key_facts": ["1 cup flour", "0 cup sugar", "1 egg", "0 cup butter"]
+  },
+  {
+    "id": "train_046",
+    "difficulty": 4,
+    "question": "Ecosystem simulation: Rabbits=100, Foxes=20, Grass=500 units. Turn 1: 10 foxes eat rabbits (each fox eats 3), rabbits eat grass (each rabbit eats 1). Turn 2: 15 rabbits are born, 5 foxes die, 50 grass grows. Turn 3: 8 foxes eat rabbits (each eats 4), 20 rabbits are born, 40 grass grows, rabbits eat grass. Turn 4: All foxes that exceed the rabbit/fox ratio of 5:1 die of starvation (round down). What are the final populations?",
+    "expected": {"rabbits": 97, "foxes": 15, "grass": 388},
+    "key_facts": ["97 rabbit", "15 fox", "388 grass"]
+  },
+  {
+    "id": "train_047",
+    "difficulty": 4,
+    "question": "Project tracking: Tasks A, B, C, D, E each start at 0% complete. A and B start simultaneously. A finishes (100%). B reaches 50% then pauses. C starts and finishes (100%). B resumes and finishes. D starts, reaches 75%, then is cancelled (removed). E starts. B's completion triggers E to jump to 50%. E finishes. How many tasks are complete, how many were cancelled, and what is the overall completion rate of non-cancelled tasks?",
+    "expected": {"complete": 4, "cancelled": 1, "completion_rate": 100},
+    "key_facts": ["4 complete", "1 cancelled", "100%"]
+  },
+  {
+    "id": "train_048",
+    "difficulty": 4,
+    "question": "A vending machine has: Cola=5, Juice=3, Water=8, Coffee=2. Prices: Cola=$1.50, Juice=$2.00, Water=$1.00, Coffee=$2.50. Machine starts with $0 cash. Customer 1 buys 2 Cola and 1 Juice. Customer 2 buys 3 Water. Customer 3 tries to buy 2 Coffee but machine is out of exact change (has only $8.00, needs to give $0.00 change for $5.00 purchase) — purchase succeeds. Customer 4 buys all remaining Juice and 1 Water. How many of each drink remain and how much cash is in the machine?",
+    "expected": {"cola": 3, "juice": 0, "water": 4, "coffee": 0, "cash": 18},
+    "key_facts": ["3 cola", "0 juice", "4 water", "0 coffee", "18 dollar"]
+  },
+  {
+    "id": "train_049",
+    "difficulty": 4,
+    "question": "A city's budget over 4 quarters: Starting fund=$1,000,000. Q1: Revenue=$250,000, Expenses=$300,000. Q2: Revenue=$400,000, Expenses=$350,000, Emergency fund transfer out=$50,000. Q3: Revenue=$275,000, Expenses=$425,000, Emergency fund transfer in=$75,000. Q4: Revenue=$500,000, Expenses=$200,000, Year-end bonus paid=$100,000. What is the final budget balance and what was spent on the bonus?",
+    "expected": {"final_balance": 1075000, "bonus": 100000},
+    "key_facts": ["1,075,000", "100,000"]
+  },
+  {
+    "id": "train_050",
+    "difficulty": 4,
+    "question": "A game has 4 players with scores: Alice=0, Bob=0, Carol=0, Dave=0. Round 1: Alice+10, Bob+7, Carol+5, Dave+3. Round 2: Highest scorer loses half their points (round down). Alice-5. Bob+8, Carol+6, Dave+4. Round 3: Alice+12, Bob+3. Last place player gets double points: Dave+8 (already added). Carol+2. Round 4: All players with scores above 20 lose 5 points. What are the final scores?",
+    "expected": {"alice": 17, "bob": 13, "carol": 13, "dave": 15},
+    "key_facts": ["17", "13", "13", "15"]
+  }
+]

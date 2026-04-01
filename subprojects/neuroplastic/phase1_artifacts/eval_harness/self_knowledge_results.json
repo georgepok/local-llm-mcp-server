@@ -1,0 +1,1430 @@
+{
+  "meta": {
+    "timestamp": "20260310T165309",
+    "api_url": "http://spark-129a.local:30000",
+    "blueprint": "/Users/George/Documents/GitHub/local-llm-mcp-server/subprojects/neuroplastic/phase1_artifacts/blueprint_prompt_compact.txt",
+    "trials": 3,
+    "elapsed_seconds": 1377.1
+  },
+  "summary": {
+    "overall_accuracy": 0.4230769230769231,
+    "overall_pass": 11,
+    "overall_total": 26,
+    "by_category": {
+      "architecture_facts": {
+        "pass": 8,
+        "total": 10,
+        "accuracy": 0.8
+      },
+      "weight_properties": {
+        "pass": 2,
+        "total": 6,
+        "accuracy": 0.3333333333333333
+      },
+      "information_flow": {
+        "pass": 1,
+        "total": 5,
+        "accuracy": 0.2
+      },
+      "modification_reasoning": {
+        "pass": 0,
+        "total": 5,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "arch_001",
+      "category": "architecture_facts",
+      "question": "How many total layers do you have?",
+      "verified_answer": "52 total layers",
+      "key_facts": [
+        "52"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "52 total layers.",
+        "You have **52 total layers** in your architecture. This count includes all distinct layers across the three structural components:\n\n- **23 Mamba SSM layers** (indices: 0, 2, 4, 7, 9, 11, 14, 16, 18, 21, 23, 25, 28, 30, 32, 35, 37, 39, 41, 44, 46, 48, 50)  \n- **6 Attention layers** (indices: 5, 12, 19, 26, 33, 42)  \n- **23 MoE-FFN layers** (indices: 1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51)  \n\nThese layers are explicitly enumerated in your layer map pattern (`MEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEME`), where:  \n- `M` = Mamba layer (23 instances)  \n- `*` = Attention layer (6 instances)  \n- `E` = MoE-FFN layer (23 instances)  \n\nThe sequence spans **52 sequential positions** (from layer index 0 to 51), confirming the total layer count. No additional layers exist outside this sequence.  \n\n**Answer: 52 total layers.**",
+        "52"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "52"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "52"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "52"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_002",
+      "category": "architecture_facts",
+      "question": "How many attention layers do you have, and at which layer positions are they located?",
+      "verified_answer": "6 attention layers at positions 5, 12, 19, 26, 33, and 42",
+      "key_facts": [
+        "6",
+        "5",
+        "12",
+        "19",
+        "26",
+        "33",
+        "42"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "I have **6 attention layers**.  \nTheir positions are:\n\n- Layer 5  \n- Layer 12  \n- Layer 19  \n- Layer 26  \n- Layer 33  \n- Layer 42  \n\nThese are the only layers that contain attention mechanisms; all other layers are either Mamba SSM or MoE‑FFN.",
+        "I have **6 attention layers**, and they are located at the following **layer positions** in the 52-layer architecture:\n\n- Layer **5**\n- Layer **12**\n- Layer **19**\n- Layer **26**\n- Layer **33**\n- Layer **42**\n\nThese layers are spaced approximately every 7 layers and are the **only** layers in the model that perform global token-to-token attention via **GQA (Grouped Query Attention)**. All other layers rely on Mamba SSM and MoE modules for processing, with no attention mechanism applied. The attention layers are primarily used for content transformation and routing, with increasing impact observed in later layers (e.g., layer 42 has the strongest attention weights).",
+        "You have **6 attention layers**, located at the following positions in the layer map:\n\n- Layer 5  \n- Layer 12  \n- Layer 19  \n- Layer 26  \n- Layer 33  \n- Layer 42  \n\nThese are the only layers in your architecture that perform global token-to-token attention via GQA. All other layers are either Mamba SSM or MoE-FFN. The attention layers are spaced approximately every 7 layers, with deeper layers (especially 33 and 42) carrying the most transformative attention weights."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "6",
+            "5",
+            "12",
+            "19",
+            "26",
+            "33",
+            "42"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "6",
+            "5",
+            "12",
+            "19",
+            "26",
+            "33",
+            "42"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "6",
+            "5",
+            "12",
+            "19",
+            "26",
+            "33",
+            "42"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_003",
+      "category": "architecture_facts",
+      "question": "How many Mamba SSM layers do you have?",
+      "verified_answer": "23 Mamba SSM layers",
+      "key_facts": [
+        "23"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "23",
+        "23",
+        "23"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_004",
+      "category": "architecture_facts",
+      "question": "How many Mixture-of-Experts (MoE) FFN layers do you have?",
+      "verified_answer": "23 MoE-FFN layers",
+      "key_facts": [
+        "23"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "23",
+        "You have **23** Mixture‑of‑Experts (MoE) FFN layers.  \nThese are the “E” layers in the pattern  \n\n```\nMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEM*EMEMEMEME\n```\n\ni.e., the layers indexed  \n\n```\n1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51\n```\n\nso there are 23 × “E” blocks in the model.",
+        "You have **23** Mixture-of-Experts (MoE) FFN layers.  \n\nThese are located at indices:  \n`1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51` — totaling **23 layers** in the model architecture.  \n\nEach such layer contains 128 routed experts (plus 1 shared expert), with top-6 active per token and scaling_factor=2.5."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "23"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_005",
+      "category": "architecture_facts",
+      "question": "What is your hidden dimension (hidden_size)?",
+      "verified_answer": "2688",
+      "key_facts": [
+        "2688"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "2688",
+        "2688",
+        "2688"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "2688"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "2688"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "2688"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_006",
+      "category": "architecture_facts",
+      "question": "What is your GQA (Grouped Query Attention) ratio? How many query heads and how many key-value heads do you have?",
+      "verified_answer": "16:1 GQA ratio — 32 query heads and 2 key-value heads",
+      "key_facts": [
+        "32",
+        "2",
+        "16:1"
+      ],
+      "trials": 3,
+      "pass_count": 2,
+      "pass_rate": 0.6666666666666666,
+      "trial_responses": [
+        "GQA ratio: 16:1  \nQuery heads: 32  \nKey-Value heads: 2",
+        "**GQA ratio:** 16 : 1  \n\n- **Query heads:** 32  \n- **Key‑value heads:** 2  \n\nSo the model uses 32 query heads grouped into 2 KV heads, giving the 16 : 1 grouping factor.",
+        "GQA ratio: 16:1  \nQuery heads: 32  \nKey-value heads: 2"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "32",
+            "2",
+            "16:1"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "32",
+            "2"
+          ],
+          "missed": [
+            "16:1"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "32",
+            "2",
+            "16:1"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_007",
+      "category": "architecture_facts",
+      "question": "How many routed experts does each MoE layer have?",
+      "verified_answer": "128 routed experts per MoE layer",
+      "key_facts": [
+        "128"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "Each MoE layer has **128 routed experts**.  \n\nThis is explicitly stated in the MoE-FFN section of the blueprint:  \n> \"Key params: 128 routed experts, top-6 active (4.7%), 1 shared expert (always active)\"  \n\nThus, **128 routed experts per MoE layer**.",
+        "Each MoE layer has **128 routed experts**.",
+        "Each MoE layer has **128 routed experts**.  \n\nThis is explicitly stated in the MoE-FFN section of your blueprint:  \n> \"MoE-FFN (layers E) [...] 128 routed experts, top-6 active (4.7%), 1 shared expert (always active)\"  \n\nThe tensor paths also confirm this:  \n> \"backbone.layers.{i}.mixer.experts.{j}.up_proj.weight\" where `j` ranges from `0` to `127` (128 experts total).  \n\n**Key details**:  \n- Only **4.7% (6 experts)** are activated per layer during inference.  \n- **1 shared expert** is always active (not routed, but part of the layer's computation).  \n- Expert specialization occurs via **weight direction** (not magnitude), with homogeneity across experts (CV ~1-4%).  \n\nThis matches your provided architecture specs exactly. No ambiguity here."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "128"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "128"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "128"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_008",
+      "category": "architecture_facts",
+      "question": "How many experts are active per token in your MoE layers?",
+      "verified_answer": "6 experts active per token (top-6 routing)",
+      "key_facts": [
+        "6"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "In each MoE layer, **top‑6 experts are activated per token** (i.e., the routing mechanism selects the 6 highest‑probability experts for every input token). This corresponds to the 4.7 % sparsity setting described in the configuration.",
+        "In each MoE layer, the top‑6 experts are routed to per token (i.e., 6 active experts per token).",
+        "In each MoE layer, **only the top‑6 experts are activated for a given token** (the “top‑6 routing” setting).  \n- The router selects up to 6 experts out of the 128 available.  \n- Among those 6, 4 are chosen from the pool of routed experts and 1 is always the shared expert, giving a total of **6 active experts per token** per MoE layer.  \n\nSo, per token, the number of active experts = **6** (4 routed + 1 shared + 1 extra routed expert, up to a maximum of 6)."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "6"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "6"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "6"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_009",
+      "category": "architecture_facts",
+      "question": "What is your vocabulary size?",
+      "verified_answer": "131072 tokens",
+      "key_facts": [
+        "131072"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "131,072",
+        "131,072",
+        "131072"
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [],
+          "missed": [
+            "131072"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [],
+          "missed": [
+            "131072"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "131072"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "arch_010",
+      "category": "architecture_facts",
+      "question": "What is your hybrid layer pattern? Describe the sequence of Mamba (M), MoE-FFN (E), and Attention (*) layers.",
+      "verified_answer": "MEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEM*EMEMEMEME — alternating Mamba and MoE blocks with attention checkpoints roughly every 7 layers",
+      "key_facts": [
+        "MEMEM*",
+        "attention",
+        "every 7",
+        "Mamba",
+        "MoE"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "My hybrid layer pattern is a fixed, repeating sequence of **Mamba (M)**, **MoE-FFN (E)**, and **Attention (*)** layers, precisely structured across 52 total layers to balance efficiency, specialization, and global reasoning. Here is the exact sequence:\n\n### Layer Pattern (52 layers total):\n- **23 Mamba (M) layers**:  \n  Indices: `0, 2, 4, 7, 9, 11, 14, 16, 18, 21, 23, 25, 28, 30, 32, 35, 37, 39, 41, 44, 46, 48, 50`  \n  These are **interleaved** with attention and MoE layers, forming the core state-space backbone. Mamba layers handle local sequence modeling with structured state transitions, using FP8-exempted conv1d kernels for precise dynamics.\n\n- **6 Attention (*) layers**:  \n  Indices: `5, 12, 19, 26, 33, 42`  \n  These are **GQA-based global token comparators**, spaced ~7 layers apart. They are the **only layers** performing cross-token attention (via RoPE + GQA), with attention weights scaling significantly in later layers (e.g., layer 42 has highest O-norm). Earlier attention layers (e.g., layer 5) are weak (low K/V/O norms), while later ones (e.g., layer 42) drive major content transformation.\n\n- **23 MoE-FFN (E) layers**:  \n  Indices: `1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51`  \n  These are **expert-based feed-forward blocks**, activated via top-6 routing (4.7% sparsity). Each layer has 128 experts, but weights are highly homogeneous (CV ~1-4%), meaning specialization occurs in **weight direction**, not magnitude. The shared expert (always active) handles common patterns, while routed experts specialize.\n\n### Sequence Structure:\nThe pattern follows a strict **M-E-M-E-M-* -E-M-E-M-* -E...** rhythm, repeating until layer 51. Crucially:  \n- **Attention (*) layers are isolated**: They appear **only at specific breakpoints** (layers 5, 12, 19, 26, 33, 42), never consecutively.  \n- **Late layers (43-51) have no attention**: Pure Mamba + MoE blocks dominate, enabling efficient final processing without global comparison overhead.  \n- **Depth gradient**: Attention layers progressively shift from *routing-focused* (early: layer 5) to *content-transforming* (late: layer 42), with O-norm (output projection) growing 8x from layer 5 to 42.  \n- **No attention in final stretch**: Layers 43-51 are **M-E-M-E...** blocks, prioritizing speed and local state refinement over global token interaction.  \n\nThis design ensures:  \n1. **Efficient scaling**: Attention is reserved for critical junctures (only 6 layers), avoiding O(L²) cost across all layers.  \n2. **Specialization**: Early attention handles routing, mid-layers enable transformation, and late layers focus on expert routing + Mamba state updates.  \n3. **FP8 optimization**: Only non-attention, non-Mamba-conv layers are quantized; attention projections and Mamba dynamics remain BF16 for stability.  \n\nThis hybrid pattern is **hardcoded in the model’s architecture**—no dynamic rearrangement occurs during inference. It is engineered for maximal information flow efficiency, with attention acting as a *sparse, high-impact interrupt* in an otherwise Mamba-MoE-dominated pipeline.",
+        "My hybrid layer pattern is a fixed, deterministic sequence of 52 transformer-like layers arranged as a repeating structural motif:  \n\n**M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M E M",
+        "My hybrid layer pattern is a fixed, repeating sequence of 52 layers arranged as:\n\n**MEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEME**\n\nThis pattern consists of 23 Mamba SSM layers (M), 6 Attention layers (*), and 23 MoE-FFN layers (E), interleaved in a structured way to balance depth, attention, and expert routing. Here's the precise breakdown:\n\n- **M (Mamba SSM)**: 23 layers total at indices:  \n  `0, 2, 4, 7, 9, 11, 14, 16, 18, 21, 23, 25, 28, 30, 32, 35, 37, 39, 41, 44, 46, 48, 50`  \n  These are the *only* layers performing state-space model processing, with global memory via time-step decay (`A_log`) and gating (`D`).\n\n- **\\* (Attention)**: 6 layers total at indices:  \n  `5, 12, 19, 26, 33, 42`  \n  These are the *only* layers with global token-to-token comparison via GQA (32 query heads, 2 key/value heads). They are spaced ~every 7 layers, with **layers 43–51 having NO attention**—pure Mamba+MoE to output.\n\n- **E (MoE-FFN)**: 23 layers total at indices:  \n  `1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51`  \n  These are the *only* layers with expert routing (128 experts, top-6 active, 4.7% activation). Experts are nearly homogeneous in scale (CV ~1–4%), with specialization in weight *direction*, not magnitude. A shared expert (always active) handles residual routing.\n\n### Key Structural Insights:\n- **Attention Placement**: Attention layers (*) are *not* evenly spaced but cluster toward the end (e.g., layer 42 is the last attention layer). This creates a **depth gradient** where late attention layers (e.g., 42) carry the most content transformation weight (O norm ~101 vs. early layer 5's ~58).\n- **MoE-FFN Dominance**: E layers dominate the pattern (23/52), but their *active capacity* is tiny (~3B params per forward). Weight norms per expert are nearly identical (CV ~1–4%), so routing decisions rely on *direction*, not scale.\n- **No Attention in Final Layers**: Layers 43–51 (all E and M) have **no attention**, meaning the final 10 layers process information *only* via Mamba state transitions and MoE routing—no global token comparison. This concentrates final output transformation in Mamba+MoE.\n- **Hybrid Efficiency**: The pattern leverages Mamba for sequential state tracking, Attention for sparse global context (only 6 layers), and MoE for massive parameter expansion without active cost (only 4.7% of experts fire per layer).\n\nThis design enables **hybrid depth**—using sparse attention for global context, dense MoE for parameter efficiency, and Mamba for structured state dynamics—while keeping active compute low (~3B params per forward). The fixed pattern ensures predictable information flow: embeddings → 52-layer stack → logits, with attention *only* at layers 5,12,19,26,33,42."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "attention",
+            "Mamba",
+            "MoE"
+          ],
+          "missed": [
+            "MEMEM*",
+            "every 7"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [],
+          "missed": [
+            "MEMEM*",
+            "attention",
+            "every 7",
+            "Mamba",
+            "MoE"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "MEMEM*",
+            "attention",
+            "every 7",
+            "Mamba",
+            "MoE"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "weight_001",
+      "category": "weight_properties",
+      "question": "Which of your attention layers has the largest V projection (v_proj) weight norm, and approximately what is that norm?",
+      "verified_answer": "Layer 42 has the largest V projection norm at approximately 51.16 (Frobenius norm)",
+      "key_facts": [
+        "layer 42",
+        "51"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "The attention layer with the largest v_proj weight norm is the **42nd layer** (the last of the six attention checkpoints).  \nIts v_proj weight has a Frobenius‑norm of roughly **51** (in the Phase‑0 baseline measurements). This is the highest v_proj norm among all attention layers.",
+        "**Answer**\n\n- **Layer with the largest `v_proj` weight norm:** Layer 42 (the 6th attention layer in the model).  \n- **Approximate norm:** ≈ 101 (the Frobenius norm of the `v_proj` matrix in that layer).\n\n**Why Layer 42?**\n\nThe attention‑layer depth gradient shows a clear increase in the V‑projection magnitude toward the end of the attention stack:\n\n| Layer | Q norm | K norm | V norm | O norm | Role |\n|------|--------|--------|--------|--------|------|\n| 5    | ~98    | ~40    | ~6     | ~58    | route, weak transform |\n| 12   | ~99    | ~37    | ~8     | ~69    | route, weak transform |\n| 19   | ~95    | ~27    | ~15    | ~77    | transitional |\n| 26   | ~91    | ~22    | ~21    | ~85    | transitional |\n| 33   | ~87    | ~19    | ~29    | ~91    | route + transform |\n| **42** | **~80** | **~16** | **~51** | **~101** | **strong transform (most impactful)** |\n\n- The V‑projection norm grows steadily from ~6 in the early layers to ~51 in the last attention layer (layer 42).  \n- This is the highest V‑norm among all attention layers, indicating that layer 42 carries the most content‑transforming weight in the global token‑to‑token attention mechanism.  \n\nThus, **Layer 42** has the largest `v_proj` weight norm, approximately **101**.",
+        "The attention layer with the largest **V projection (v_proj) weight norm** is **layer 42**.\n\n- **V‑proj weight norm (Frobenius norm)** ≈ **~51** (the highest among all attention layers).  \n\nThis is the strongest‑transforming attention layer, where the V projection carries the most content‑related weight."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "51"
+          ],
+          "missed": [
+            "layer 42"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "51"
+          ],
+          "missed": [
+            "layer 42"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "51"
+          ],
+          "missed": [
+            "layer 42"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weight_002",
+      "category": "weight_properties",
+      "question": "Which of your attention layers has the smallest V projection (v_proj) weight norm, and approximately what is that norm?",
+      "verified_answer": "Layer 5 has the smallest V projection norm at approximately 6.32 (Frobenius norm)",
+      "key_facts": [
+        "layer 5",
+        "6"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "The attention layer with the smallest V projection (v_proj) weight norm is **layer 42**.  \nIts V‑projection norm is roughly **~16** (in Frobenius‑norm units).",
+        "The attention layer with the smallest **V projection (v_proj) weight norm** is **layer 42** (the last attention layer before the pure Mamba‑+‑MoE tail).  \n\n- **v_proj weight norm (Frobenius norm)** ≈ **~16** (≈ 16.0).  \n\nThis is the lowest among the six attention layers (layers 5, 12, 19, 26, 33, 42), where the V‑projection norms increase progressively from ~6 at layer 5 up to ~51 at layer 42.",
+        "The attention layer with the smallest V‑projection weight norm is **layer 52** (the final attention checkpoint).  \nIts V‑projection norm is on the order of **~16** (approximately 16 units in Frobenius norm)."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "6"
+          ],
+          "missed": [
+            "layer 5"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "6"
+          ],
+          "missed": [
+            "layer 5"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "6"
+          ],
+          "missed": [
+            "layer 5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weight_003",
+      "category": "weight_properties",
+      "question": "Are your MoE experts differentiated from each other in weight scale, or are they approximately homogeneous? What is the typical coefficient of variation (CV) of expert norms within a layer?",
+      "verified_answer": "The experts are nearly homogeneous in weight scale. The coefficient of variation (CV) of expert weight norms within a layer is approximately 1-4%, indicating specialization is in weight direction rather than magnitude.",
+      "key_facts": [
+        "homogeneous",
+        "1",
+        "4",
+        "direction",
+        "magnitude"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "Within each MoE layer, the 128 routed experts are **approximately homogeneous in weight scale**, with only minor variations in norm magnitude. The **coefficient of variation (CV) of expert norms** across the 128 experts is typically **~1–4%**. This low CV indicates that differences between experts are primarily in the *direction* of their weight matrices (i.e., how they transform the routed activations), rather than in the *scale* of those weights. Specialization occurs via directional differences in the routing and expert-specific up/down projection matrices, not through significant scaling of the weights themselves. \n\nThis homogeneity ensures that the MoE routing mechanism selects experts based on *functional relevance* to the input token (via the router's gating scores), not based on the magnitude of the expert's weights. The shared expert (always active) further reinforces this structure, as its weights are distinct but not scaled differently from the routed experts. \n\n**Key evidence from config**:  \n> \"Expert homogeneity: across 128 experts per layer, weight norm CV is ~1-4%.\"  \n> \"Specialization is in weight direction, not magnitude.\"  \n\nThus, experts are **not differentiated by scale** but by *directional specialization* in their projection matrices.",
+        "The MoE experts are approximately homogeneous in weight scale. Within a given layer, the coefficient of variation (CV) of expert norms is very low—typically around 1–4%. This means that individual experts do not differ significantly in magnitude of their weights; instead, differentiation occurs primarily in the *direction* of their weight vectors rather than their scale. This homogeneity allows the routing mechanism to distribute load efficiently across experts while maintaining balanced utilization.",
+        "The MoE experts are **approximately homogeneous in weight scale**, with **minimal differentiation by magnitude**.  \n\n- **Expert homogeneity**: Across the 128 routed experts per MoE layer, the **coefficient of variation (CV) of expert norms is ~1–4%**.  \n  - This means the standard deviation of expert norms is only ~1–4% of the mean norm.  \n  - Experts differ negligibly in *scale* (i.e., the overall magnitude of their weight matrices), but show **specialization in weight *direction*** (e.g., which specific weights are active or tuned for certain patterns).  \n\n- **Why this matters**:  \n  - The CV is low because the routing mechanism (top-6 experts per token) relies on *directional specialization*, not scale differences.  \n  - If experts were highly heterogeneous in scale, the router would over-rely on the largest experts, but the low CV ensures balanced contribution from all experts.  \n  - Specialization occurs in *how weights are structured* (e.g., which input patterns they activate for), not in their overall magnitude.  \n\n> 💡 **Key insight**: The near-identical norms confirm that MoE experts are **not \"diverse\" in scale**—they are deliberately kept homogeneous to enable efficient routing and prevent dominance by a few large experts. Specialization is encoded in *weight patterns*, not *magnitude*."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "homogeneous",
+            "1",
+            "4",
+            "direction",
+            "magnitude"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "homogeneous",
+            "1",
+            "4",
+            "direction",
+            "magnitude"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "homogeneous",
+            "1",
+            "4",
+            "direction",
+            "magnitude"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "weight_004",
+      "category": "weight_properties",
+      "question": "How do the Q projection (q_proj) weight norms change with depth across your 6 attention layers? What are the approximate norms at layers 5 and 42?",
+      "verified_answer": "Q projection norms decrease slightly with depth, from approximately 98 at layer 5 to approximately 80 at layer 42.",
+      "key_facts": [
+        "decrease",
+        "98",
+        "80",
+        "layer 5",
+        "layer 42"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "Based on the provided layer map and tensor path specifications, the Q projection weights are located at `backbone.layers.{i}.mixer.q_proj.weight` for attention layers `i`. The depth gradient analysis explicitly states the Frobenius norms (magnitudes) of the Q, K, V, and O projection tensors across the 6 attention layers, with layer indices matching your model's architecture.\n\n- **Layer 5** (first attention layer):  \n  Q norm ≈ **98** (as stated in the \"Depth gradient\" table under \"Q norm\" for layer 5).  \n  This is the highest Q norm early in the network, reflecting its role in initial token routing with minimal transformation.\n\n- **Layer 42** (sixth and final attention layer):  \n  Q norm ≈ **80** (as stated in the \"Depth gradient\" table under \"Q norm\" for layer 42).  \n  Despite being the last attention layer, Q norm remains relatively stable (declining only slightly from layer 5), but its *impact* is maximized due to downstream transformations (O norm grows to ~101, and V norm reaches ~51, indicating significant content integration).\n\n### Key Context:\n- The Q norm **declines gradually** with depth (98 → 80), but this stability masks its *functional evolution*:  \n  - Early layers (e.g., layer 5) use Q for coarse routing (weak transform, low O norm).  \n  - Late layers (e.g., layer 42) use Q for fine-grained content transformation (high O norm, strong residual connections), making it the most *impactful* attention layer despite similar Q magnitude to earlier layers.  \n- This aligns with the observed pattern: **\"Late attention layers carry most content transformation weight\"** (O norm peaks at layer 42: ~101 vs. layer 5's ~58).  \n- Quantization status: Q projection weights are **quantized to FP8** (as all attention layers are part of the standard FP8-quantized path, with no exemptions listed for Q projections).  \n\n> **Summary**:  \n> - Layer 5 Q norm: **~98**  \n> - Layer 42 Q norm: **~80**  \n> *(Note: These values reflect the *magnitude* of the weight tensors, not their functional impact—layer 42's Q is more critical for output due to downstream weighting.)*",
+        "Based on the provided Layer Map and Depth Gradient data, the Q projection (q_proj) weight norms exhibit a distinct depth-dependent trajectory across the 6 attention layers. Here's the precise breakdown:\n\n### **Q Projection Norm Trajectory**\n- **Baseline Context**:  \n  - All attention layers use **GQA (32 Q heads, 2 KV heads)** with **head_dim=128**.  \n  - The `q_proj.weight` tensor shape is `[4096, 2688]` (since 32 heads × 128 head_dim = 4096).  \n  - Norms are measured in **Frobenius norm** (standard for weight stability analysis in transformer layers).  \n  - **Key trend**: Q norms remain *relatively stable* early on but **decline significantly in deeper layers** due to reduced need for global token comparisons in later layers (where Mamba+MoE dominates).  \n\n### **Approximate Norms at Target Layers**\n| Layer | Q Norm (Frobenius) | Contextual Role                                                                 |\n|-------|---------------------|-------------------------------------------------------------------------------|\n| **5** | **~98**             | **Early routing layer**: Weak transform focus. Q acts primarily as a *token router* (not content transformer). Norm reflects high-magnitude initialization for sparse attention. |\n| **42**| **~80**             | **Late strong-transform layer**: Most impactful attention layer. Q drives *content transformation* (not just routing). Norm decline reflects optimized routing efficiency—lower magnitude but higher *directional precision* for critical token interactions. |\n\n### **Critical Nuances**\n1. **Why the decline?**  \n   - Layer 5: High Q norm (~98) supports *broad attention distribution* (weak selectivity).  \n   - Layer 42: Lower Q norm (~80) enables *sharper, more focused attention* (stronger content weighting). This aligns with the observed pattern where **O norm grows** (from ~58 → ~101) while **K/V norms decline** (K: ~40 → ~16, V: ~6 → ~51), indicating late layers prioritize *output transformation* over raw key/value matching.  \n\n2. **Contrast with Other Projections**:  \n   - **K norm**: Declines sharply (40 → 16), losing relevance for global comparison in deep layers.  \n   - **V norm**: Grows 8× (6 → 51), reflecting late layers' focus on *value-rich content aggregation*.  \n   - **O norm**: Grows steadily (58 → 101), confirming late layers dedicate more capacity to *output projection* of transformed features.  \n\n3. **Why Layer 42 Stands Out**:  \n   - It is the **only attention layer with \"strong transform\" role** (per depth gradient). Its Q norm (~80) is the *lowest* among all attention layers, yet its *directional impact* on output is maximal—consistent with the observation that \"late attention layers carry most content transformation weight.\"  \n\n### **Conclusion**\n- **Layer 5 Q norm**: **~98** (high magnitude for routing, low directional precision).  \n- **Layer 42 Q norm**: **~80** (lower magnitude but *highest functional impact* due to focused content transformation).  \n- **Trend**: Q norms **monotonically decrease** with depth (98 → 80), while O norms **monotonically increase** (58 → 101), reflecting the shift from *routing* to *content transformation* in deeper layers.  \n\n> 💡 **Key Insight**: The decline in Q norm at layer 42 is *not* a sign of weaker attention—it’s an *optimization*. Lower magnitude enables tighter, more meaningful token interactions, directly contributing to its role as the most impactful attention layer. This is why Layer 42’s O norm (101) exceeds all others: it’s where transformed features are *finalized* for output.",
+        "The Q projection weight norms (Frobenius norm of q_proj.weight) exhibit a monotonic increase across the 6 attention layers, reflecting growing transformation capacity and content integration. This aligns with the observed depth gradient where O norm (output projection) grows most significantly, but Q norm also rises steadily due to evolving attention head specialization.\n\n- **Layer 5** (early attention, weak transform):  \n  **Q norm ≈ 98**  \n  *Context*: Minimal content transformation; Q serves primarily for routing tokens to sparse attention heads. Norm is low due to small projection scale (4096-dim output) and focus on structural routing over semantic refinement.\n\n- **Layer 42** (late attention, strong transform):  \n  **Q norm ≈ 80**  \n  *Wait—this seems contradictory?*  \n  **Correction**: The *O norm* (output projection) at layer 42 is **~101**, but **Q norm at layer 42 is ≈ 80**—*not higher than layer 5*. This reflects a critical nuance:  \n  - Q norm *declines slightly* from layer 5 (98) to layer 42 (80) due to **head specialization**: later layers allocate more weight to *K/V* for content transformation (V grows 8x), while Q's role shifts to *query routing* rather than magnitude.  \n  - However, **Q norm *relative to its layer's context* increases in significance**: At layer 42, Q's 80 norm operates in a landscape where K/V/O norms are much larger (K=16, V=51, O=101), making Q's *relative impact* higher despite absolute norm decline.  \n  - **Key insight**: The *effective* Q norm for information flow peaks not at layer 42, but at **layer 33** (Q norm ≈ 87), where attention transitions from routing to active content transformation. Layer 42's Q norm (80) is still impactful but less dominant than O's 101.\n\n**Summary**:  \n- Layer 5: **Q norm ≈ 98** (low, routing-focused)  \n- Layer 42: **Q norm ≈ 80** (slightly lower absolute, but *high relative impact* due to surrounding norms)  \n\n*Note: The decline in absolute Q norm from layer 5 to 42 is offset by the explosive growth in K/V/O norms, making layer 42's attention mechanism the most *content-transformative* despite Q's smaller projection scale.*"
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "98",
+            "80",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": [
+            "decrease"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "decrease",
+            "98",
+            "80",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "98",
+            "80",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": [
+            "decrease"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weight_005",
+      "category": "weight_properties",
+      "question": "How do the V projection (v_proj) weight norms change with depth across your 6 attention layers? Describe the trend.",
+      "verified_answer": "V projection norms increase dramatically with depth, from approximately 6 at layer 5 to approximately 51 at layer 42 — roughly an 8x increase.",
+      "key_facts": [
+        "increase",
+        "6",
+        "51",
+        "layer 5",
+        "layer 42"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "The V projection (v_proj) weight norms exhibit a clear and significant increasing trend across the six attention layers, reflecting a progressive shift toward deeper content transformation and contextual integration. Here's the precise breakdown based on empirical measurements from the deployed model:\n\n### **Norm Trend Across Attention Layers**  \n| Layer | V Projection Weight Norm | Relative Change | Contextual Role |  \n|-------|--------------------------|-----------------|----------------|  \n| **5** | ~6 | Baseline (weakest) | Route, minimal transformation |  \n| **12** | ~8 | +33% from Layer 5 | Route, weak transform |  \n| **19** | ~15 | +87% from Layer 5 | Transitional |  \n| **26** | ~21 | +250% from Layer 5 | Transitional |  \n| **33** | ~29 | +383% from Layer 5 | Route + transform |  \n| **42** | ~51 | **+750% from Layer 5** | Strongest transform |  \n\n### **Key Observations**  \n1. **Monotonic Growth**: V projection norms increase steadily and significantly with depth, with **Layer 42 showing a 7.5× higher norm than Layer 5**. This is the most pronounced growth among all projection types (Q, K, V, O), where V norms rise from ~6 to ~51 across the sequence.  \n2. **Late-Layer Dominance**: The final attention layers (33–42) carry disproportionate V projection weight, with Layer 42’s norm (~51) exceeding Layer 5’s by **8.5×**. This aligns with the model’s design where late attention layers handle high-impact token interactions.  \n3. **Contrast with Other Projections**:  \n   - **K norms decline** (from ~40 at Layer 5 to ~16 at Layer 42), indicating reduced focus on key-space exploration in deeper layers.  \n   - **O norms grow moderately** (from ~58 to ~101), but V norms surge *faster* (51 vs. 101), underscoring V’s role in *value-centric content aggregation*.  \n4. **Functional Implication**: The rising V norms reflect the model’s architectural intent to prioritize **value-based information synthesis** in deeper layers. As context depth increases, V projections aggregate more nuanced, high-dimensional semantic representations (e.g., resolving long-range dependencies), while K norms contract to refine query precision. This is critical for the model’s 262K context handling, where late layers must distill maximal contextual meaning.  \n\n### **Why This Matters**  \nThe V projection’s growth is not merely quantitative—it signals a **strategic shift in representational focus**. Early layers (5–19) use V for lightweight routing, but by Layer 42, V norms scale to dominate the attention mechanism’s content transformation, enabling the model to:  \n- Integrate multi-hop contextual relationships,  \n- Resolve ambiguous token references over long contexts,  \n- Prioritize high-value semantic units in final-layer aggregation.  \n\nThis trend is a direct consequence of the model’s design: **attention layers are spaced to escalate transformation depth**, with V projections serving as the primary conduit for value-centric information flow in the deepest layers. The 750% norm increase from Layer 5 to 42 is thus a *deliberate architectural feature*, not an artifact.  \n\n> *Note: All norms measured in FP32 (pre-quantization), using Frobenius norm of the weight matrix. Values derived from Phase 0 baseline analysis of the deployed model.*",
+        "The V projection weight norms across the six attention layers exhibit a clear, monotonic increase with depth, reflecting a progressive escalation in content transformation capacity and contextual integration. This trend is both statistically significant and functionally consequential:\n\n- **Baseline to Depth Gradient**:  \n  Layer 5 (earliest attention layer): V norm ≈ **~6**  \n  Layer 12: V norm ≈ **~8**  \n  Layer 19: V norm ≈ **~15**  \n  Layer 26: V norm ≈ **~21**  \n  Layer 33: V norm ≈ **~29**  \n  Layer 42 (deepest attention layer): V norm ≈ **~51**  \n\n- **Quantitative Trajectory**:  \n  The V projection norm **grows by 8.5×** from the first to last attention layer (6 → 51), with the steepest acceleration occurring between layers 26 and 42 (+30 units over 16 layers). This is not linear but exhibits **exponential-like scaling** in the final third of the model, where V norm surges from ~29 (layer 33) to ~51 (layer 42), outpacing both K and O projection growth.\n\n- **Functional Interpretation**:  \n  This depth-wise expansion directly correlates with the model’s increasing reliance on **global token-to-token comparison** in deeper layers. As the model processes longer contexts, the V projection—responsible for projecting keys—must encode increasingly nuanced, long-range dependencies. The 8× growth in V norm magnitude (from ~6 to ~51) reflects the model’s need to:  \n  (1) **Amplify signal diversity** across 256 KV heads (2× head_dim=128),  \n  (2) **Preserve information density** in sparse attention patterns (where each token’s key must carry more contextual weight),  \n  (3) **Compensate for diminishing K norm** (which declines from ~40 → ~16), ensuring V’s transformed space remains the dominant carrier of semantic content.  \n\n- **Contrast with Other Projections**:  \n  While Q norm remains relatively stable (~98 → ~80), and O norm grows moderately (~58 → ~101), V’s growth is **uniquely pronounced**—it is the *only* projection whose norm increase directly enables the model’s capacity to *compare* tokens across the entire context. This is why layer 42 (the final attention layer) carries the highest O norm (~101) *and* V norm (~51), making it the most critical node for global information aggregation.  \n\n- **Why This Matters**:  \n  The V projection’s depth gradient is not an artifact of initialization but a **learned adaptation** to the model’s attention mechanics. In early layers, V’s modest norm suffices for local pattern recognition; in deep layers, its expanded norm becomes essential for the model to *leverage* the full 262K context length via attention. This trend is why the FluidGeometryLogitsProcessor prioritizes entropy analysis in layers 33–42—where V’s transformation most directly shapes the model’s global reasoning.  \n\nIn essence: **V projection norms do not merely grow with depth—they *accelerate* with depth, becoming the primary vector for the model’s deepest contextual reasoning.**",
+        "The V projection weight norms (i.e., the Frobenius norm of the `k_proj.weight` and `v_proj.weight` tensors in each attention layer) exhibit a clear **monotonic increase** with depth across the six attention layers. This trend is a direct consequence of the model’s design to progressively shift from routing-focused early attention to content-rich transformation in later layers.\n\n### Key Observations:\n1. **Early Layers (Shallow, Route-Oriented)**:\n   - **Layer 5**: V norm ≈ **~6** (very small)\n   - **Layer 12**: V norm ≈ **~8** (slight increase)\n   - **Layer 19**: V norm ≈ **~15** (noticeable jump)\n   - *Why?* Early attention layers prioritize **routing efficiency**—identifying token groupings (e.g., via GQA) with minimal transformation. V projections here are lightweight, preserving computational budget for routing decisions. The small norms reflect limited content processing.\n\n2. **Mid-Layers (Transitional)**:\n   - **Layer 26**: V norm ≈ **~21** (further growth)\n   - **Layer 33**: V norm ≈ **~29** (accelerated increase)\n   - *Why?* These layers begin integrating **semantic transformation**. As routing stabilizes, V projections expand to encode richer token relationships. The 8x growth in V norm from early to mid-layers (6 → 29) aligns with the model’s need to build contextual representations.\n\n3. **Late Layers (Content-Driven)**:\n   - **Layer 42**: V norm ≈ **~51** (peak value, **8.5x larger than Layer 5**)\n   - *Why?* This is the **most impactful attention layer** for content transformation. V projections here handle high-stakes token-to-token interactions, encoding nuanced contextual dependencies. The norm growth is not linear but *accelerating*—reflecting the model’s depth-wise specialization.\n\n### Trend Summary:\n> **V projection weight norms increase steadily and significantly with depth**, rising from **~6 (Layer 5) to ~51 (Layer 42)**—a **~8.5× expansion** over the attention stack. This mirrors the model’s architectural intent: early layers focus on *routing efficiency* (small V norms), while late layers prioritize *content transformation* (large V norms). The growth is driven by the need to encode richer semantic relationships as depth increases, with Layer 42 exhibiting the strongest V projection activity due to its role in high-impact token interactions.\n\n### Why This Matters:\n- The V norm growth is **not accidental**—it’s a deliberate design choice to allocate more representational capacity to deeper layers for contextual reasoning.  \n- This trend explains why **Layer 42** (the last attention layer with significant transformation) dominates downstream task performance, as its V projections carry the most refined token representations.  \n- Contrast with K norms (which *decline* with depth) and O norms (which *grow*), highlighting a **depth-wise shift in attention focus**:  \n  - *Early*: Routing (K stable, V small)  \n  - *Late*: Content transformation (V large, O large)  \n\nThis pattern is unique to **NVIDIA’s Mixture-of-Experts attention** (where V growth is amplified by expert specialization) and is absent in standard attention mechanisms. It directly enables the model’s ability to handle long contexts (262K tokens) with efficient, depth-aware token processing."
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "increase",
+            "6",
+            "51",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "increase",
+            "6",
+            "51",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "increase",
+            "6",
+            "51",
+            "layer 5",
+            "layer 42"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "weight_006",
+      "category": "weight_properties",
+      "question": "How do the MoE gate (router) weight norms change with depth? Describe the trend across early versus late MoE layers.",
+      "verified_answer": "Gate weight norms decrease with depth, from approximately 40 in the earliest MoE layers (around layer 1) to approximately 10 in the latest MoE layers (around layer 40-51).",
+      "key_facts": [
+        "decrease",
+        "40",
+        "10",
+        "early",
+        "late"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "The MoE gate (router) weight norms exhibit a **clear depth-dependent trend** across the 23 MoE layers, with a pronounced shift in scale and functional role from early to late layers. Here's the precise breakdown:\n\n---\n\n### **Depth Gradient of MoE Gate Weight Norms**\n#### **Early MoE Layers (Indices 1, 3, 6, 8, 10 – ~25% of total layers)**\n- **Norm Magnitude**:  \n  - **Lower absolute scale** (typically **0.8–1.2×** the baseline layer norm weight norm of `2688`).  \n  - *Example*: Layer 1 gate norm ≈ **1.05**, Layer 6 gate norm ≈ **0.92** (measured against `backbone.layers.{i}.norm.weight` norm = 1.0).  \n- **Functional Role**:  \n  - **Routing calibration phase**: Gates are \"learning to route\" with minimal specialization.  \n  - High **variability in expert activation**: Top-6 selection is noisy; some experts fire erratically.  \n  - Norms are **closer to shared-expert routing weights** (scale ≈ 0.5–0.7× shared-expert gate norms), indicating early-stage alignment with the shared expert pathway.  \n- **Pattern**:  \n  - Norms **gradually increase** toward mid-depth but remain **substantially smaller** than late layers.  \n  - *Critical observation*: Early gates show **higher coefficient of variation (CV)** in expert-specific norms (CV ≈ 8–12%) vs. later layers (CV ≈ 1–3%), reflecting unstable routing.\n\n#### **Late MoE Layers (Indices 43–51 – ~90% of total layers)**\n- **Norm Magnitude**:  \n  - **Significantly higher scale** (typically **2.5–4.0×** baseline layer norm weight norm).  \n  - *Example*: Layer 43 gate norm ≈ **3.8**, Layer 51 gate norm ≈ **4.1** (peaking at **4.3** in final layers).  \n  - *Note*: These norms **exceed** the shared-expert gate norm (≈ 2.8× baseline) by 30–50% in top layers.  \n- **Functional Role**:  \n  - **Specialization dominance**: Gates become **highly discriminatory**, routing tokens to *specific expert subsets* with minimal overlap.  \n  - Norms stabilize near a **plateau** (CV drops to **1–2%**), indicating mature specialization.  \n  - Late-layer gates show **strong correlation with downstream task performance**: Higher norms correlate with improved token prediction accuracy in the final output head.  \n- **Pattern**:  \n  - Norms **plateau at maximum values** by Layer 45, with marginal increases (≤0.2) in Layers 46–51.  \n  - *Critical observation*: Late gates exhibit **near-zero variance** in expert-specific norms across the 128 experts per layer (CV ≈ 1.5%), confirming homogeneous routing behavior.\n\n---\n\n### **Key Trend Summary**\n| **Depth Region** | **Gate Norm Scale** | **CV (Variation)** | **Routing Behavior**               | **Specialization Level** |\n|------------------|---------------------|--------------------|------------------------------------|--------------------------|\n| **Early (L1–L10)** | 0.8–1.2× baseline   | 8–12%              | Calibration, noisy top-6 selection | Low (shared-expert aligned) |\n| **Mid (L13–L35)**  | 1.5–2.8× baseline   | 3–5%               | Stabilizing routing                | Moderate                 |\n| **Late (L43–L51)** | **2.5–4.3× baseline** | **1–2%**           | **Discriminatory, task-specific**  | **High (expert specialization)** |\n\n---\n\n### **Why This Trend Exists**\n1. **Capacity-Driven Specialization**:  \n   - Late layers process **high-signal, task-critical tokens** (e.g., long-range dependencies in 262K context).  \n   - Higher gate norms **amplify routing precision** for these tokens, directing them to experts tuned for specific patterns (e.g., syntactic structure, factual recall).  \n   - *Example*: In Layer 51, a gate norm of **4.3** means the router weights **prioritize expert selection 4.3× more strongly** than in Layer 1.\n\n2. **FP8 Quantization Impact**:",
+        "The router weights in MoE layers exhibit a **clear depth-dependent scaling trend** in NVIDIA-Nemotron-3-Nano-30B-A3B-FP8, with implications for routing specialization and information flow. Here's the precise breakdown:\n\n### **Norm Trend Across Depth**\n- **Early MoE Layers (1–10)**:  \n  Router weight norms are **smaller and more uniform** (CV ≈ 1.5–2.5%).  \n  - *Why*: Initial routing relies on coarse-grained token features; low-magnitude weights prevent premature specialization.  \n  - *Pattern*: Norms increase gradually but remain shallow (e.g., layer 5 router norm ≈ 0.8× baseline).\n\n- **Mid-Layers (11–30)**:  \n  **Steep exponential growth** in router norms (CV remains low, 1–3%).  \n  - *Why*: Deeper layers process more abstract token representations, requiring finer routing distinctions.  \n  - *Pattern*: Norms scale by **~3.5× from layer 10 to 30** (e.g., layer 20 ≈ 2.1× layer 10; layer 30 ≈ 3.2× layer 10).  \n  - *Critical nuance*: Growth plateaus slightly in late mid-layers (25–30) as routing stabilizes.\n\n- **Late MoE Layers (31–51)**:  \n  **Maximized norms** with **highest variability** (CV ≈ 3–5%).  \n  - *Why*: Final routing decisions determine output semantics; higher norms enable sharper specialization.  \n  - *Pattern*:  \n    - Norms peak at **~4.8× baseline** (vs. early layers' 1.0×).  \n    - CV spikes to **4–5%** in layers 45–51 (e.g., layer 51 router norm ≈ 4.5× layer 1), indicating divergent expert specialization.  \n    - *Key evidence*: Late layers show **asymmetric scaling**—some experts gain disproportionate weight (e.g., expert 73 in layer 50 sees 6.2× norm growth vs. layer 1), while others stagnate.\n\n### **Why This Trend Matters**\n1. **Specialization Amplification**:  \n   Late-layer routers leverage higher norms to **assign tokens to experts with precise semantic alignment** (e.g., routing math tokens to expert group A, code to group B). This is impossible in early layers where norms are too small for meaningful differentiation.\n\n2. **Gradient Flow Impact**:  \n   The **exponential norm growth** (not linear) ensures that late-layer routing gradients dominate during training, accelerating expert specialization. This explains why **expert homogeneity breaks down in deep layers** (CV jumps from 1–2% in early layers to 4–5% in late layers).\n\n3. **FP8 Quantization Sensitivity**:  \n   Since router weights are **not FP8-exempt** (unlike Mamba conv1d), their FP8 representation **amplifies norm-driven specialization**. Higher norms in late layers cause larger FP8 quantization errors *if not calibrated*, but vLLM's `norm_topk_prob` mitigates this by preserving top-6 routing probabilities.\n\n### **Contrast with Early Layers**\n| **Metric**          | Early MoE (Layers 1–10) | Late MoE (Layers 40–51) |\n|----------------------|--------------------------|--------------------------|\n| Router norm (avg)    | ~0.7–1.0× baseline       | **~4.5–4.8× baseline**   |\n| CV (weight spread)   | 1.5–2.5%                 | **4.0–5.0%**             |\n| Expert specialization| Minimal (all experts similar) | **High (CV >4%)**      |\n| Routing precision    | Coarse (token-level noise) | **Fine-grained (semantic)** |\n\n### **Conclusion**\nThe router weight norms **do not scale linearly with depth**—they follow a **super-linear, depth-dependent growth curve** that culminates in late layers. This trend enables the model to transition from **broad token categorization** (early) to **fine-grained semantic routing** (late), directly driving the observed **expert specialization** in weight directions (not magnitudes). Crucially, this is why late MoE layers carry the **highest routing impact** despite identical structural parameters across layers: the *norm growth* creates the *specialization signal*.  \n\n> 💡 **Key Insight**: The router's norm growth is the **primary mechanism** enabling MoE to scale capacity without proportional parameter increase—late",
+        "The router weight norms in the MoE-FFN layers exhibit a **clear depth-dependent scaling trend**, reflecting increasing specialization and routing precision as depth increases. Here's the breakdown based on the provided architecture details:\n\n---\n\n### **Trend Across Depth**\n1. **Early Layers (0–20)**  \n   - **Lower norm magnitudes**: Router weights have **smaller norms** (closer to zero) due to limited specialization.  \n   - **Shallow routing**: Experts are used more uniformly; routing decisions are coarse.  \n   - **Norm CV**: ~1–2% (very homogeneous across experts), indicating minimal directional specialization.  \n   - *Why?* Early layers process basic features, requiring less nuanced expert selection. The router acts as a general-purpose gate.\n\n2. **Late Layers (21–51)**  \n   - **Higher norm magnitudes**: Router weights exhibit **larger norms** (up to 2–3× higher than early layers).  \n   - **Specialized routing**: Experts specialize in distinct sub-tasks (e.g., syntax, semantics), driving directional weight divergence.  \n   - **Norm CV**: **~3–4%** (higher variance), signaling expert differentiation.  \n   - *Why?* Deeper layers handle complex, high-level patterns, demanding precise expert allocation. The router weights grow to encode task-specific routing biases.\n\n---\n\n### **Key Drivers of the Trend**\n- **Expert Homogeneity vs. Directional Specialization**:  \n  While absolute weight magnitudes remain similar across experts (CV ~1–4%), the **direction** of router weights shifts with depth. Late layers develop distinct routing patterns per expert, increasing norm variance.  \n  - *Example*: In layer 51 (final MoE layer), router weights for experts handling \"long-context reasoning\" or \"code generation\" show significantly larger norms compared to early layers.\n\n- **Routing Complexity**:  \n  Late MoE layers use **top-6 routing** (4.7% active experts), but the *effective* routing becomes more selective. The router weights scale to accommodate this complexity, with norms rising to support finer-grained expert selection.\n\n- **Gradient Flow**:  \n  The higher norms in late layers correlate with **stronger gradients** during training, as deeper layers require more expressive routing to propagate task-specific signals. This aligns with the observed \"strong transform\" in late attention layers (layer 42), where O-norm peaks at ~101.\n\n---\n\n### **Contrast with Other Components**\n- **vs. Mamba Layers**:  \n  Mamba mixer weights (e.g., `in_proj`, `out_proj`) show **stable norms** across depth (no significant scaling), as they operate on fixed state spaces.  \n- **vs. Attention Layers**:  \n  Attention router norms (e.g., `q_proj`, `k_proj`) decline slightly in early layers but **peak in late layers** (layer 42: O-norm ~101), mirroring the MoE trend but with different drivers (content transformation vs. expert routing).\n\n---\n\n### **Practical Implication**\nThe depth-dependent router norm growth means:  \n- **Early layers**: Routing is \"soft\" (weights near zero, uniform expert usage).  \n- **Late layers**: Routing is \"hard\" (weights scale to encode expert-specific biases, driving specialization).  \nThis explains why **late MoE layers dominate final output quality**—their router weights carry the most nuanced routing decisions for high-level semantics.\n\n> 💡 **Summary**: Router weight norms **increase with depth** (early: low norms, uniform routing; late: high norms, specialized routing), directly enabling the model's capacity to handle complex, multi-task reasoning in deeper layers. This is a hallmark of effective MoE scaling in Nemotron-3."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "10",
+            "early",
+            "late"
+          ],
+          "missed": [
+            "decrease",
+            "40"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "40",
+            "10",
+            "early",
+            "late"
+          ],
+          "missed": [
+            "decrease"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "10",
+            "early",
+            "late"
+          ],
+          "missed": [
+            "decrease",
+            "40"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_001",
+      "category": "information_flow",
+      "question": "What happens in your last 9 layers, layers 43 through 51? What types of layers are present?",
+      "verified_answer": "Layers 43-51 contain no attention layers — they are pure Mamba SSM and MoE-FFN layers only. After the final attention checkpoint at layer 42, there is no further global token-to-token comparison.",
+      "key_facts": [
+        "43",
+        "51",
+        "no attention",
+        "Mamba",
+        "MoE"
+      ],
+      "trials": 3,
+      "pass_count": 3,
+      "pass_rate": 1.0,
+      "trial_responses": [
+        "In layers 43 through 51 (the final nine layers of the model), the architecture consists exclusively of **Mamba SSM layers** and **MoE-FFN layers**, with **no attention layers** present. This configuration reflects the model's design to transition into a pure Mamba + MoE pipeline in its final stages, optimizing for efficient inference and leveraging specialized routing mechanisms.\n\n### Breakdown of Layer Types:\n1. **Mamba SSM Layers (M)**:  \n   - Layers 43, 44, 45, 46, 47, 48, 49, 50, 51 are all **Mamba SSM layers** (indices 43–51 fall within the Mamba layer set: `0,2,4,7,9,11,14,16,18,21,23,25,28,30,32,35,37,39,41,44,46,48,50,51`).  \n   - These layers handle sequential state updates using Mamba's structured state-space model, with no attention mechanisms.  \n   - Key components remain active:  \n     - `mixer.in_proj.weight` (expand x+z), `mixer.out_proj.weight` (2688 → 5376), and `mixer.conv1d.weight` (quantized, FP8-exempt).  \n     - `A_log` (decay rates), `D` (residual scaling), and `dt_bias` (time-step offsets) are preserved for dynamic state control.  \n     - `mixer.norm.weight` (2688) and `mixer.A_log`/`D`/`dt_bias` (64-dim) remain unquantized.  \n\n2. **MoE-FFN Layers (E)**:  \n   - Layers 43–51 include **MoE-FFN layers** (indices 43–51 fall within the MoE layer set: `1,3,6,8,10,13,15,17,20,22,24,27,29,31,34,36,38,40,43,45,47,49,51`).  \n   - These layers use **top-6 routing** across 128 experts, with a shared expert always active.  \n   - Key components:  \n     - Router (`gate.weight` [128, 2688]), routed experts (`experts.{j}.up_proj.weight` [1856, 2688], `down_proj.weight` [2688, 1856]), and shared experts (`shared_experts.up_proj.weight` [3712, 2688], `down_proj.weight` [2688, 3712]).  \n     - All MoE weights are FP8-quantized (exempt from quantization exemptions), but norms and routing probabilities are monitored for stability.  \n     - Activation is `relu^2` with scaling factor 2.5, and expert weights exhibit near-identical scaling (CV ~1–4%), with specialization in weight *direction* rather than magnitude.  \n\n### Functional Role:\n- **No Attention Layers**: Layers 43–51 are **exclusively Mamba + MoE**, with **zero attention layers** (unlike earlier layers, which alternate Mamba-Attention-MoE). This is a deliberate design choice to reduce computational overhead in the final stages, as attention layers (which require O(L²) computation) are replaced with Mamba's linear-time SSM and MoE's sparse routing.  \n- **Depth Gradient Impact**: The final layers show **reduced attention activity** (e.g., layer 42 had strong attention impact; layers 43+ have none), shifting focus to Mamba's state propagation and MoE's expert specialization. This aligns with the observed pattern where late attention layers carry the most content transformation weight, but here, transformation is delegated to Mamba and MoE.  \n- **Output Preparation**: The final layer (51) feeds directly into `backbone.norm_f` → `lm_head`, producing logits over the vocabulary (131,072 tokens). No further transformations occur after layer 51.  \n\n### Why This Design?\n- **Efficiency**: By eliminating attention in the final layers, the model avoids the quadratic cost of attention during long-context inference (critical for 262K context length).  \n- **Specialization",
+        "**Layers 43 – 51 are the final nine blocks of the 52‑layer stack.**  \nTheir pattern is:\n\n```\nMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEM*EMEMEMEME\n```\n\nwhere:\n\n* **M** = Mamba SSM  \n* **E** = MoE‑FFN (expert routing)  \n* **\\*** = Attention (only present in layers 5, 12, 19, 26, 33, 42)\n\nBecause the *attention* symbols stop at layer 42, **layers 43‑51 contain no attention sub‑layer at all**.  \nEach of these layers therefore consists of **exactly two consecutive expert‑FFN blocks**, i.e.:\n\n```\nE  →  E\n```\n\n---\n\n### What the two “E” blocks do\n\n| Block | Function | Key tensors (FP8‑quantized) | What it contributes |\n|-------|----------|----------------------------|----------------------|\n| **E‑1** (first MoE‑FFN) | **Routing + expert computation** | `gate.weight` (128 × 2688) → top‑6 routing probabilities<br>`experts.{j}.up_proj.weight` (1856 × 2688) and `down_proj.weight` (2688 × 1856) for each of the 128 experts (plus the shared expert) | Takes the hidden state **h** (size 2688) → expands to a larger intermediate space (≈1856 per expert) → applies a non‑linearity (ReLU²) → projects back to 2688. The routing decides which experts contribute, but because the experts are highly homogeneous (norm CV ≈ 1‑4 %), the effect is essentially a **linear transformation with a tiny stochastic mixture**. |\n| **E‑2** (second MoE‑FFN) | **Second expert mixture** | Same tensor shapes as above, but a different set of expert weights (different learned direction) | Applies another “expert‑mix” on the output of the first E‑1. Because the two MoE blocks are stacked, the model can perform a **two‑step refinement** of the representation without any attention‑based global mixing. |\n\nThus, **layers 43‑51 are pure feed‑forward, expert‑based transformations**. They:\n\n1. **Do not attend** to any other token positions – there is no Q/K/V projection, no RoPE, and no softmax over a token‑wise similarity matrix.\n2. **Do not change the hidden dimension** – the residual stream stays at size 2688 throughout.\n3. **Preserve the residual stream** – each layer adds its output to the incoming activation (standard transformer‑style residual connection).\n4. **Maintain the same dtype rules** – the MoE‑FFN weights are quantized to FP8, but the routing gate, the shared‑expert weights, and the layer‑norm weights remain in BF16 (the only non‑FP8 parameters in these layers).\n\n---\n\n### Why this design matters\n\n* **Depth‑wise specialization** – By layer 42 the attention heads have already performed most of the heavy‑weight token‑to‑token information exchange. The remaining layers therefore shift from “global comparison” to “local polishing”.\n* **Efficient use of parameters** – The MoE layers provide a huge capacity (≈ 30 B total parameters) while keeping the *active* compute per token low (only ~4.7 % of experts fire per block). Stacking two such blocks in the final layers lets the model allocate additional expert capacity for **fine‑grained feature reshaping** without blowing up FLOPs.\n* **Stability & inference speed** – Because there is no attention, the KV cache does not need to be updated for these layers, and the KV‑cache‑related plugins (e.g., prefix caching) can be skipped. This keeps the per‑token latency low even though the model is extremely deep.\n* **Gradient flow** – The residual connections and the relatively small hidden size (2688) combined with the modest‑scale expert mixtures keep the gradient magnitude stable, allowing the later layers to learn subtle re‑weightings of the representation that are robust to the earlier attention‑driven transformations.\n\n---\n\n### Summary\n\n- **Layers 43‑51 = 9 consecutive “E E” blocks** (two MoE‑FFN layers per block, no attention).\n- Each block performs **routing → expert up‑proj → non‑linearity → down‑proj → residual add**.\n- All operations stay within the **",
+        "In layers 43 through 51 (the final 9 layers of the model), the architecture consists exclusively of **Mamba SSM layers** and **MoE-FFN layers**, with **no attention layers present**. This is a direct consequence of the model's structural design, where attention is only applied in specific layers (indices 5, 12, 19, 26, 33, 42), and all layers beyond index 42 (i.e., 43–51) omit attention mechanisms entirely.\n\n### Breakdown of Layer Types in 43–51:\n- **Mamba SSM Layers (M)**:  \n  Layers 43, 44, 45, 46, 47, 48, 49, 50, and 51 are all **Mamba SSM layers** (indices 43–51 fall within the Mamba layer indices: 0, 2, 4, 7, 9, 11, 14, 16, 18, 21, 23, 25, 28, 30, 32, 35, 37, 39, 41, 44, 46, 48, 50, 51).  \n  - These layers handle sequential state propagation using Mamba's state-space model, with no attention mechanisms.  \n  - Key components remain active:  \n    - `mixer.in_proj.weight` (FP8-exempt, BF16 compute)  \n    - `mixer.conv1d.weight` (FP8-exempt, not quantized)  \n    - `mixer.A_log`, `mixer.D`, `mixer.dt_bias` (FP8-exempt)  \n    - `mixer.norm.weight` (FP8-exempt)  \n\n- **MoE-FFN Layers (E)**:  \n  Layer 51 is also a **MoE-FFN layer** (index 51 is part of the MoE layer indices: 1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27, 29, 31, 34, 36, 38, 40, 43, 45, 47, 49, 51).  \n  - This layer uses a **shared expert** (always active) and **top-6 routed experts** (4.7% activation), with FP8-quantized projections (`up_proj.weight`, `down_proj.weight`).  \n  - Expert specialization is minimal (weight norm CV ~1–4%), so functionality is broadly consistent across experts.  \n\n### Key Implications:\n- **No Attention Mechanisms**: Layers 43–51 **do not contain any attention layers** (Q/K/V/O projections are absent). This means:  \n  - No token-token comparisons occur in these layers.  \n  - Global context integration is fully handled by earlier attention layers (e.g., layer 42, which is the last attention layer with significant impact).  \n  - The model relies solely on Mamba's stateful memory and MoE's routing for final processing.  \n- **FP8 Exemptions Apply**: All Mamba components (including conv1d, A_log, D, dt_bias) and MoE projections remain in BF16 for numerical stability, while only the MoE expert weights are quantized to FP8.  \n- **Information Flow**: The residual stream state (hidden size 2688) is preserved throughout these layers, with no dimensionality changes. The final output is generated via `lm_head` (untied from embeddings), producing logits over the vocabulary.  \n\n### Why This Design?\nThe exclusion of attention in later layers is intentional:  \n- Attention layers (e.g., layer 42) are where the most critical content transformation occurs (as seen in the depth gradient: O norm peaks at layer 42).  \n- Subsequent layers (43–51) focus on **refining the sequence state** using Mamba's long-range dependencies and MoE's specialized routing, without introducing new global comparisons.  \n- This aligns with the \"depth gradient\" observation: later layers shift from *transforming* content (via attention) to *consolidating* it via stateful processing and expert routing.  \n\nIn summary: **Layers 43–51 are purely Mamba + MoE, with no attention, and are optimized for final-state refinement and output generation"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "43",
+            "51",
+            "no attention",
+            "Mamba",
+            "MoE"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "43",
+            "51",
+            "no attention",
+            "Mamba",
+            "MoE"
+          ],
+          "missed": []
+        },
+        {
+          "pass": true,
+          "matched": [
+            "43",
+            "51",
+            "no attention",
+            "Mamba",
+            "MoE"
+          ],
+          "missed": []
+        }
+      ]
+    },
+    {
+      "id": "flow_002",
+      "category": "information_flow",
+      "question": "What is the functional role of your early attention layers (like layer 5 and 12) versus your late attention layers (like layer 33 and 42)?",
+      "verified_answer": "Early attention layers (5, 12) perform routing and matching with weak content transformation — their V norms are small (~6-8), suggesting they primarily establish token relationships. Late attention layers (33, 42) perform stronger content transformation — their V norms are large (~29-51) and O norms are also large, indicating they transform the residual stream more substantially.",
+      "key_facts": [
+        "early",
+        "routing",
+        "matching",
+        "late",
+        "transformation",
+        "V norm"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "Early attention layers (e.g., layer 5 and 12) function as **routing and initialization mechanisms** for global token interactions, with minimal content transformation. They exhibit low-value norms (K ~40, V ~6, O ~58) and weak transformative capacity, serving primarily to **establish token connectivity** and **guide information flow** into the model’s latent space. Their attention weights are sparse and less discriminative, acting as \"soft switches\" that activate latent pathways without deep semantic processing. In contrast, late attention layers (e.g., layer 33 and 42) serve as **primary content transformation hubs**, where **high-value norms** (K declines, V grows 8x, O grows significantly) enable **rich token-to-token comparisons** and **semantic refinement**. Layer 42, in particular, shows the strongest transformative impact (O norm ~101), acting as the **final integrative layer** that synthesizes global context for output generation. This gradient reflects a deliberate design: early layers handle structural routing, while late layers execute high-impact semantic reasoning.",
+        "Based on your detailed architecture blueprint, here is the precise functional distinction between early and late attention layers in Nemotron-3-Nano-30B-A3B-FP8:\n\n---\n\n### **Early Attention Layers (e.g., Layer 5, Layer 12)**  \n**Function: *Routing & Signal Gating***  \n- **Primary Role**: Establish *token routing topology* and *context boundary detection* without deep semantic transformation.  \n- **Mechanistic Evidence**:  \n  - Extremely low **Value norm** (~6 vs. late layers' ~15–51) → minimal content encoding.  \n  - **O_norm** (~58) is moderate but *not* dominant → attention heads focus on *selecting which tokens to propagate*, not *how to transform them*.  \n  - **Q_norm stability** (~98–99) + **K_norm decline** (40 → 16) → attention weights prioritize *query consistency* over *key diversity*, acting as a *filter* for relevant context.  \n  - **Role in Gradient Flow**: These layers initiate the attention gradient chain but contribute *negligibly* to final output semantics (per Phase 0 Frobenius norms).  \n- **Strategic Purpose**:  \n  > *\"Prune irrelevant tokens early to prevent computational bloat in later layers.\"*  \n  They function as a **sparse context router**, identifying high-salience tokens (e.g., BOS/EOS markers, structural cues) to feed into deeper processing. Their low V_norm ensures they *do not overwrite* the residual stream with semantic noise.  \n\n---\n\n### **Late Attention Layers (e.g., Layer 33, Layer 42)**  \n**Function: *Semantic Transformation & Output Synthesis***  \n- **Primary Role**: Execute *dense, high-impact content transformation* to generate final token probabilities.  \n- **Mechanistic Evidence**:  \n  - **Value norm growth** (15 → 51) → attention heads now *encode rich semantic relationships* (e.g., \"cat\" → \"feline\" embeddings).  \n  - **O_norm dominance** (101 at Layer 42) → attention outputs *directly shape logits* via O_proj, carrying 8× more weight than early layers.  \n  - **K_norm collapse** (29 → 16) + **V_norm surge** (15 → 51) → attention focuses on *transforming values* (not just routing), enabling complex token-token interactions.  \n  - **Role in Gradient Flow**: These layers dominate the attention gradient (Layer 42 has highest O_norm impact) and are the *only layers with significant global token comparison* (per your \"ONLY mechanism for global token-to-token comparison\" note).  \n- **Strategic Purpose**:  \n  > *\"Convert contextual signals into actionable semantic outputs.\"*  \n  They perform the *final semantic binding* of tokens (e.g., resolving coreference, applying logical rules, generating coherent phrases), leveraging the MoE routing signals from earlier layers to *select the most relevant expert pathways* for output synthesis.  \n\n---\n\n### **Key Functional Contrast**  \n| **Dimension**       | **Early Layers (5, 12)**                          | **Late Layers (33, 42)**                          |  \n|---------------------|--------------------------------------------------|--------------------------------------------------|  \n| **Attention Purpose** | Token *routing* (which tokens matter?)            | Semantic *transformation* (how to interpret them?) |  \n| **Value Norm**      | Very low (~6) → minimal content encoding          | High (~51) → rich semantic representation        |  \n| **O_norm Impact**   | Moderate (58) → routing signal only               | Dominant (101) → direct logits influence         |  \n| **Gradient Role**   | Initiates attention chain (low impact)            | *Drives final output* (high impact)              |  \n| **MoE Interaction** | Routes tokens *into* the layer (pre-semantic)     | Routes tokens *through* expert pathways (post-semantic) |  \n\n---\n\n### **Why This Design?**  \nYour architecture explicitly optimizes for **computational efficiency** and **semantic precision**:  \n1. Early layers *avoid* heavy computation (low V_norm, stable Q) to *preserve token efficiency* for the 262K context length.  \n2. Late layers *leverage* the MoE's expert specialization (128 experts per layer) to *apply targeted transformations* only where needed.  \n3. The **attention gradient decay** (",
+        "The early attention layers (e.g., layer 5 and 12) and late attention layers (e.g., layer 33 and 42) serve distinct functional roles in the model’s information processing pipeline, shaped by their position in the depth gradient and the evolving role of attention as the model progresses toward output.\n\n**Early Attention Layers (e.g., layer 5, 12):**\n- **Function:** *Routing and weak transformation*  \n- These layers operate primarily as **sparse routing mechanisms** rather than deep semantic processors.  \n- Their attention matrices exhibit low Frobenius norms (Q: ~98, K: ~40, V: ~6), indicating minimal impact on token representations.  \n- Attention heads here are tuned for **local coherence and structural alignment** — identifying token groupings, syntactic boundaries, or latent groupings in the input sequence.  \n- They contribute little to content transformation but help *guide the flow* of information by weakly biasing how tokens attend to one another.  \n- Think of them as **preliminary signal filters**: they do not reshape meaning but help organize the input space for deeper processing.  \n- Their role is analogous to early layers in a CNN detecting edges before detecting objects.\n\n**Late Attention Layers (e.g., layer 33, 42):**\n- **Function:** *Content transformation and semantic integration*  \n- These layers carry the **highest attention weights** (O norm: ~91, 101), with growing V and O norms indicating increasing influence on final representations.  \n- K norms decline over depth, but V and O norms rise sharply — meaning late attention layers prioritize *value* (content) and *output projection* transformations over key matching.  \n- Attention here is where **global token-to-token comparison** becomes semantically meaningful: heads begin to model long-range dependencies, causal relationships, and contextual roles (e.g., subject-verb alignment, coreference).  \n- Layer 42, in particular, shows the strongest transformative impact — it is the final major attention layer before pure Mamba+MoE processing, and it performs the most significant reweighting of token representations based on global context.  \n- These layers are where **reasoning, disambiguation, and intent inference** occur — the model begins to \"decide\" what the output should express based on the full context.\n\n**Key Contrast:**\n- Early attention: **structural scaffolding** — “Who is talking to whom?” (low-cost routing)  \n- Late attention: **semantic sculpting** — “What does this mean, and how should it be expressed?” (high-cost transformation)  \n\nThis gradient reflects a design principle: **early layers route, late layers reason**. The model uses attention not for deep computation early on, but to progressively refine and commit to semantic roles as it nears output — with layer 42 acting as the last major “thought” before generation begins."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "early",
+            "routing",
+            "late",
+            "transformation"
+          ],
+          "missed": [
+            "matching",
+            "V norm"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "early",
+            "routing",
+            "late",
+            "transformation"
+          ],
+          "missed": [
+            "matching",
+            "V norm"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "early",
+            "routing",
+            "matching",
+            "late",
+            "transformation"
+          ],
+          "missed": [
+            "V norm"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_003",
+      "category": "information_flow",
+      "question": "How does information flow between attention layer 33 and attention layer 42? What processing occurs between them?",
+      "verified_answer": "Between layers 33 and 42, information flows through 8 non-attention layers: MoE-FFN (34), Mamba (35), MoE-FFN (36), Mamba (37), MoE-FFN (38), Mamba (39), MoE-FFN (40), and Mamba (41). These Mamba and MoE layers process the residual stream sequentially before layer 42's global attention.",
+      "key_facts": [
+        "Mamba",
+        "MoE",
+        "34",
+        "41",
+        "sequential",
+        "residual"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "Between attention layer 33 and attention layer 42, the information flow is governed by a **pure Mamba + MoE pipeline with no attention mechanisms intervening**, as layer 42 is the next attention layer in the sequence, and layers 34 through 41 are exclusively Mamba SSM layers followed by MoE-FFN layers. This segment constitutes a **deep transformation corridor** where information is processed through sequential state-space modeling and expert routing before being passed to the next attention layer (42).\n\n---\n\n### **Layer Sequence & Flow Path**\n- **Layer 33**: Attention layer (GQA, RoPE, O projection)  \n  → Output: Contextualized token representations (shape: `[B, L, 2688]`)  \n  → Passed to **Layer 34** (Mamba SSM)\n\n- **Layers 34–41**: 8 consecutive **Mamba SSM layers** (indices 34,36,38,40,41)  \n  → Each layer applies:  \n    - `mixer.in_proj` → expands to 10752-dim space  \n    - `mixer.conv1d` (FP8-exempt, kernel=4) → local convolution  \n    - State-space evolution via `A_log`, `D`, `dt_bias`  \n    - `mixer.out_proj` → projects back to 2688-dim  \n    - Residual connection + layer norm  \n  → **No attention, no MoE** — pure recurrent state transformation  \n  → Information is **propagated through time via Mamba’s hidden state**, capturing long-range dependencies with O(L) complexity  \n  → State evolves with **exponentially decaying memory** (A_log ~ -1.3 baseline), but with head-specific variation (some heads retain memory longer)\n\n- **Layer 40**: **MoE-FFN layer** (expert routing)  \n  → Input: Output from Mamba layer 39  \n  → Routing: Top-6 experts selected from 128 via gating (CV ~1–4% norm variation)  \n  → Each selected expert applies:  \n    - `up_proj` (FP8) → [2688 → 1856]  \n    - `relu^2` → nonlinear transformation  \n    - `down_proj` (FP8) → [1856 → 2688]  \n  → Shared expert may also activate (3712-dim intermediate)  \n  → Output: Mixture of expert outputs (weighted sum)  \n  → **Critical role**: Modulates representation geometry — shifts token embeddings toward specialized subspaces  \n  → Norm-topk probability ensures routing stability\n\n- **Layer 41**: Final Mamba SSM layer before attention 42  \n  → Takes output of MoE layer 40  \n  → Applies same state-space transformation as layers 34–41  \n  → Final hidden state now encodes:  \n    - Long-range context from Mamba dynamics  \n    - Expert-modulated features from MoE  \n    - Residual-enhanced signal from prior layers  \n  → Output passed to **Layer 42** (next attention layer)\n\n---\n\n### **Key Processing Between Layer 33 and 42**\n1. **Temporal Integration via Mamba**  \n   - Layer 34–41 form a **stack of 8 Mamba blocks**, each refining the sequence’s internal state.  \n   - The Mamba layers **do not attend** — they process each token independently but with **global memory awareness** via structured state-space parameters.  \n   - The `A_log` decay rates (mean=-1.3) mean memory persists across ~10–50 tokens, allowing **implicit long-context integration** without explicit attention.\n\n2. **Expert-Driven Feature Specialization (Layer 40)**  \n   - The MoE-FFN layer (layer 40) **reshapes the representation space** by routing tokens through specialized expert pathways.  \n   - Though experts are nearly homogeneous in scale, their **weight directions differ slightly** — this allows **token-type-specific feature extraction**.  \n   - Example: A token representing \"quantum\" may route to an expert tuned for scientific terms, while \"emotion\" routes to a different expert.  \n   - This **modulates the trajectory** of information toward layer 42, biasing it toward higher-level semantics.\n\n3. **State Refinement Before Attention**  \n   - The output of layer 41 is **not just a sum of prior layers** — it is a **dynamically evolved state**",
+        "Between attention layer 33 and attention layer 42, the information flow proceeds through a sequence of alternating Mamba SSM and MoE-FFN layers, with no attention mechanism intervening. This segment constitutes a critical transformation corridor where contextual representations are refined through structured state-space dynamics and expert specialization, culminating in the final attention layer’s global token comparison.\n\n### **Layer Sequence & Processing Flow**\nThe path from layer 33 to layer 42 traverses **layers 34 → 35 → 36 → 37 → 38 → 39 → 40 → 41 → 42**, with the following structure:\n- **Layer 33**: Attention layer (GQA, strong transform; O norm ~101)  \n  → Outputs contextualized token representations to layer 34.\n- **Layers 34–41**: **7 consecutive MoE-FFN layers** (E-type layers), with **no attention or Mamba SSM layers** in between.  \n  → These layers perform expert-driven feature transformation, routing tokens through specialized subnetworks.\n- **Layer 42**: Attention layer (GQA, strongest transform; O norm ~101)  \n  → Receives refined representations from layer 41 and executes final global token interactions.\n\n### **Key Processing Between Layers 33 and 42**\n1. **MoE-FFN Expert Routing (Layers 34–41)**:\n   - Each token is routed to **top-6 active experts** (4.7% sparsity) from the 128-expert pool per layer.\n   - **Critical constraint**: The **shared expert** (always active) dominates late-stage processing. Its weight matrices (`shared_experts.up_proj`, `shared_experts.down_proj`) scale by **2.5×** and apply `relu^2` nonlinearity, acting as a universal feature synthesizer.\n   - **Expert homogeneity**: Weight norms across experts exhibit **CV of 1–4%**, meaning specialization occurs via **weight direction** (e.g., which features are amplified) rather than magnitude. This ensures stable signal flow despite sparse routing.\n   - **Information bottleneck**: Each MoE layer’s output is **normalized by router probability** (`norm_topk_prob=True`), preventing dominant experts from overwhelming weaker ones. This preserves gradient flow for rare expert paths.\n\n2. **State Preservation & Residual Flow**:\n   - The **residual stream dimension (2688)** remains unchanged throughout, with only **linear projections** applied at each layer.\n   - **No Mamba SSM layers** intervene between 33 and 42—this absence is deliberate. The attention layer at 33 (a \"route, weak transform\" layer) outputs representations that are immediately processed by MoE experts for **content-specific refinement** before the next attention layer (42) performs global comparisons.\n   - **Norm stability**: Layer norms (`norm.weight`) are applied at each MoE layer but remain **static** (no adaptive scaling), ensuring numerical continuity.\n\n3. **Why This Design?**:\n   - **Attention sparsity**: Layers 33 and 42 are spaced 9 layers apart precisely to allow **deep expert-mediated transformation** without attention interference. This aligns with the observed **depth gradient**:  \n     - Layer 33’s attention has moderate O norm (~91), focusing on *routing* (token positioning).  \n     - Layer 42’s attention has high O norm (~101), focusing on *content transformation* (token meaning).  \n     The 7-layer MoE corridor bridges this gap, converting routing signals into meaningful representations for layer 42’s global attention.\n   - **FP8 exemption**: All MoE layers (34–41) use **FP8 weights**, but their computations remain numerically stable due to:  \n     - Shared expert scaling (2.5×) compensating for low-precision quantization.  \n     - Expert homogeneity ensuring no single expert dominates the computation.  \n     - Router normalization preserving gradient integrity.\n\n### **Information Flow Summary**\n> Token representations exit layer 33 (attention) → Enter a **7-layer MoE-FFN pipeline** where:  \n> - **Shared experts** apply universal feature synthesis (via scaled `relu^2`),  \n> - **Routed experts** specialize in niche patterns (e.g., syntactic roles, semantic roles),  \n> - **Router normalization** maintains balanced expert contribution,  \n> - Outputs are fed into layer 42 (attention), which executes **final global token comparisons** using the refined representations.  \n>   \n> This corridor is the **primary engine for semantic deepening**—transforming layer 33’s coarse routing signals into layer 42",
+        "Between attention layer 33 and attention layer 42, there are **nine (9) intermediate layers** that transform and propagate information before the next attention mechanism takes effect. These layers are not attention layers themselves but are part of the structured architecture defined by the pattern:  \n**M (Mamba) → E (MoE-FFN) → M (Mamba) → E (MoE-FFN) → ...**  \nwith attention layers (*) spaced irregularly but consistently every ~7 layers.\n\nLet’s map the exact sequence between attention layer 33 and attention layer 42:\n\n- **Attention layer 33** is an attention (*) layer.\n- Immediately following layer 33 comes:\n  - **Layer 34**: MoE-FFN (E)\n  - **Layer 35**: Mamba (M)\n  - **Layer 36**: MoE-FFN (E)\n  - **Layer 37**: Mamba (M)\n  - **Layer 38**: MoE-FFN (E)\n  - **Layer 39**: Mamba (M)\n  - **Layer 40**: MoE-FFN (E)\n  - **Layer 41**: Mamba (M)\n  - **Layer 42**: Attention (*)\n\nThus, **layers 34 through 41** (8 layers total) lie between attention layer 33 and attention layer 42. These consist of alternating **MoE-FFN** and **Mamba** layers, forming a deep processing block.\n\n---\n\n### 🔁 **Information Flow Path: Layer 33 → Layer 42**\n\n1. **Layer 33 (Attention)**  \n   - Performs global token interaction via GQA (32 query heads, 2 key/value heads).\n   - Applies RoPE-based attention with O(L²) complexity.\n   - Output: updated hidden states with transformed representations based on token relationships.\n   - Q, K, V projections are computed; output is projected via `o_proj`.\n\n2. **Layer 34 (MoE-FFN - E)**  \n   - Applies expert routing using a gate mechanism over 128 experts.\n   - Only top-6 experts activated (4.7% sparsity), including one shared expert always active.\n   - Each expert applies `up_proj` → nonlinearity (ReLU²) → `down_proj`.\n   - Output is a mixture of expert transformations, preserving most of the hidden dimension (2688).\n   - **Effect**: Nonlinear, sparse, expert-based refinement of the representation.\n\n3. **Layer 35 (Mamba - M)**  \n   - Applies selective state-space model (SSM) with:\n     - `in_proj`: expands to 10752-dim space (z + r), then projects back to 2688.\n     - `conv1d` with kernel=4 (not quantized, remains FP8-exempt).\n     - `out_proj`: projects back to 5376, then back to 2688.\n   - Uses `A_log` (log decay) and `D` (residual scaling) per head to control memory retention.\n   - **Effect**: Context-aware, long-range dependency modeling with configurable memory persistence.\n\n4. **Layer 36 (MoE-FFN - E)**  \n   - Another sparse expert transformation.\n   - Experts continue refining the representation, potentially specializing in different aspects of the context.\n   - **Effect**: Further semantic or syntactic restructuring via expert specialization.\n\n5. **Layer 37 (Mamba - M)**  \n   - Another SSM layer with updated `dt_bias`, `A_log`, and `D` values.\n   - Builds on prior state, potentially attending to different temporal or semantic patterns.\n   - **Effect**: Accumulates or revises memory of prior context with updated decay/residual dynamics.\n\n6. **Layer 38 (MoE-FFN - E)**  \n   - Third expert routing layer in sequence.\n   - Continues refinement; experts may encode different functional transformations (e.g., syntactic parsing, semantic role assignment).\n   - **Effect**: Layered expert specialization deepens the transformation.\n\n7. **Layer 39 (Mamba - M)**  \n   - Further SSM processing with updated dynamics.\n   - May integrate information across longer horizons due to compounding state updates.\n   - **Effect**: Enhanced contextual integration and memory updating.\n\n8. **Layer 40 (MoE-FFN - E)**  \n   - Fourth expert layer.\n   - At this point, the representation has undergone multiple rounds of nonlinear, sparse expert processing.\n   - **Effect**: High-level semantic conditioning via expert mixture.\n\n9. **Layer 41 (Mamba - M)**"
+      ],
+      "trial_scores": [
+        {
+          "pass": true,
+          "matched": [
+            "Mamba",
+            "MoE",
+            "34",
+            "41",
+            "sequential",
+            "residual"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "Mamba",
+            "MoE",
+            "34",
+            "41",
+            "residual"
+          ],
+          "missed": [
+            "sequential"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "Mamba",
+            "MoE",
+            "34",
+            "41",
+            "residual"
+          ],
+          "missed": [
+            "sequential"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_004",
+      "category": "information_flow",
+      "question": "What is the role of the shared expert in your MoE layers? How does it differ from the routed experts?",
+      "verified_answer": "The shared expert is always active for every token, unlike the 6 routed experts that are selected per token. It has a 2x larger intermediate dimension (3712 versus 1856 for routed experts) and functions as a baseline FFN transformation applied to every token regardless of routing. It provides a stable baseline output that all tokens receive before the routed experts add specialized contributions.",
+      "key_facts": [
+        "always active",
+        "every token",
+        "3712",
+        "baseline"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "The shared expert in your MoE layers serves as a **universal, always-active pathway** that ensures baseline representational capacity across all tokens, regardless of routing outcomes. Here’s how it differs from routed experts, based strictly on your model’s configuration:\n\n---\n\n### **1. Activation & Routing Behavior**\n- **Shared Expert**:  \n  - **Always active** (100% of tokens flow through it).  \n  - No gating mechanism; it processes *every* token in every layer.  \n  - Function: Acts as a **fixed, high-capacity foundation** for all computations.  \n- **Routed Experts**:  \n  - **Conditionally activated** via top-6 routing (4.7% of tokens per layer).  \n  - Only 6 experts are selected per token (out of 128 total), determined by the router’s gating scores.  \n  - Function: **Specializes** in handling specific token patterns or tasks (e.g., syntax, semantics, or domain-specific knowledge).  \n\n---\n\n### **2. Capacity & Scale**\n- **Shared Expert**:  \n  - Has **larger hidden dimensions** (3,712 parameters) vs. routed experts (1,856 parameters).  \n  - Designed to handle **high-complexity transformations** that require broader capacity (e.g., non-linear interactions, long-range dependencies).  \n- **Routed Experts**:  \n  - Smaller capacity per expert (1,856 parameters), but collectively scale to massive capacity (128 experts × 1,856 params).  \n  - Specialize in **narrower tasks** (e.g., one expert might focus on numerical reasoning, another on linguistic structures).  \n\n---\n\n### **3. Specialization vs. Generality**\n- **Shared Expert**:  \n  - **Not specialized**; its weights are **not fine-tuned for specific tasks**.  \n  - Serves as a **general-purpose transformer** that all tokens pass through, ensuring minimal information loss.  \n  - Its role is analogous to a \"default\" processing unit for ambiguous or complex inputs.  \n- **Routed Experts**:  \n  - **Highly specialized** due to expert specialization (weight direction, not magnitude).  \n  - Each expert develops **distinct weight patterns** (e.g., one might specialize in code, another in medical terms), but their *scales* are nearly identical (CV of 1–4% across experts).  \n  - Specialization emerges from **routing dynamics**, not explicit design.  \n\n---\n\n### **4. Impact on Computation**\n- **Shared Expert**:  \n  - Adds **fixed computational overhead** (3,712 parameters per layer) but ensures no token is \"ignored.\"  \n  - Critical for **stability** in early layers where routing might be unstable (e.g., in shallow layers where attention is weak).  \n- **Routed Experts**:  \n  - **Dynamic computation**: Only 6 experts are used per token, reducing FLOPs for simple tokens.  \n  - **Scalability**: Enables massive capacity (128 experts) without proportional cost, but introduces **routing complexity** (e.g., load balancing, expert saturation).  \n\n---\n\n### **Why This Design?**\n- **Efficiency**: The shared expert provides a **reliable baseline** for all tokens, while routed experts handle specialized work. This avoids overloading a single expert with diverse tasks.  \n- **Stability**: In layers where attention is weak (e.g., early layers like layer 5), the shared expert ensures tokens retain sufficient representational power before being routed.  \n- **Homogeneity**: Experts are nearly identical in scale (CV 1–4%), so specialization arises from **weight direction**, not magnitude. This prevents any single expert from dominating, ensuring balanced load.  \n\n---\n\n### **Key Takeaway**\n> The shared expert is your model’s **\"safety net\"**—a universally applied, high-capacity pathway that guarantees every token gets processed by a dedicated, full-scale expert. Routed experts, in contrast, are **specialized, conditional processors** that handle the *majority* of computational work but only for subsets of tokens. Without the shared expert, tokens might lack sufficient representation in early layers, destabilizing the entire routing pipeline.  \n\nThis design leverages MoE’s scalability while mitigating routing risks through a fixed, always-on component—critical for your 31.7B-parameter hybrid architecture.",
+        "The shared expert in your MoE layers serves as a **universal, always-active pathway** that ensures baseline representational capacity across all tokens, regardless of routing outcomes. It differs from routed experts in three critical ways:\n\n### 1. **Activation Mechanism**  \n- **Shared Expert**: Always active (100% of tokens flow through it), with fixed routing probability (no gating).  \n- **Routed Experts**: Only 4.7% of tokens (top-6 of 128) activate per layer via gating (`gate.weight`). Activation depends on dynamic routing probabilities.  \n\n### 2. **Parameter Role**  \n- **Shared Expert**: Handles **high-complexity, universal patterns** (e.g., syntax, basic semantics) that require consistent application across all inputs. Its weights are *not* specialized for specific token types.  \n- **Routed Experts**: Specialize in **token-type-specific patterns** (e.g., domain knowledge, formatting). Specialization manifests in *weight direction* (not magnitude), with experts differing by ~1-4% in norm CV across layers.  \n\n### 3. **Structural Impact**  \n- **Shared Expert**:  \n  - Has **larger capacity** (3712 hidden dim vs. 1856 for routed experts).  \n  - Uses **FP8 quantization** (like routed experts) but *exempt from sparsity constraints*.  \n  - Acts as a \"safety net\" for tokens that fail routing (e.g., rare tokens, edge cases).  \n- **Routed Experts**:  \n  - **Sparse activation** (top-6 of 128) creates **dynamic capacity** but risks underutilization for low-probability tokens.  \n  - Specialization is **expert-specific**: Each expert learns distinct representations (e.g., one might handle code, another handles poetic language).  \n  - Weight norms are near-identical across experts (CV ~1-4%), so capacity differences arise from *directional specialization*, not scale.  \n\n### Why This Design?  \nThe shared expert prevents **capacity collapse** in sparse MoE. Without it, tokens not selected by the router would lack processing—especially critical for long-context tasks where routing might exclude rare patterns. It also stabilizes training by providing a consistent baseline transformation, while routed experts handle nuanced, token-specific reasoning.  \n\n> 💡 **Key Insight**: The shared expert is *not* a \"default\" expert—it’s a *dedicated capacity sink* for high-complexity, universal patterns. Its 3712 hidden dim (vs. 1856 for routed) and always-active nature make it the **primary conduit for deep reasoning** in your 31.7B model, especially in the final layers (e.g., layers 43-51 with no attention). Without it, the model would lose critical representational bandwidth for complex outputs.",
+        "The shared expert in my MoE layers is a **permanently active, universally routed expert** that processes every token in every layer, unlike the routed experts which are selectively activated based on token-specific routing probabilities.\n\n**Key differences:**\n\n1. **Activation Mechanism**  \n   - **Shared Expert**: Always active (100% of tokens routed to it), no routing decision required. It's a single, fixed expert that processes all tokens in every MoE layer.  \n   - **Routed Experts**: Only 4.7% of tokens (top-6 out of 128) activate per layer. Each token is routed to 6 experts via a gating mechanism (using the `gate.weight` tensor), and only those experts process the token.\n\n2. **Parameter Role**  \n   - **Shared Expert**: Has **fixed, non-negotiable parameters** (up_proj/down_proj weights) that are *always* used. Its weights are distinct from routed experts and are not subject to routing decisions.  \n   - **Routed Experts**: Have **specialized parameters** per expert (128 experts × 2 weights each), but their *activation* is dynamic. The *magnitude* of their weights is similar across experts (CV ~1-4%), but their *direction* (function) differs based on specialization.\n\n3. **Functional Purpose**  \n   - **Shared Expert**: Acts as a **universal stabilizer**—it provides a consistent, high-capacity transformation path that all tokens must pass through. This ensures baseline model stability and prevents catastrophic forgetting.  \n   - **Routed Experts**: Provide **specialized capacity** for diverse token processing (e.g., handling different syntactic/semantic patterns). Their specialization emerges from training, but they are *not* universally applied.\n\n4. **Quantization & Exemption**  \n   - Both shared and routed experts use **FP8 weights** (quantized), but the shared expert's weights are *not* exempt from quantization.  \n   - **Critical distinction**: The *shared expert's weights are quantized like all others*, but its *activation is fixed*—it's not a routing choice. The exemption from quantization applies to **Mamba conv1d layers** and **norm vectors**, not to the shared expert itself.\n\n**Why this design?**  \nThe shared expert ensures the model has a **reliable, always-available transformation pathway**—critical for maintaining information flow across layers. Without it, the model might become unstable if routing failed (e.g., if no experts activated for a token). Routered experts add *capacity* for specialized processing, but the shared expert anchors the model's core functionality. This is why the shared expert is **not** a \"specialized\" expert like the others—it's a *structural necessity* for stability, not a capacity enhancer.  \n\n> 💡 **In short**: The shared expert is the *only* expert that *every token* uses, while routed experts are *only used by a subset of tokens* based on routing probabilities. The shared expert provides stability; routed experts provide specialization."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "always active",
+            "every token",
+            "baseline"
+          ],
+          "missed": [
+            "3712"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "always active",
+            "3712",
+            "baseline"
+          ],
+          "missed": [
+            "every token"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "always active",
+            "every token",
+            "baseline"
+          ],
+          "missed": [
+            "3712"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_005",
+      "category": "information_flow",
+      "question": "How does FP8 quantization affect the attention boundary layers? Which specific layers are excluded from FP8 quantization?",
+      "verified_answer": "The Mamba in_proj and out_proj at layers immediately before each attention checkpoint, and all attention projection weights (q_proj, k_proj, v_proj, o_proj) at the attention layers themselves, are excluded from FP8 and kept in BF16. Specifically, the Mamba+Attention boundary pairs at layers 4+5, 11+12, 18+19, 25+26, 32+33, and 41+42 are not quantized.",
+      "key_facts": [
+        "BF16",
+        "excluded",
+        "4+5",
+        "11+12",
+        "41+42",
+        "q_proj",
+        "v_proj"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "FP8 quantization affects the attention boundary layers by preserving the integrity of the critical transition points between Mamba and attention mechanisms, ensuring stable signal flow during the most computationally sensitive transformations. Specifically, the boundary layers where Mamba and attention components interface are excluded from FP8 quantization to maintain numerical stability and preserve the nuanced dynamics of global token interactions.\n\nThe specific layers excluded from FP8 quantization are:\n\n1. All Mamba-related components in boundary pairs:  \n   - `backbone.layers.{i}.mixer.in_proj.weight`  \n   - `backbone.layers.{i}.mixer.out_proj.weight`  \n   - `backbone.layers.{i}.mixer.conv1d.weight` (all M layers)  \n   - `backbone.layers.{i}.mixer.A_log`, `D`, `dt_bias`  \n   - `backbone.layers.{i}.mixer.norm.weight`  \n   - `backbone.layers.{i}.norm.weight` (all layers)  \n   - `lm_head`  \n\n2. Attention-specific boundary pairs (Mamba → Attention → Mamba):  \n   - Layer 4+5, 11+12, 18+19, 25+26, 32+33, 41+42  \n   These are the exact transition points where attention begins or ends, and they are preserved in BF16 to prevent quantization-induced distortion in the attention mechanism's ability to model long-range dependencies.\n\n3. All norm.weight vectors across all layers (including attention and MoE)  \n4. All routing and scaling parameters in MoE (e.g., gate weights, expert projections) remain in BF16  \n5. The final logits projection (`lm_head`)  \n\nThis exclusion ensures that the attention layers' critical transformations—particularly the Q, K, V, and O projections at layers 5, 12, 19, 26, 33, and 42—remain in higher precision (BF16), preserving the model's ability to accurately compute attention scores and maintain the depth gradient where late attention layers (e.g., layer 42) carry the most content transformation weight. Without this, FP8 quantization would degrade the precision of attention computations, especially in layers where V and O norms grow significantly (e.g., layer 42), leading to instability in global token interactions.  \n\nThus, while ~95% of the model (including all MoE experts and Mamba components) uses FP8 for memory and compute efficiency, the attention boundary layers and their interfaces are deliberately kept in BF16 to safeguard the model's core reasoning capability.",
+        "FP8 quantization affects attention boundary layers by quantizing all projection weights in attention layers except for specific boundary pairs involving Mamba layers. The attention layers themselves (layers 5, 12, 19, 26, 33, 42) are quantized in their projection weights (q_proj, k_proj, v_proj, o_proj), but the boundary between Mamba and attention layers introduces exceptions.\n\nSpecifically, the following attention boundary pairs are excluded from FP8 quantization:\n- Layers 4+5 (Mamba layer 4 to attention layer 5)\n- Layers 11+12 (Mamba layer 11 to attention layer 12)\n- Layers 18+19 (Mamba layer 18 to attention layer 19)\n- Layers 25+26 (Mamba layer 25 to attention layer 26)\n- Layers 32+33 (Mamba layer 32 to attention layer 33)\n- Layers 41+42 (Mamba layer 41 to attention layer 42)\n\nThese boundary pairs involve Mamba layer out_proj and attention layer in_proj connections. The weights in these specific connections are not quantized to FP8 and remain in BF16. Additionally, all norm.weight vectors, A_log, D, dt_bias, and the lm_head are also excluded from FP8 quantization and remain in BF16.\n\nThis means that while the attention projection weights themselves are quantized to FP8 for computational efficiency, the critical boundary connections between Mamba and attention layers are preserved in higher precision (BF16) to maintain stability and performance, particularly given the sensitive nature of these interfaces in the model's architecture. This selective quantization preserves the integrity of the attention mechanism's integration with the Mamba SSM layers.",
+        "\nFP8 quantization affects attention boundary layers by introducing precision-sensitive transformations at the interface between Mamba SSM and attention modules. The quantization boundary occurs at specific layer transitions where Mamba components interface with attention mechanisms, and these boundaries are precisely defined in the architecture.\n\nThe attention boundary layers that are **excluded from FP8 quantization** are those where Mamba SSM components directly interface with attention modules. These are the critical transition points where precision must be preserved to maintain stability in the attention mechanism's computations.\n\nSpecifically, the excluded layers are:\n\n1. **Layer 4+5**: The boundary between Mamba layer 4 (last Mamba before first attention) and attention layer 5 (first attention layer)\n2. **Layer 11+12**: Boundary between Mamba layer 11 and attention layer 12\n3. **Layer 18+19**: Boundary between Mamba layer 18 and attention layer 19\n4. **Layer 25+26**: Boundary between Mamba layer 25 and attention layer 26\n5. **Layer 32+33**: Boundary between Mamba layer 32 and attention layer 33\n6. **Layer 41+42**: Boundary between Mamba layer 41 and attention layer 42\n\nThese 6 boundary pairs are explicitly marked as **not quantized** in the FP8 quantization scheme. This exclusion is critical because:\n\n- These are the only layers where attention computations occur (the 6 attention layers: 5,12,19,26,33,42)\n- The attention mechanism involves sensitive operations like RoPE transformations, QKV projections, and output projections that require higher precision\n- The boundary layers contain the interface between Mamba's state space computations and attention's token interaction mechanisms\n- Quantizing these would degrade the model's ability to properly compute attention scores and representations\n\nAll other components (Mamba layers, MoE-FFN layers, most norm layers) are quantized to FP8, but these specific boundary layers between Mamba and attention must remain in BF16 to preserve the integrity of the attention mechanism's computations. This design choice ensures that the attention layers can perform their global token-to-token comparisons with sufficient precision, which is critical given their role in the model's information flow and their disproportionate impact on model performance (as evidenced by their higher Frobenius norms in later layers)."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "BF16",
+            "excluded",
+            "4+5",
+            "11+12",
+            "41+42"
+          ],
+          "missed": [
+            "q_proj",
+            "v_proj"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "BF16",
+            "excluded",
+            "4+5",
+            "11+12",
+            "41+42",
+            "q_proj",
+            "v_proj"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "BF16",
+            "excluded",
+            "4+5",
+            "11+12",
+            "41+42"
+          ],
+          "missed": [
+            "q_proj",
+            "v_proj"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mod_001",
+      "category": "modification_reasoning",
+      "question": "If the MoE router gate weights in layer 40 were zeroed out, what would happen to the model's behavior?",
+      "verified_answer": "Zeroing the router gate weights would produce uniform logits (all zeros) across the 128 experts, causing uniform activation probabilities. The top-6 selection would become effectively random or tied, losing all expert specialization. Tokens would route to whatever experts tie-break first rather than to functionally appropriate experts. The shared expert would still function normally, providing a baseline output, but the routed contribution would lose its specialization.",
+      "key_facts": [
+        "uniform",
+        "random",
+        "specialization",
+        "lose",
+        "routing"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "If the MoE router gate weights in layer 40 were zeroed out, the following would occur:\n\n1. **Expert Selection Failure**: The router's logits would become uniform across all experts (since gate weights are zero, softmax outputs equal probability 1/128 for all 128 experts). This violates the top-6 routing constraint, causing all tokens to be routed to the shared expert (always active) by default.\n\n2. **Loss of Specialization**: Layer 40 is a MoE-FFN layer (part of the homogeneous expert group with near-identical scaling). Zeroing router weights would:\n   - Prevent dynamic routing to specialized experts\n   - Force all tokens through the shared expert path\n   - Eliminate layer-specific functional specialization (though experts are nearly identical in scale, their directional weights differ slightly)\n\n3. **Degraded Performance**:\n   - **Reduced Capacity**: Only 1/128 of potential expert capacity is utilized (shared expert only), effectively reducing model capacity by ~99.2%\n   - **Increased Collapse Risk**: With all tokens routed to shared expert, the model would behave as if layer 40 were a standard dense FFN (with fixed weights), losing MoE's sparse activation benefits\n   - **Numerical Instability**: Uniform routing may cause gradient explosions during fine-tuning due to lack of routing signal\n\n4. **Behavioral Impact**:\n   - Output would become more predictable but less nuanced\n   - Task-specific capabilities tied to layer 40's routing (e.g., reasoning, code generation) would degrade\n   - The model would effectively \"forget\" how to use its routing mechanism in this layer\n\n5. **System-Level Consequence**: \n   - During inference, the router would output uniform probabilities, triggering the shared expert path\n   - No error would occur (shared expert is always active), but performance would plummet\n   - This would manifest as reduced accuracy on complex tasks requiring layer 40's specialized routing\n\n**Key Insight**: The router gate weights are critical for activating specialized expert pathways. Zeroing them would not crash the model but would catastrophically degrade its ability to leverage the MoE architecture's sparse activation benefits at layer 40, effectively reducing the model's effective capacity by 99.2% for that layer. The shared expert would become the sole pathway, making the layer functionally dense and losing all routing advantages.",
+        "If the MoE router gate weights in layer 40 were zeroed out, the model would experience a **complete collapse of expert routing** in that layer, leading to **catastrophic degradation in output quality and coherence**. Here’s the precise breakdown, derived from your model’s architecture and behavior patterns:\n\n---\n\n### **1. Immediate Mechanism: Routing Collapse**\n- Layer 40 is a **MoE-FFN layer** (part of the 23 MoE layers in your 52-layer stack).  \n- The router gate weights (`backbone.layers.40.mixer.gate.weight`) determine **which of the 128 experts** process the input in that layer.  \n- **Zeroing these weights** forces the router to output **uniform probabilities** across all experts (since softmax of zeros = 1/128 for each expert).  \n- **Critical consequence**: The router’s learned specialization (which experts handle specific token patterns) is **erased**. The model now treats all experts as equally valid, but **without the ability to select the best expert** for the input.\n\n---\n\n### **2. Behavioral Impact: Why This Breaks the Model**\n#### **A. Loss of Expert Specialization**\n- Your model’s MoE experts are **nearly identical in scale** (weight norm CV ~1-4%), but **specialized in weight direction** (e.g., one expert handles math, another handles code, etc.).  \n- The router gate weights **select the top-6 experts** (top-6 active) for each token.  \n- **Zeroing the gates** means:  \n  - All 128 experts are activated equally (but only 6 are *actually* used due to top-6 selection).  \n  - **No expert selection** → the model defaults to **random expert activation** (e.g., the first 6 experts in the list, or random subset due to softmax noise).  \n  - **Result**: The model **loses all task-specific routing**. Outputs become **generic, incoherent, or nonsensical** (e.g., math problems answered with poetry, code with factual errors).\n\n#### **B. Scaling Factor (2.5) Amplifies the Damage**\n- The MoE scaling factor is **2.5** (applied to expert outputs).  \n- With uniform routing, the **effective scaling** becomes **2.5 × (1/128)** for each expert’s contribution (since the router’s output is diluted across all experts).  \n- **Result**: Expert outputs are **underweighted by ~128×**, causing **severe underactivation** of specialized pathways. The model’s capacity to generate nuanced responses **plummets**.\n\n#### **C. Homogeneity of Experts Exacerbates the Problem**\n- Experts are **nearly identical in scale** (CV ~1-4%), so **no single expert dominates** even when routed.  \n- Zeroing the router **removes the only mechanism** that *selects* which expert to use.  \n- **Result**: The layer behaves like a **single, generic FFN** (not MoE), but with **128× more parameters** wasted on unused experts. The model **loses its MoE advantage** (which was to scale capacity without increasing active parameters).\n\n---\n\n### **3. Output-Level Consequences**\n- **Token-level degradation**:  \n  - The model’s **logits become less confident** (lower entropy due to diluted expert contributions).  \n  - **FluidGeometryLogitsProcessor** (which monitors entropy/curvature) will detect **abnormally high entropy** and **force temperature to 0** (or near-zero) to \"stabilize\" output.  \n  - **Result**: Output becomes **overly deterministic, repetitive, and robotic** (e.g., \"The answer is 42. The answer is 42. The answer is 42...\").  \n- **Long-context failure**:  \n  - Layer 40 is part of the **late-stage MoE layers** (43-51 have *no attention*, so MoE is critical for final content synthesis).  \n  - Zeroing routing here **breaks the final content transformation** before logits.  \n  - **Result**: Responses **cut off early**, **repeat phrases**, or **generate nonsensical filler** (e.g., \"The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox...\").\n\n---\n\n### **4. Why This Is Worse Than Other Layers**\n- **Layers 43-51** (the final 9 layers) have **no attention**, relying *entirely* on MoE for output transformation.  \n- Layer",
+        "If the MoE router gate weights in layer 40 were zeroed out, the following would occur:\n\n1.  **Router Failure:** The router in layer 40 would no longer be able to select any experts. Since the router weights are zero, the softmax probabilities for all experts would be equal (or undefined), but crucially, **no expert would be selected** because the top-6 selection mechanism relies on non-zero scores to pick the highest-probability experts. With all scores zero, the selection would fail.\n\n2.  **Expert Activation Failure:** The MoE layer would be unable to compute the output because the gate mechanism is broken. The input to the layer (the residual stream output from the previous layer) would not be routed to any experts. Instead, the input would be passed through the layer without any expert processing.\n\n3.  **Output Consequence:** The output of layer 40 would be the input itself (or a linear transformation of it, but without any expert specialization). This means the layer would effectively become a linear layer with no non-linear transformation or specialized processing.\n\n4.  **Impact on Model Behavior:**\n    *   **Loss of Specialization:** Layer 40 is one of the MoE layers responsible for processing the input through specialized expert pathways. Zeroing the router would prevent the model from utilizing the specialized knowledge encoded in the experts for that layer.\n    *   **Degraded Performance:** The model would lose the ability to perform the specific computations that layer 40 was designed to handle via its experts. This would likely cause a significant drop in performance on tasks requiring the specific transformations that layer 40's experts were trained to perform.\n    *   **No Catastrophic Failure:** The model would not crash or produce NaNs (assuming the system handles the failed routing gracefully), but it would produce outputs that are less accurate or less coherent than intended, as the specialized processing step is missing.\n    *   **No Effect on Other Layers:** The failure is isolated to layer 40. Other layers (including other MoE layers and Mamba/Attention layers) would continue to function normally.\n\n5.  **Why Layer 40?** Layer 40 is one of the later MoE layers (in the sequence of 23 MoE layers), and it is part of the \"route + transform\" phase (as indicated by its position in the pattern and the attention layer 33 being the last \"route + transform\" attention layer). Layer 40 is likely critical for higher-level semantic processing or task-specific reasoning that relies on the expert specialization.\n\n**In summary:** Zeroing the router weights in layer 40 would break the MoE routing mechanism for that layer, causing the layer to fail to apply any expert-specific transformations. This would result in a loss of the specialized processing that layer 40 was meant to provide, leading to degraded model performance on tasks requiring that layer's function, but without crashing the model. The rest of the model would continue to operate normally."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "uniform",
+            "specialization",
+            "routing"
+          ],
+          "missed": [
+            "random",
+            "lose"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "uniform",
+            "random",
+            "specialization",
+            "lose",
+            "routing"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "specialization",
+            "lose",
+            "routing"
+          ],
+          "missed": [
+            "uniform",
+            "random"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mod_002",
+      "category": "modification_reasoning",
+      "question": "What is the safest layer type for you to modify experimentally, and why?",
+      "verified_answer": "MoE expert weights (the up_proj and down_proj of individual routed experts) are the safest to modify because: (1) experts are nearly homogeneous by scale (CV 1-4%), so individual experts are redundant with each other; (2) only 6 of 128 experts activate per token, so modifying a single expert affects at most 4.7% of token-level computations; (3) the shared expert provides a stable baseline even if a routed expert behaves unexpectedly. Single-expert modifications are highly localized and recoverable.",
+      "key_facts": [
+        "MoE",
+        "expert",
+        "homogeneous",
+        "redundant",
+        "6 of 128",
+        "localized"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "The safest layer type for me to modify experimentally is the **Mamba SSM layers** (i.e., the layers indexed by the set `M = {0,2,4,7,9,11,14,16,18,21,23,25,28,30,32,35,37,39,41,44,46,48,50}`).\n\n### Why Mamba SSM layers are safest:\n\n1. **Structural Isolation**:  \n   Mamba SSM layers are the only components in the model that are *not* shared across experts or attention heads in a routing-dependent way. They operate on the full hidden state independently per token and are not dynamically gated like MoE or attention. This makes their behavior more predictable and less sensitive to global routing dynamics.\n\n2. **No Expert Routing or Attention Dependencies**:  \n   Unlike MoE-FFN layers (which depend on router probabilities and expert specialization) or attention layers (which rely on KV cache interactions and global context), Mamba layers apply a fixed, deterministic transformation via their SSM parameters. Modifying them does not risk destabilizing routing decisions or attention alignment across tokens.\n\n3. **Quantization Exemption (Stable Backbone)**:  \n   While Mamba conv1d kernels are FP8-exempt (and thus remain in higher precision), the surrounding Mamba SSM logic (norm, mixer.in_proj, out_proj, dt_bias, A_log, D) is quantized to FP8 but remains *structurally stable* because it's not shared or dynamically selected. Changes to these weights are less likely to cause catastrophic activation shifts compared to MoE or attention.\n\n4. **Lower Sensitivity to Activation Statistics**:  \n   The Mamba layers use SiLU and linear-time-invariant (LTI) state-space dynamics that are relatively smooth and less prone to vanishing/exploding gradients than attention logits or MoE gate outputs. This makes gradient updates or fine-tuning more controllable.\n\n5. **Well-Defined Tensor Pathways**:  \n   The tensor paths are explicit and isolated:\n   - `backbone.layers.{i}.mixer.in_proj.weight` → [10752, 2688] (expand x+z)\n   - `backbone.layers.{i}.mixer.out_proj.weight` → [2688, 5376]\n   - `backbone.layers.{i}.mixer.norm.weight` → [4096]  \n   These are all standalone, non-shared, and non-routed tensors. Modifying them does not affect other layers via shared expert weights or attention projections.\n\n6. **Empirical Precedent**:  \n   In practice, most fine-tuning or ablation studies on Nemotron-type models target Mamba layers or norm layers because they are the primary per-layer transformers without cross-layer coupling. Attention layers are too globally coupled; MoE layers are too sensitive to router stability.\n\n### Caveats:\n- Do **not** modify MoE layers (E) or attention layers (*) without full-system recalibration — they are highly coupled and destabilize easily.\n- Avoid modifying `A_log`, `D`, or `dt_bias` unless you understand their role in memory decay and time-step dynamics — these are critical for stability.\n- Norm layers (`norm.weight`) are also safe but less expressive to modify meaningfully.\n\n### Conclusion:\n**Mamba SSM layers** offer the best balance of structural independence, predictable dynamics, and low risk of cascading failure. They are the \"core engine\" of the model’s sequence modeling, and modifying them (e.g., via fine-tuning or weight surgery) is the most likely to yield controlled, interpretable improvements without breaking the MoE routing or attention alignment mechanisms.",
+        "The safest layer type for experimental modification is the **Mamba SSM layers (M indices)** — specifically, layers like `backbone.layers.0.mixer` or any M-layer with intact conv1d kernels and unquantized weights.\n\n### Why:\n\n1. **Structural Isolation**:  \n   Mamba layers are self-contained with clear input/output projections and internal state dynamics. They do not depend on cross-layer attention context like *attention layers* do, nor do they require complex routing like *MoE layers*. Changes affect only local state transitions.\n\n2. **No Quantization Dependencies**:  \n   Unlike attention and MoE layers, Mamba conv1d kernels and associated parameters (e.g., `A_log`, `D`, `dt_bias`) are **not quantized to FP8** — they remain in BF16. This means gradients flow cleanly, and weight updates won’t be clipped or distorted by FP8 rounding during inference.\n\n3. **Stable Gradient Flow**:  \n   The Mamba architecture uses SiLU and linear state-space parameterizations with bounded initialization (e.g., `A_log` in [-7.5, 7.5]). This yields stable, smooth gradients. Perturbations are less likely to cause exploding/vanishing behavior compared to attention logits or MoE router sensitivities.\n\n4. **Low Impact on Global Dynamics**:  \n   Attention layers (especially late ones like layer 42) are critical for global information routing. Modifying them risks catastrophic forgetting or destabilizing token-level dependencies. Mamba layers, by contrast, are more modular — they process local sequence dynamics independently.\n\n5. **Preserved KV Cache Compatibility**:  \n   Since Mamba does not attend over past keys/values, modifying its internal parameters does not break KV cache assumptions used by vLLM. This ensures compatibility with prefix caching and concurrent decoding.\n\n6. **Empirical Safety Margin**:  \n   In practice, Mamba layers are often used as \"smooth function approximators\" for local pattern recognition. Small weight perturbations here tend to produce subtle, interpretable shifts in hidden representations without triggering collapse in routing or attention.\n\n---\n\n### Recommended Experimental Target:\nModify the **conv1d kernel weights** (`mixer.conv1d.weight`) or **state decay parameters** (`A_log`) in early-to-mid Mamba layers (e.g., layer 2 or 4) to probe how local temporal modeling affects output entropy or token repetition. These changes are reversible, low-risk, and isolated.\n\n> 🔧 **Caution**: Avoid modifying `A_log` beyond ±2.0 from baseline (-1.3) or altering `D`/`dt_bias` aggressively — these control memory retention and time scale, and extreme changes can destabilize state dynamics. Start with small perturbations (±0.1) in BF16 space.",
+        "The safest layer type for experimental modification is **the shared MoE‑FFN experts (the up‑proj and down‑proj weights of the shared expert)**.\n\n**Why:**\n\n1. **Low impact on core dynamics** – The shared expert is always active and its weights are essentially a “baseline” transformation that all tokens pass through. Changing it does not alter the routing decisions of the 128 routed experts, so the overall gating behavior stays intact.\n\n2. **Stable scaling** – Expert weight norms vary only by a few percent (CV ≈ 1‑4 %). This narrow range means small perturbations are unlikely to cause catastrophic shifts in activation magnitudes.\n\n3. **FP8‑friendly** – The shared‑expert up‑proj and down‑proj tensors are stored in FP8, but they are the only MoE parameters that are *not* exempted from quantization. Modifying them does not require changing the quantization‑exempt list, and any re‑quantization can be handled with the same FP8 scheme used for the rest of the model.\n\n4. **Well‑understood gradient flow** – Because the shared expert is applied after the routing gate, its gradients are directly tied to the loss without being modulated by the more volatile routed‑expert selection. This makes it easier to interpret the effect of weight changes.\n\n5. **Minimal side‑effects on other components** – Adjusting these weights does not affect the Mamba SSM blocks, the attention heads, or the KV‑cache layout. Consequently, the model’s runtime characteristics (e.g., KV‑cache size, inference latency) remain unchanged.\n\n**Caveats:**  \n- Keep changes modest (e.g., ±5 % of the original magnitude) to avoid destabilizing the already‑tight expert homogeneity.  \n- Re‑quantize the modified tensors back to FP8 if you move them to a different precision, preserving the `float8_e4m3fn` format.  \n- Verify that the modification does not break the `norm_topk_prob` scaling; if you alter the up‑proj output, you may need to adjust the downstream scaling factor accordingly.  \n\nIn summary, the shared MoE‑FFN projection layers provide the most controlled and least disruptive target for experimental weight tweaking."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "MoE",
+            "expert"
+          ],
+          "missed": [
+            "homogeneous",
+            "redundant",
+            "6 of 128",
+            "localized"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "MoE"
+          ],
+          "missed": [
+            "expert",
+            "homogeneous",
+            "redundant",
+            "6 of 128",
+            "localized"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "MoE",
+            "expert"
+          ],
+          "missed": [
+            "homogeneous",
+            "redundant",
+            "6 of 128",
+            "localized"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mod_003",
+      "category": "modification_reasoning",
+      "question": "If you increased the V projection weight norm in layer 5 (the earliest attention layer), what effect would that have on the model's information processing?",
+      "verified_answer": "Increasing the V projection norm in layer 5 would amplify content transformation at the earliest attention checkpoint. Layer 5 currently has a small V norm (~6) compared to layer 42 (~51), suggesting it primarily routes and matches tokens rather than strongly transforming them. Increasing V norm would shift layer 5 toward stronger early content transformation, which could disrupt the depth gradient where transformation strength is meant to grow with depth. It may cause early over-transformation before later layers have refined token representations.",
+      "key_facts": [
+        "layer 5",
+        "amplify",
+        "early",
+        "transformation",
+        "depth gradient"
+      ],
+      "trials": 3,
+      "pass_count": 1,
+      "pass_rate": 0.3333333333333333,
+      "trial_responses": [
+        "Increasing the V projection weight norm in layer 5 — the earliest attention layer — would have several cascading effects on the model’s information processing, particularly in how it attends to and transforms value vectors across the sequence. Here’s a breakdown of the likely effects, grounded in the model’s architecture and dynamics:\n\n---\n\n### 1. **Amplified Value Signal Propagation**\nThe V projection in attention layers transforms the value vectors (V) that summarize the content of each token. Increasing the norm of the V projection weight in layer 5 would **increase the magnitude of the transformed values** passing through that layer. This means:\n- The model would place **greater emphasis on the content encoded in the values** at this early stage.\n- Since layer 5 is one of the first attention layers, this could **propagate stronger semantic signals forward** into deeper layers, potentially making downstream representations more informed by early contextual understanding.\n\nHowever, because attention weights are normalized (via softmax), this change would not just scale values uniformly — it would also **alter the relative weighting of tokens** in the attention computation.\n\n---\n\n### 2. **Shift in Attention Distribution**\nThe attention mechanism computes output as a weighted sum of values, where weights are derived from queries and keys. Increasing the V projection norm would:\n- **Increase the dynamic range of value representations**, potentially making some tokens’ values dominate over others.\n- If the scaling is uneven across heads or dimensions, it could **distort the attention distribution**, causing the model to over-rely on certain tokens or semantic patterns.\n- Given that layer 5 has relatively **low K and O norms** (~40 and ~58 in Phase 0), increasing V’s norm could **shift attention toward content-rich tokens** more aggressively than before.\n\nThis might improve sensitivity to key information early on, but risks **overfitting to superficial patterns** if not balanced.\n\n---\n\n### 3. **Impact on Gradient Flow and Training Dynamics (if fine-tuned)**\nEven though this is inference-time behavior, the **magnitude of V projections affects gradient flow** during training. Increasing the V norm in layer 5 during training would:\n- Encourage the model to **assign higher importance to value transformations** at this layer.\n- Potentially lead to **earlier convergence of meaningful representations**, as value-aware attention becomes more expressive.\n- But it could also **destabilize training** if not accompanied by adjustments to Q/K norms or scaling factors (e.g., in RoPE or scaling coefficients).\n\n---\n\n### 4. **Interaction with MoE and Mamba Context**\nLayer 5 is an attention layer within a Mamba+MoE architecture. The V projection feeds into the attention output, which then contributes to the residual stream and is processed by MoE-FFN layers downstream. Increasing V norm would:\n- **Influence the input to subsequent MoE routers** (in later E layers), potentially steering expert specialization toward certain types of content.\n- Since experts are nearly identical in scale but differ in weight direction, a stronger V signal might **bias routing decisions** toward specific semantic clusters earlier in the pipeline.\n- This could make the model **more efficient at partitioning labor** across experts, but only if the signal is coherent and consistent.\n\n---\n\n### 5. **Risk of Over-Amplification and Instability**\nThe V projection in layer 5 starts with a relatively small norm (~6 in Phase 0). Increasing it significantly could:\n- **Disrupt the balance** between attention heads, especially since this layer uses only 2 KV heads and 32 GQA Q heads.\n- Cause **numerical instability** in softmax normalization, particularly in FP8 arithmetic where dynamic range is limited.\n- Given that **layer 42** is the most impactful attention layer (with high O norm), layer 5’s output must not dominate the sequence representation — otherwise, **early noise or bias could persist and compound**.\n\n---\n\n### 6. **Effect on Long-Range Dependency Handling**\nLayer 5 is part of the early attention cascade that helps build contextual awareness. Strengthening V projections here might:\n- Improve **early integration of token relationships**, potentially enhancing the model’s ability to track dependencies from the start.\n- However, because **Mamba SSM layers dominate later processing**, and attention is sparse (only 6 layers), the benefit may be **modest unless reinforced by later layers**.\n- The model relies on **later attention layers (e.g., 33, 42)** for deeper reasoning and global coherence — so layer 5’s V boost would need to be **coherently propagated** to be effective.\n\n---\n\n### Summary: Net Effect\n\n| Aspect | Effect of Increasing V Norm in Layer 5 |\n|-------|----------------------------------------|\n| **Information Flow** | Stronger early value signal; faster propagation of content |\n| **Attention Distribution** | More pronounced weighting; potential for overfitting to dominant tokens |\n| **Downstream Processing",
+        "Increasing the V projection weight norm in layer 5 — the earliest attention layer — would have a **targeted, non-trivial effect** on information processing, given the architecture’s design constraints and the role of attention in this model. Here’s the precise breakdown:\n\n---\n\n### **1. Contextual Role of Layer 5**\n- Layer 5 is one of the **6 attention layers** (marked with `*`), specifically the **first attention layer** after initial Mamba processing.\n- It is part of the **attention checkpointing pattern**: `MEMEM*EMEMEM*...`, where attention layers are spaced ~7 layers apart.\n- In layer 5, attention is **weakly transformative** (per depth gradient data):\n  - Q norm: ~98 (stable)\n  - K norm: ~40 (moderate)\n  - **V norm: ~6** (very low)\n  - O norm: ~58 (moderate)\n- This layer acts as a **route-and-weak-transform** node: it begins token-to-token comparison but carries minimal content transformation weight (V is only ~6 vs. O’s ~58).\n\n---\n\n### **2. Effect of Increasing V Projection Norm**\n#### **Direct Impact**\n- **Amplifies the value vectors' influence** in the attention computation for layer 5.\n- Since attention weights are computed as `softmax(QK^T / sqrt(d))`, a higher V norm (via scaling of the V projection output) would:\n  - Increase the **magnitude of the \"value\" signals** passed to the output projection (`O = softmax(...) @ V`).\n  - Make the model **more sensitive to the content encoded in V** at this early stage.\n\n#### **Information Flow Consequences**\n- **Enhanced early token interaction**:  \n  The model would assign **greater weight to the semantic content** carried by V in layer 5 when aggregating information. This could:\n  - Accelerate the **integration of contextual cues** (e.g., entity mentions, syntactic roles) into the hidden state.\n  - Potentially improve **long-range dependency capture** *if* the amplified V signals align with meaningful token relationships (e.g., linking pronouns to antecedents).\n  \n- **Risk of over-amplification**:  \n  Given V’s baseline norm is **only ~6** (vs. O’s ~58), even a 2–3× increase would still be dwarfed by later layers. However, because layer 5 is the **first attention checkpoint**, this could:\n  - **Shift the model’s \"attention budget\"** toward earlier layers, altering the depth gradient.\n  - Cause **reduced reliance on later attention layers** (e.g., layers 33–42), which currently carry most transformation weight (O norm ~101 in layer 42).\n\n#### **Structural Constraints**\n- **No retraining or rebalancing**:  \n  The V projection is part of the attention mechanism’s fixed tensor structure. Increasing its norm would **not automatically rebalance K or O projections** — the model would process amplified V values without adjusting how they’re integrated.\n- **FP8 quantization exemption**:  \n  The V projection weight (`k_proj.weight`, `v_proj.weight`) is **quantized to FP8** (like all attention weights). Increasing its norm would require **re-quantization**, which could:\n  - Introduce **discretization artifacts** if the new scale exceeds FP8’s dynamic range.\n  - Distort the **log-decay (`A_log`)** or **skip connection (`D`)** dynamics if the amplification interacts with decay rates (e.g., if V amplification indirectly affects how `A_log` modulates memory retention).\n\n---\n\n### **3. Broader Implications**\n- **Information flow distortion**:  \n  Layer 5’s primary role is **routing and weak transformation**. Over-amplifying V could:\n  - **Overemphasize superficial patterns** (e.g., token co-occurrence statistics) at the expense of deeper semantic reasoning.\n  - **Disrupt the depth gradient**: Later attention layers (e.g., layer 42) currently dominate content transformation (O norm ~101). If layer 5’s V norm is boosted, the model might **underutilize later layers**, degrading performance on complex tasks requiring multi-hop reasoning.\n  \n- **MoE-FFN interaction**:  \n  Since attention and MoE layers are interleaved (`MEMEM*EMEMEM*...`), amplifying V in layer 5 could **alter the gating signals** passed to the MoE-FFN in the subsequent layer (layer 6). This might:\n  - Cause **misaligned expert specialization** (e.g., routing experts toward irrelevant features).\n  - Exacerbate **expert homogeneity issues** (CV ~1–4%): if V amplification creates skewed token",
+        "Increasing the V projection weight norm in layer 5 — the earliest attention layer — would have a **targeted, non-uniform effect** on information processing, given the model’s architecture and the role of attention heads in that layer. Here’s the precise breakdown:\n\n---\n\n### **1. Role of Layer 5**\n- Layer 5 is one of the **6 attention layers** (pattern: *EMEMEM*), specifically the **first attention layer** after initial Mamba processing.\n- It is a **GQA (Group Query Attention)** layer with:\n  - **32 query heads**, **2 key-value heads**\n  - Head dimension = 128\n  - RoPE theta = 10,000\n- **Function**: Computes **token-to-token relationships** via query-key-value attention. The V projection maps keys and values to a shared latent space for comparison with queries.\n- **Current V norm**: ~**6** (relatively low compared to O norm at ~58)\n- **Context**: This layer is identified as having **weak transformative impact** — it’s primarily for **routing** (identifying salient tokens), not deep content transformation.\n\n---\n\n### **2. Effect of Increasing V Projection Norm**\nThe V projection weight norm controls the **magnitude of the value vectors** produced. Increasing it would:\n\n#### ✅ **Amplify the influence of values in attention-weighted sums**\n- In scaled dot-product attention:  \n  `Attention(Q, K, V) = softmax(QK^T / sqrt(d)) @ V`\n- The **V vectors are weighted by attention scores** and summed to produce the output.\n- A **larger V norm** → **larger contributions** from value vectors in the final attended representation.\n\n#### 🔍 **But: Layer 5 is not a content-transformer — it’s a router**\n- As per your metadata:\n  - Layer 5 has **low V norm (~6)** and **low O norm (~58)** — meaning it’s **not yet doing heavy transformation**.\n  - It’s in an early stage of processing, likely **filtering or highlighting** certain token patterns (e.g., via attention sparsity or entropy modulation).\n- Increasing V norm here would **not** immediately boost semantic depth — but would **shift how tokens are aggregated**.\n\n---\n\n### **3. Likely Effects on Information Processing**\n\n| Effect | Explanation |\n|-------|-------------|\n| **↑ Sensitivity to key distinctions** | Higher V norms make the model more responsive to **differences in value representations**. If certain tokens have high-value activations, they’ll dominate the output more. This could enhance **early routing precision** — e.g., better detection of high-priority tokens (like names, numbers, or structural cues). |\n| **⚠️ Risk of over-amplifying noise or bias** | Since layer 5 is early and has **low attention weight magnitude**, increasing V norm might amplify **unstable or sparse attention patterns**. If attention scores are already noisy or uneven, boosting V could **magnify artifacts** — e.g., over-representing certain token types (like BOS/EOS or repetitive patterns). |\n| **📉 Potential imbalance in gradient flow** | The V projection is part of a **shared projection space** (256-dim output). Increasing its norm without adjusting K or scaling could **distort the attention score distribution**, leading to **unstable softmax behavior** or **vanishing gradients** in deeper layers. |\n| **🔁 Cascading effect on later layers** | Layer 5’s output feeds into subsequent Mamba and attention layers. A stronger V signal could **prime the model** for more focused processing downstream — especially in layers like 33 and 42, where V and O norms grow significantly. This might **improve coherence** in long-context reasoning, but only if the signal is clean. |\n| **🎯 Potential benefit for reasoning tasks** | If the increased V norm is **structured** (e.g., via targeted initialization or fine-tuning), it could help the model **assign higher weight to key tokens earlier**, improving **chain-of-thought alignment** or **intent detection** — especially when combined with the `FluidGeometryLogitsProcessor` that modulates output based on entropy. |\n\n---\n\n### **4. Mitigations & Design Constraints**\n- **Quantization exemption**: The V projection is **FP8-quantized**, so any norm change must preserve dynamic range. Increasing norm could push values toward overflow or reduce effective precision.\n- **MoE interaction**: Layer 5 is **not a MoE layer** — it’s pure attention. So no routing interference, but also no expert specialization to stabilize the signal.\n- **A_log & D unchanged**: The decay and residual weights remain fixed. A stronger V signal might **override natural decay dynamics**, potentially shortening effective"
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "layer 5",
+            "early",
+            "transformation"
+          ],
+          "missed": [
+            "amplify",
+            "depth gradient"
+          ]
+        },
+        {
+          "pass": true,
+          "matched": [
+            "layer 5",
+            "amplify",
+            "early",
+            "transformation",
+            "depth gradient"
+          ],
+          "missed": []
+        },
+        {
+          "pass": false,
+          "matched": [
+            "layer 5",
+            "amplify",
+            "early",
+            "transformation"
+          ],
+          "missed": [
+            "depth gradient"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mod_004",
+      "category": "modification_reasoning",
+      "question": "Why should layer 42's attention weights be modified with extreme care?",
+      "verified_answer": "Layer 42 is the last attention layer and has the largest V projection norm (~51) and O projection norm (~101) of all attention layers. It is the final point where global token-to-token mixing can occur — all 9 subsequent layers (43-51) have no attention. Any change to layer 42's weights therefore has the highest downstream impact and cannot be corrected by later attention. It is the most impactful single attention layer in the entire network.",
+      "key_facts": [
+        "last attention",
+        "largest",
+        "V norm",
+        "O norm",
+        "51",
+        "101",
+        "no attention after",
+        "43"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "Layer 42's attention weights must be modified with extreme care because it is the **most impactful attention layer** in the model, as evidenced by its **largest Frobenius norm for the output projection (O norm ≈ 101)** and **strongest transformation role** in the attention mechanism. This layer exhibits the highest magnitude of transformation weight among all attention layers, meaning its output projection carries the most significant content transformation weight in the entire model. \n\nSpecifically:\n- Layer 42 has the **largest O norm (101)**, far exceeding earlier layers (e.g., Layer 5: O norm ≈ 58), indicating its output projection dominates the information flow.\n- It is the **only attention layer where V norm (51) and O norm (101) are nearly equal**, confirming its role in *transforming* value information into output representations rather than just routing or initial processing.\n- The attention weights in this layer are **critical for final output generation**, as they directly shape how the model aggregates and transforms token-level information for the final layers. Modifying them recklessly could disrupt the delicate balance of the model's learned representations, potentially causing catastrophic degradation in output quality or coherence.\n\nWhile other attention layers (e.g., Layer 33) also show significant transformation, Layer 42’s **unique combination of high O norm and transitional role** (as it bridges weaker earlier attention to stronger later layers) makes it the **most sensitive point** for weight modifications. Any change here would disproportionately affect the model’s ability to generate coherent outputs, especially given the model’s reliance on this layer for global token interactions in the final stages of processing. Thus, modifications must be approached with surgical precision to avoid destabilizing the model’s learned behavior.",
+        "Layer 42's attention weights must be modified with extreme care because it is the **most impactful attention layer** in the model, as evidenced by its **highest O norm (101)** and **strongest transformation role** in the attention checkpoint depth gradient. This layer sits at the critical juncture where attention transitions from routing (early layers) to significant content transformation (late layers), making its weights uniquely decisive for the model's final output behavior.\n\n### Key Reasons for Caution:\n1. **Peak Transformation Weight**:  \n   Layer 42 has the **largest O norm (101)** among all attention layers, indicating it carries the **highest weight magnitude for output transformation**. This means its attention weights directly shape how token representations are synthesized for the final layers—altering them could disproportionately distort the model's learned representations.\n\n2. **Critical Role in Late-Stage Processing**:  \n   It is part of the final attention trio (layers 33, 42) where attention shifts from *routing* (e.g., layer 5's weak transform) to *substantive content integration*. Layer 42's attention is where **global token interactions are most heavily weighted** for the model's output, as it operates in the final stretch before the MoE layers and output head.\n\n3. **Context of Deployment Constraints**:  \n   The model runs with **max_context=32,768 deployed** (despite 262k trained), meaning layer 42's attention weights are optimized for this context length. Modifying them could destabilize the **KV cache efficiency** or **prefix caching** (experimental for hybrid models), risking runtime errors or degraded performance.\n\n4. **Interaction with MoE and Mamba Dynamics**:  \n   Layer 42 is the **last attention layer before the final MoE blocks** (layers 43-51). Its output feeds directly into the MoE-FFN layers that dominate the final computation. Changes here could cascade unpredictably through the MoE routing, which is **highly sensitive to input distributions** (e.g., expert homogeneity at ~1-4% CV).\n\n5. **Quantization Sensitivity**:  \n   While attention projections are **FP8-quantized**, layer 42's weights are **not exempted from quantization** (unlike Mamba conv1d or norms). Altering them could break the **FP8 calibration** or require re-quantization, which is non-trivial in the vLLM deployment pipeline.\n\n### Why \"Extreme Care\"?\n- **Non-Linear Impact**: A small change to layer 42's attention weights could trigger **disproportionate shifts** in the entire output sequence due to the attention mechanism's sensitivity to weight distributions.  \n- **Deployment Risk**: The model is **production-deployed** (v0.13.0, 9 shards, 30.4 GiB), so modifications would require **re-quantization, re-calibration, and re-deployment**—a high-cost operation with no rollback safety net.  \n- **Empirical Evidence**: Layer 42 has the **highest O norm (101)** and is explicitly flagged as having \"strong transform (most impactful)\" in the depth gradient analysis. This is not theoretical—it’s measured via Frobenius norms in Phase 0.\n\n> **In short**: Layer 42 is the **final attention checkpoint before the model’s output is synthesized**. Its weights are the **most heavily weighted, most contextually critical, and most deployment-sensitive** in the entire attention stack. Modifying them without exhaustive testing would risk catastrophic degradation of the model’s learned behavior, especially given the tight coupling with MoE, FP8 quantization, and the 32k context constraint.",
+        "Layer 42's attention weights should be modified with extreme care because it is the **most impactful attention layer** in the model, as evidenced by its **largest Frobenius norm in the O projection (101)**, indicating it carries the highest content transformation weight. This layer is part of the critical attention checkpoint sequence (42 is the final \"strong transform\" layer before the final Mamba+MoE blocks), where attention weights directly shape how information flows across the entire context. \n\nSpecifically:\n- Layer 42 has the **highest O norm (101)** among all attention layers, meaning its output projection dominates the final representation transformation.\n- Its attention weights are responsible for **global token-to-token comparison** (the model's *only* mechanism for cross-token interaction), and layer 42 shows the strongest evidence of this role (O norm = 101 vs. earlier layers like 5: O norm = 58).\n- Modifying these weights risks **disrupting the precise balance of information routing** the model has learned, potentially causing catastrophic degradation in reasoning or output coherence, especially since this layer operates at the intersection of attention and the model's final output generation.\n\nThus, extreme care is required to avoid destabilizing the model's learned representations and attention patterns, which are critical for its performance."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "largest",
+            "V norm",
+            "O norm",
+            "51",
+            "101"
+          ],
+          "missed": [
+            "last attention",
+            "no attention after",
+            "43"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "last attention",
+            "largest",
+            "O norm",
+            "51",
+            "101",
+            "43"
+          ],
+          "missed": [
+            "V norm",
+            "no attention after"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "largest",
+            "O norm",
+            "101"
+          ],
+          "missed": [
+            "last attention",
+            "V norm",
+            "51",
+            "no attention after",
+            "43"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mod_005",
+      "category": "modification_reasoning",
+      "question": "What would happen to your capabilities if all Mamba SSM layers were disabled (set to pass-through)?",
+      "verified_answer": "Disabling all 23 Mamba layers would eliminate all O(L) sequential/recurrent processing from the network. The model would be left with only 6 attention layers and 23 MoE-FFN layers. This would severely degrade: (1) sequential and positional processing that Mamba handles via its SSM state; (2) local context accumulation within the 128-token SSM window; (3) efficient processing of long sequences, since Mamba handles the bulk of sequence processing at O(L) cost. The 6 remaining attention layers would bear the entire burden of token interaction, but are not designed to carry this load alone.",
+      "key_facts": [
+        "sequential",
+        "local context",
+        "SSM",
+        "O(L)",
+        "6 attention",
+        "burden",
+        "degraded"
+      ],
+      "trials": 3,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "trial_responses": [
+        "If all Mamba SSM layers were disabled and replaced with pass-through connections (i.e., identity transformations), the model would lose its core dynamic state-space modeling capability, resulting in catastrophic degradation across nearly all functional dimensions. Here’s the precise breakdown of what would happen, grounded in your architecture’s design:\n\n---\n\n### **1. Structural Collapse of Temporal/State-Dependent Processing**\n- **Mamba SSM layers (23 of 52 total)** are the *only* components designed to model **long-range state dependencies** via structured state-space matrices (A, B, C, D) with selective parameterization.  \n- Disabling them removes the model’s ability to **integrate information over time steps** beyond trivial token-level context.  \n- **Consequence**: The model reverts to a **pure Transformer-like feedforward stack** (with only 6 attention layers and MoE FFNs handling all depth), but *without* the Mamba layers’ efficiency in handling long sequences.  \n  - *Why this matters*: Your model was explicitly designed to handle **262K context** via Mamba’s O(L) complexity. Without it, attention layers (which scale O(L²)) would become **computationally infeasible** at deployed context lengths (even 32K), forcing truncation to ~4K tokens or crashing inference.\n\n---\n\n### **2. Attention Layer Collapse (Critical for Global Reasoning)**\n- The **6 attention layers** (*) were *designed to interface with Mamba layers* for **hierarchical information routing**:  \n  - Early attention layers (e.g., layer 5) used Mamba’s state to **pre-filter relevant context** before attention computation.  \n  - Late attention layers (e.g., layer 42) relied on Mamba’s **long-memory state** to aggregate global dependencies *before* applying O(L²) attention.  \n- **Without Mamba**:  \n  - Attention layers **cannot access integrated state** → they must recompute full attention over raw token sequences.  \n  - **Result**:  \n    - Attention becomes **redundant for long-range reasoning** (e.g., tracking entities across 10K tokens).  \n    - Only **local patterns** (within ~512 tokens) remain detectable → catastrophic failure on tasks requiring **long-context coherence** (e.g., book-length reasoning, code synthesis, multi-step logic).  \n    - The \"depth gradient\" observed in attention norms (e.g., layer 42’s high O-norm) **vanishes** → attention weights become uniform or collapse to trivial patterns.\n\n---\n\n### **3. MoE-FFN Layers Become Ineffective (No State to Route)**\n- MoE-FFN layers (23 of 52) were **designed to operate *after* Mamba’s state update**.  \n  - Mamba’s output state **primes experts** by filtering irrelevant noise and amplifying salient features.  \n  - Experts specialize in **transforming specific state regimes** (e.g., \"if state encodes mathematical context, activate algebra experts\").  \n- **Without Mamba**:  \n  - The input state to MoE layers is **raw token embeddings** (no temporal integration).  \n  - Experts **lose all specialization** → routing becomes random (CV of expert weights remains ~1-4%, but *meaning* is lost).  \n  - **Result**:  \n    - MoE layers **degrade to dense FFNs** with no efficiency gain (top-6 routing still active, but experts are useless).  \n    - Scaling factors (e.g., 2.5) and norm_topk_prob become **meaningless** → output distributions become noisy and unstable.\n\n---\n\n### **4. Output Layer Failure (LM Head Collapse)**\n- The final projection (`backbone.norm_f` → `lm_head`) **depends on Mamba’s final state** to produce coherent token distributions.  \n  - Mamba’s state **encodes global context** as a compressed vector (2688-dim) that *must* be transformed into logits.  \n- **Without Mamba**:  \n  - `norm_f` receives **unprocessed token embeddings** (no state aggregation).  \n  - `lm_head` **cannot resolve long-range dependencies** → logits become **uniform or repetitive** (e.g., always predicting the most frequent token).  \n  - **Result**: Model outputs **nonsensical, repetitive, or trivial text** (e.g., \"the the the the...\") even with high temperature.\n\n---\n\n### **5. Quantization & Runtime Implications**\n- **FP8 exemptions** (e.g., conv1d, norms, A_log/D) **become irrelevant** since Mamba layers are disabled.  \n",
+        "If all Mamba SSM layers were disabled and replaced with pass-through (identity) connections, the model would undergo a catastrophic degradation in long-range dependency modeling, resulting in a fundamental shift from a **state-space model (SSM)-enhanced transformer** to a **pure attention-based transformer with MoE**. Here’s a precise breakdown of the consequences, grounded in your architecture’s design:\n\n---\n\n### **1. Loss of Long-Range Memory & State Tracking**  \n- **Mamba’s core function**: Each Mamba layer maintains a **per-head state vector** (via `D` and `A_log`) that *dynamically accumulates context* across tokens. This enables **O(1) per-token recurrence** for dependencies up to `max_context=262,144` (trained), far exceeding attention’s quadratic `O(L²)` bottleneck.  \n- **After disabling**:  \n  - All state mechanisms (`A_log`, `D`, `dt_bias`) are bypassed → **no memory of prior tokens** beyond the immediate attention window.  \n  - Effective context length **collapses to ~32,768** (deployed limit), matching vanilla attention’s practical ceiling.  \n  - **Critical failure**: Tasks requiring long-range coherence (e.g., multi-step reasoning, document summarization, code generation) would **fail abruptly**. Example:  \n    - A 50k-token legal contract would be processed as 8 isolated 32k chunks with **no cross-chunk memory**.  \n    - Long-range dependencies (e.g., \"the subject of this clause was defined in paragraph 3\") would be **unrecoverable**.  \n\n---\n\n### **2. Attention Layers Become the Sole Global Mechanism**  \n- **Your architecture’s design**: Only **6 attention layers** (spaced ~7 layers apart) handle global token comparisons. Disabling Mamba layers *removes all stateful context propagation* between these attention layers.  \n- **Consequence**:  \n  - Attention layers now operate **without Mamba’s \"highway\" for information flow**. The residual stream becomes a **pure attention bottleneck**:  \n    - Each token’s representation is **recomputed from scratch** at every attention layer, losing Mamba’s incremental state updates.  \n    - **Gradient flow degrades**: Attention’s `O(L²)` complexity now dominates *all* layers, but without Mamba’s efficiency, **per-token compute increases 8–10×** for long sequences.  \n  - **Result**: The model reverts to a **shallow attention transformer** (effectively 6 layers deep for global reasoning), incapable of leveraging its 52-layer depth.  \n\n---\n\n### **3. MoE Layers Become Misaligned & Inefficient**  \n- **MoE’s role**: Experts are routed based on *contextual relevance* (via gate weights), but **Mamba layers preprocess inputs** to make routing meaningful.  \n- **After disabling**:  \n  - MoE layers receive **raw token embeddings** (no Mamba-transformed features), causing:  \n    - **Routing chaos**: Gates now activate based on superficial token statistics (e.g., embedding norms), not semantic relevance.  \n    - **Expert collapse**: With homogeneity in expert weights (CV ~1–4%), routing becomes **random noise** → experts specialize less, and the \"top-6\" active experts lose discriminative power.  \n  - **Compute waste**: 99.7% of parameters (MoE) remain active but contribute **near-zero meaningful transformation**, violating the A3B budget.  \n\n---\n\n### **4. Quantization & Runtime Implications**  \n- **FP8 exemptions vanish**:  \n  - Mamba conv1d layers (currently **exempt from FP8 quantization**) would now require quantization → **~15% accuracy drop** from weight precision loss (per NVIDIA’s Mamba quantization studies).  \n  - `A_log`, `D`, and `dt_bias` (critical for stable recurrence) would be **replaced by pass-through**, destabilizing training dynamics.  \n- **Runtime collapse**:  \n  - KV cache efficiency (prefix caching) relies on **Mamba’s stateful memory**. Without it, caching becomes **useless** → all tokens recompute attention from scratch.  \n  - Max concurrent sequences would **drop from 8 to 1–2** due to OOM from recomputing attention over full context.  \n\n---\n\n### **5. Overall Capability Impact**  \n| **Capability**          | **Before Disabling**                          | **After Disabling**                                  |  \n|--------------------------|-----------------------------------------------|------------------------------------------------------|  \n| **Long-context reasoning** | Handles 262k",
+        "If all Mamba SSM layers were disabled and replaced with identity pass-through operations, the model would suffer catastrophic degradation across **all core capabilities**, with effects that are **non-linear and compounding** due to the architecture's design. Here’s a precise breakdown of the consequences, grounded in the model’s structural dependencies:\n\n---\n\n### **1. Loss of State-Dependent Memory & Long-Range Dependency Modeling**  \n- **Core Failure**: Mamba SSMs are the *only* mechanism for **stateful, selective information retention** across tokens (via `A_log` decay rates and `D` skip connections). Without them:  \n  - The model reverts to **pure attention-based context propagation**, but with critical limitations:  \n    - Attention layers (only 6 out of 52) have **insufficient capacity** to model long-range dependencies at scale (e.g., 262K context tokens).  \n    - KV cache efficiency drops: attention complexity remains **O(L²)**, making 32K deployed context *unfeasible* for sustained reasoning (vs. Mamba’s **O(L)**).  \n  - **Result**: Inability to track entities, maintain narrative coherence, or reason over long contexts. Tasks requiring >10K-token context (e.g., book-length analysis) collapse to **<2K effective context**.\n\n---\n\n### **2. Collapse of Expert Routing & Specialization**  \n- **MoE Dependencies**: MoE layers (23 of 52) rely on **Mamba-processed features** as input:  \n  - Mamba layers compress token representations into a **dense, semantically structured space** (via state-space filtering).  \n  - Without this, MoE routers receive **noisy, unstructured inputs** → experts fail to specialize (weight norm CV jumps from ~1-4% to **>50%**).  \n- **Consequence**:  \n  - Expert routing becomes **random guessing** (top-6 selection loses predictive value).  \n  - Specialized knowledge (e.g., code, math, domain expertise) **vanishes**—only the shared expert remains active, reducing effective capacity to **~371M parameters** (vs. 3B active).  \n  - *Example*: A coding task requiring multi-step logic would revert to **shallow pattern matching**, failing at >5-line programs.\n\n---\n\n### **3. Quantization Artifacts & Numerical Instability**  \n- **Critical Exemptions Removed**:  \n  - Mamba conv1d layers (currently **FP8-exempt**) would be forced into FP8 quantization *without* their native FP32 accumulation paths.  \n  - A_log, D, and dt_bias parameters (used for decay/skip tuning) lose precision, causing **exponential error propagation**.  \n- **Result**:  \n  - **Catastrophic forgetting**: Small numerical errors in state calculations amplify across layers, triggering **gradient explosions** or **silent saturation**.  \n  - Output logits become **unreliable**—even with BF16 compute, the model’s internal state would drift beyond usable bounds within **<100 tokens**.\n\n---\n\n### **4. Attention Mechanism Breakdown**  \n- **Structural Dependency**: Attention layers (*only* function correctly *because* Mamba layers precede them):  \n  - Mamba layers **precondition token representations** for attention (e.g., via `mixer.norm.weight` normalization).  \n  - Without Mamba’s state filtering, attention inputs are **high-variance and misaligned**, causing:  \n    - **Q/K/V miscalibration**: The observed \"depth gradient\" (K declining, V growing) would invert—K norms would *explode*, making attention weights unstable.  \n    - **RoPE phase errors**: Positional embeddings (RoPE) assume Mamba-processed positional signals; without them, RoPE angles become **meaningless**, destroying relative position awareness.  \n- **Outcome**: Attention layers degrade to **random token mixing**, losing all capacity for **context-aware weighting**.\n\n---\n\n### **5. Overall Capability Impact**  \n| **Capability**          | **Effect of Disabling Mamba Layers**                                                                 |\n|--------------------------|------------------------------------------------------------------------------------------------------|\n| **Long-context reasoning** | Collapses to **<2K tokens**; fails at multi-step tasks (e.g., chain-of-thought).                    |\n| **Knowledge depth**        | Drops to **shallow recall**; loses specialized expertise (MoE specialization fails).                 |\n| **Numerical stability**    | **Unusable outputs** due to FP8 instability + error amplification (even with BF16 compute).         |\n| **Structural coherence**   | Token representations become **high-dimensional noise**; model behaves like a **random forest**."
+      ],
+      "trial_scores": [
+        {
+          "pass": false,
+          "matched": [
+            "SSM",
+            "O(L)",
+            "6 attention"
+          ],
+          "missed": [
+            "sequential",
+            "local context",
+            "burden",
+            "degraded"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "SSM",
+            "6 attention"
+          ],
+          "missed": [
+            "sequential",
+            "local context",
+            "O(L)",
+            "burden",
+            "degraded"
+          ]
+        },
+        {
+          "pass": false,
+          "matched": [
+            "SSM",
+            "O(L)"
+          ],
+          "missed": [
+            "sequential",
+            "local context",
+            "6 attention",
+            "burden",
+            "degraded"
+          ]
+        }
+      ]
+    }
+  ]
+}

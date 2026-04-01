@@ -1,0 +1,11 @@
+{
+  "total_examples": 335,
+  "phase3_examples": 306,
+  "autoresearch_examples": 29,
+  "total_turns": 1127,
+  "action_turns": 331,
+  "sources": {
+    "phase3_sessions": 21,
+    "autoresearch_cycles": 29
+  }
+}

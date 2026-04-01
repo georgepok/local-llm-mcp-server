@@ -1,0 +1,31 @@
+{
+  "cycles_completed": 20,
+  "best_score": 14,
+  "baseline_score": 14,
+  "total_problems": 20,
+  "total_accepted": 0,
+  "total_rejected": 0,
+  "accepted_modifications": [],
+  "compressed_history": [
+    "Cycle 1: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 2: no MODIFY tag in response",
+    "Cycle 3: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 4: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 5: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 6: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 7: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 8: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 9: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 10: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 11: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 12: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 13: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 14: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 15: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 16: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 17: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 18: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 19: proposal request failed (argument of type 'NoneType' is not iterable)",
+    "Cycle 20: proposal request failed (argument of type 'NoneType' is not iterable)"
+  ]
+}

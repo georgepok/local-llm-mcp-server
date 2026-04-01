@@ -1,0 +1,30 @@
+# FGN v3 Phase 2 — Long-Sequence State Tracking (FGN)
+# 10x seq_len to expose attention dilution / sequential composition limits.
+# d=128, 4L, 4H. auto-scaled ~1400 events at seq_len=5120.
+
+d_model: 128
+n_heads: 4
+n_layers: 4
+d_ff: 512
+vocab_size: 50304
+max_seq_len: 5120
+
+model_type: fgn
+
+metric_type: diagonal
+metric_activation: softplus
+
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+
+curvature_lambda: 0.0
+correlation_length_init: 5.0
+curvature_reward_mu: 0.0
+
+metric_lr_mult: 1.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true

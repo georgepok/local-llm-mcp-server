@@ -1,0 +1,50 @@
+{
+  "cycles_completed": 16,
+  "best_score": 15,
+  "baseline_score": 15,
+  "total_problems": 20,
+  "total_accepted": 2,
+  "total_rejected": 11,
+  "accepted_modifications": [
+    {
+      "cycle": 2,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "params": {
+        "value": 0.98
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 10,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.975
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    }
+  ],
+  "compressed_history": [
+    "Cycle 1: model.layers.33.mixer.qkv_proj.weight add value=0.2 \u2192 15\u21920 REJECTED (281s)",
+    "Cycle 2: model.layers.48.mixer.A scale value=0.98 \u2192 15\u219215 KEPT (221s)",
+    "Cycle 3: model.layers.33.mixer.qkv_proj.weight add value=0.001 \u2192 15\u219214 REJECTED (232s)",
+    "Cycle 4: model.layers.33.mixer.qkv_proj.weight add value=0.2 \u2192 15\u21920 REJECTED (297s)",
+    "Cycle 5: no MODIFY tag in response",
+    "Cycle 6: model.layers.33.mixer.qkv_proj.weight scale value=0.98 \u2192 15\u219213 REJECTED (220s)",
+    "Cycle 7: model.layers.33.mixer.qkv_proj.weight scale value=0.97 \u2192 15\u219213 REJECTED (225s)",
+    "Cycle 8: no MODIFY tag in response",
+    "Cycle 9: model.layers.33.mixer.qkv_proj.weight scale value=0.97 \u2192 15\u219213 REJECTED (231s)",
+    "Cycle 10: model.layers.33.mixer.qkv_proj.weight scale value=0.975 \u2192 15\u219215 KEPT (236s)",
+    "Cycle 11: model.layers.33.mixer.qkv_proj.weight scale value=0.98 \u2192 15\u219214 REJECTED (224s)",
+    "Cycle 12: model.layers.33.mixer.qkv_proj.weight scale value=0.978 \u2192 15\u219214 REJECTED (235s)",
+    "Cycle 13: model.layers.33.mixer.qkv_proj.weight scale value=0.977 \u2192 15\u219214 REJECTED (247s)",
+    "Cycle 14: no MODIFY tag in response",
+    "Cycle 15: model.layers.33.mixer.qkv_proj.weight scale value=0.98 \u2192 15\u219214 REJECTED (216s)",
+    "Cycle 16: model.layers.33.mixer.qkv_proj.weight scale value=0.975 \u2192 15\u219213 REJECTED (230s)"
+  ]
+}

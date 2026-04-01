@@ -1,0 +1,184 @@
+{
+  "source_session": "session_20260311T010244",
+  "peak_score": 0.917,
+  "peak_score_display": "91.7% (11/12)",
+  "peak_eval_index": 9,
+  "peak_eval_timestamp": "2026-03-11T01:50:29.142177",
+  "baseline_score": 0.667,
+  "baseline_score_display": "66.7% (8/12)",
+  "breakdown_at_peak": {
+    "sequential_reasoning": {"pass": 3, "total": 3, "accuracy": 1.0},
+    "state_tracking":       {"pass": 2, "total": 3, "accuracy": 0.6667},
+    "code_generation":      {"pass": 3, "total": 3, "accuracy": 1.0},
+    "self_prediction":      {"pass": 3, "total": 3, "accuracy": 1.0}
+  },
+  "modifications": [
+    {
+      "order": 1,
+      "tensor": "model.layers.50.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "timestamp": "2026-03-11T01:03:15.618950",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 7460.3759765625,
+      "after_norm": 4524.7177734375,
+      "cumulative_eval": "eval_1 after this mod alone: 66.7% — no change from baseline"
+    },
+    {
+      "order": 2,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "timestamp": "2026-03-11T01:07:20.139684",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 22026.509765625,
+      "after_norm": 13359.078125,
+      "cumulative_eval": "eval_2 after mods 1+2: 66.7%; eval_3 also 66.7% → 75.0% jump with mods 1+2 only (no new mod before eval_3)"
+    },
+    {
+      "order": 3,
+      "tensor": "model.layers.46.mixer.D",
+      "op": "scale",
+      "params": {"value": 1.5},
+      "timestamp": "2026-03-11T01:18:08.774911",
+      "shape": [64],
+      "dtype": "torch.bfloat16",
+      "before_norm": 17.660491943359375,
+      "after_norm": 26.503681182861328,
+      "cumulative_eval": "eval_4 after mods 1-3: 75.0% — D amplification held but did not improve"
+    },
+    {
+      "order": 4,
+      "tensor": "model.layers.42.mixer.o_proj.weight",
+      "op": "scale",
+      "params": {"value": 1.2},
+      "timestamp": "2026-03-11T01:21:30.142532",
+      "shape": [2688, 4096],
+      "dtype": "torch.bfloat16",
+      "before_norm": 100.99652099609375,
+      "after_norm": 121.196044921875,
+      "cumulative_eval": "eval_5 after mods 1-4: 83.3% (10/12) — first significant jump (+8.3pp)"
+    },
+    {
+      "order": 5,
+      "tensor": "model.layers.33.mixer.o_proj.weight",
+      "op": "scale",
+      "params": {"value": 1.2},
+      "timestamp": "2026-03-11T01:24:33.877892",
+      "shape": [2688, 4096],
+      "dtype": "torch.bfloat16",
+      "before_norm": 90.67288970947266,
+      "after_norm": 108.80830383300781,
+      "cumulative_eval": "no eval immediately after; included in mods 1-6 batch evaluated at eval_6"
+    },
+    {
+      "order": 6,
+      "tensor": "model.layers.46.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "timestamp": "2026-03-11T01:27:59.239183",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 1085.14794921875,
+      "after_norm": 658.1422729492188,
+      "cumulative_eval": "eval_6 after mods 1-6: 83.3% — first scale of layer 46 A (0.6065x, net ~0.6065 of baseline)"
+    },
+    {
+      "order": 7,
+      "tensor": "model.layers.46.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "timestamp": "2026-03-11T01:34:27.330954",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 658.1422729492188,
+      "after_norm": 399.163330078125,
+      "cumulative_eval": "included in mods 1-8 batch evaluated at eval_7 — second scale of layer 46 A (net ~0.368 of original after mods 6+7)"
+    },
+    {
+      "order": 8,
+      "tensor": "model.layers.46.mixer.A",
+      "op": "scale_slice",
+      "params": {"start": 0, "end": 32, "value": 0.4},
+      "timestamp": "2026-03-11T01:37:13.331972",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 399.163330078125,
+      "after_norm": 162.87945556640625,
+      "cumulative_eval": "eval_7 after mods 1-8: 83.3% — first 32 heads of layer 46 A further scaled to ~0.147 of original"
+    },
+    {
+      "order": 9,
+      "tensor": "model.layers.44.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "timestamp": "2026-03-11T01:42:36.516257",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 16.568294525146484,
+      "after_norm": 10.048670768737793,
+      "cumulative_eval": "eval_8 after mods 1-9: 83.3% — layer 44 A reduction, plateau continues"
+    },
+    {
+      "order": 10,
+      "tensor": "model.layers.50.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.5},
+      "timestamp": "2026-03-11T01:47:48.619862",
+      "shape": [64],
+      "dtype": "torch.float32",
+      "before_norm": 4524.7177734375,
+      "after_norm": 2262.35888671875,
+      "cumulative_eval": "eval_9 after mods 1-10: 91.7% (11/12) — PEAK. Second reduction of layer 50 A (net 0.3033 of baseline after mods 1+10)"
+    }
+  ],
+  "net_state_of_modified_tensors": {
+    "model.layers.50.mixer.A": "scaled by 0.6065 then 0.5 = net 0.3033x of baseline",
+    "model.layers.48.mixer.A": "scaled by 0.6065 = net 0.6065x of baseline",
+    "model.layers.46.mixer.D": "scaled by 1.5 = net 1.5x of baseline",
+    "model.layers.42.mixer.o_proj.weight": "scaled by 1.2 = net 1.2x of baseline",
+    "model.layers.33.mixer.o_proj.weight": "scaled by 1.2 = net 1.2x of baseline",
+    "model.layers.46.mixer.A": "scaled by 0.6065 twice then heads[0:32] scaled by 0.4 = heads[0:32] net ~0.147x, heads[32:64] net ~0.368x of baseline",
+    "model.layers.44.mixer.A": "scaled by 0.6065 = net 0.6065x of baseline"
+  },
+  "post_peak_regressions": [
+    {
+      "mod_order": 11,
+      "tensor": "model.layers.46.mixer.D",
+      "op": "scale_slice",
+      "params": {"start": 0, "end": 32, "value": 1.2},
+      "eval_after": "eval_10: 83.3% — regression to 83.3%"
+    },
+    {
+      "mod_order": 12,
+      "tensor": "model.layers.46.mixer.A",
+      "op": "scale",
+      "params": {"value": 0.6065},
+      "eval_after": "eval_11: 66.7% — further regression to baseline"
+    }
+  ],
+  "eval_trajectory": [
+    {"eval_index": 1, "score": 0.667, "mods_applied": [1],       "timestamp": "2026-03-11T01:05:40"},
+    {"eval_index": 2, "score": 0.667, "mods_applied": [1,2],     "timestamp": "2026-03-11T01:09:52"},
+    {"eval_index": 3, "score": 0.750, "mods_applied": [1,2],     "timestamp": "2026-03-11T01:16:42"},
+    {"eval_index": 4, "score": 0.750, "mods_applied": [1,2,3],   "timestamp": "2026-03-11T01:20:57"},
+    {"eval_index": 5, "score": 0.833, "mods_applied": [1,2,3,4], "timestamp": "2026-03-11T01:24:04"},
+    {"eval_index": 6, "score": 0.833, "mods_applied": [1,2,3,4,5,6],     "timestamp": "2026-03-11T01:31:29"},
+    {"eval_index": 7, "score": 0.833, "mods_applied": [1,2,3,4,5,6,7,8], "timestamp": "2026-03-11T01:39:54"},
+    {"eval_index": 8, "score": 0.833, "mods_applied": [1,2,3,4,5,6,7,8,9], "timestamp": "2026-03-11T01:45:15"},
+    {"eval_index": 9, "score": 0.917, "mods_applied": [1,2,3,4,5,6,7,8,9,10], "timestamp": "2026-03-11T01:50:29"},
+    {"eval_index": 10, "score": 0.833, "mods_applied": [1,2,3,4,5,6,7,8,9,10,11], "timestamp": "2026-03-11T02:02:55"},
+    {"eval_index": 11, "score": 0.667, "mods_applied": [1,2,3,4,5,6,7,8,9,10,11,12], "timestamp": "2026-03-11T02:12:41"}
+  ],
+  "notes": [
+    "Modifications are cumulative — apply all 10 in order from a clean (unmodified) baseline model.",
+    "eval_3 (75.0%) occurred before mod 3 was applied — the 75% jump was from mods 1+2 alone, not mod 3.",
+    "Layer 46 mixer.A was scaled three times: 0.6065 (mod 6), 0.6065 (mod 7), then heads[0:32] by 0.4 (mod 8). Net effect: heads[0:32] ~0.147x original, heads[32:64] ~0.368x original.",
+    "Layer 50 mixer.A was scaled twice: 0.6065 (mod 1) then 0.5 (mod 10). Net: 0.3033x original.",
+    "The peak at eval_9 is fragile — mod 11 (D scale_slice on layer 46) immediately regressed to 83.3%.",
+    "The winning category at peak was self_prediction (3/3), which had been 0/3 at baseline.",
+    "state_tracking remained stuck at 2/3 throughout the entire session."
+  ]
+}

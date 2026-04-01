@@ -1,0 +1,26 @@
+[
+  {
+    "cycle": 0,
+    "rho": 0.3278,
+    "accuracy": 0.7666666666666667,
+    "decision": "baseline"
+  },
+  {
+    "cycle": 1,
+    "rho": 0.3278,
+    "accuracy": 0.9333333333333333,
+    "decision": "rejected_no_improvement"
+  },
+  {
+    "cycle": 2,
+    "rho": 0.3278,
+    "accuracy": 0.7666666666666667,
+    "decision": "rejected_no_improvement"
+  },
+  {
+    "cycle": 3,
+    "rho": 0.3278,
+    "accuracy": 0.8666666666666667,
+    "decision": "rejected_no_improvement"
+  }
+]

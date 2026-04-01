@@ -1,0 +1,69 @@
+# LiquidARC Zero-Scaffold — Pure CE from Step 0, No Geo Phase
+#
+# Based on TTT V2 with two key changes:
+#   1. geo_loss_enabled: false — No geometric scaffold phase. CE trains from step 0.
+#   2. tau_freeze_steps: 0    — TauNet learns immediately (no frozen period).
+#
+# Rationale:
+#   - FGN v3 ablations showed task-driven geometry is 12x more structurally efficient
+#     than reward-driven. Geo Phase 1 (5K steps CE=0) wastes steps and produces
+#     curvature explosions that get instantly crushed.
+#   - Reptile meta-learning suppressed TauNet (tau stuck at 0.97-0.99 vs V2's 0.56).
+#   - Zero-scaffold lets task loss shape geometry directly from the start.
+#
+# Expected behavior:
+#   - tau should drop below 0.7 by step 5K (no freeze holding it back)
+#   - CV should stay >3.0 (CV floor penalty active from step 0)
+#   - |k| should stay bounded (no geo-induced curvature explosion)
+#   - Baseline xform should climb faster than V2 (5K head start on CE)
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+
+# Zero-scaffold: no tau freeze, no geo phase
+tau_freeze_steps: 0
+geo_loss_enabled: false
+
+# Metric plasticity — CV floor penalty (from V2)
+cv_floor_target: 3.0
+cv_floor_lambda: 0.1
+
+# Real ARC data mixing (from V2)
+real_arc_mix_ratio: 0.3
+
+# TTT — adaptive depth with early stop (from V2)
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

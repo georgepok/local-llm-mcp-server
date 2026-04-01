@@ -1,0 +1,25 @@
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304
+max_seq_len: 1024
+model_type: fgn
+architecture_version: "v4"
+metric_type: diagonal
+metric_activation: softplus
+geo_heads: 1
+gate_init: 3.0
+phase0_steps: 1000
+geo_aux_loss_alpha: 0.0
+geo_metric_type: learned
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.0
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true

@@ -1,0 +1,78 @@
+# LiquidARC v2 — Structural Tau with Geometry Distillation
+# Seeded from post-transition 5M teacher checkpoint.
+# Geometry is transferred (not discovered), so no phase transition needed.
+
+d_model: 768
+d_metric: 192
+d_ffn: 1536
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+
+# ODE solver
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+alpha_logit_init: 2.2
+dropout: 0.1
+use_torch_compile: true
+
+# Structural tau (NEW) — input-independent per-position timescale
+structural_tau_enabled: true
+structural_tau_min: 0.3
+structural_tau_max: 3.0
+
+# Task embedding
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+model_type: liquid
+
+# Loss weights
+transform_weight: 5.0
+copy_weight: 0.05
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+
+# CV floor/ceiling — geometry seeded so these are guards not drivers
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.05
+
+# Optimizer (set in train_v2.py via structural_lr_ratio)
+base_lr: 0.0003
+structural_lr_ratio: 0.0033  # 300x slower than content
+warmup_steps: 500
+weight_decay: 0.01
+
+# Training data
+use_procedural: true
+real_arc_mix_ratio: 0.3
+batch_size: 4
+grad_accum_steps: 1
+
+# Curriculum — start at RELATIONAL (skip GLOBAL since geometry already seeded)
+curriculum_stage1_end: 0
+curriculum_stage2_end: 100000
+
+# Tau: don't freeze — geometry seeded, structural tau should evolve from step 0
+tau_freeze_steps: 0
+
+# Geo loss disabled — geometry comes from teacher, not from scaffold
+geo_loss_enabled: false
+
+# Misc
+chunk_size: 256
+invertible_solver: false
+deq_solver: false
+deq_ift_iters: 10
+ttt_enabled: false
+step_embed_enabled: false
+channel_gate_enabled: false
+system2_enabled: false
+progressive_damping: false
+metric_freeze_step: -1
+metric_freeze_after_training_step: 0

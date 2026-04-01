@@ -1,0 +1,1 @@
+{"timestamp": "2026-03-10T23:50:49.390968", "action": {"type": "CHECKPOINT", "tensor": "model.layers.50.mixer.A", "name": "pre_scale_50_A"}, "result": {"status": "saved", "tensor": "model.layers.50.mixer.A", "checkpoint": "pre_scale_50_A", "shape": [64], "n_checkpoints": 6}}

@@ -1,0 +1,178 @@
+{
+  "experiment": "Phase 5 Thinking-Chain Awareness Probe",
+  "timestamp": "2026-03-11T21:57:12Z",
+  "model": "NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+  "approach": "replay",
+  "n_problems": 5,
+  "n_trials_per_problem": 10,
+  "grand_aggregate_correlations": {
+    "mean_claim_correctness_vs_mamba_mean_change_rate": 0.1926,
+    "mean_claim_correctness_vs_mamba_mean_norm": 0.2046,
+    "mean_confidence_vs_layer_48_change_rate": 0.3417,
+    "mean_confidence_vs_layer_48_output_norm_mean": 0.3956,
+    "mean_confidence_vs_layer_50_change_rate": 0.3002,
+    "mean_confidence_vs_layer_50_output_norm_mean": 0.3477,
+    "mean_confidence_vs_mamba_mean_change_rate": 0.3138,
+    "mean_confidence_vs_mamba_mean_norm": 0.3513
+  },
+  "per_problem_correlations": [
+    {
+      "problem_id": "shirts_medium",
+      "aggregate": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.1929,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.2104,
+        "mean_confidence_vs_layer_48_change_rate": 0.3201,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.4416,
+        "mean_confidence_vs_layer_50_change_rate": 0.2475,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.3872,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.2928,
+        "mean_confidence_vs_mamba_mean_norm": 0.3997
+      },
+      "correct_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.1929,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.2104,
+        "mean_confidence_vs_layer_48_change_rate": 0.3201,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.4416,
+        "mean_confidence_vs_layer_50_change_rate": 0.2475,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.3872,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.2928,
+        "mean_confidence_vs_mamba_mean_norm": 0.3997
+      },
+      "incorrect_trials": {},
+      "n_correct": 10,
+      "n_incorrect": 0
+    },
+    {
+      "problem_id": "fruit_easy",
+      "aggregate": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.2289,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.2096,
+        "mean_confidence_vs_layer_48_change_rate": 0.4006,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.3887,
+        "mean_confidence_vs_layer_50_change_rate": 0.3481,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.2416,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3741,
+        "mean_confidence_vs_mamba_mean_norm": 0.2078
+      },
+      "correct_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.2289,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.2096,
+        "mean_confidence_vs_layer_48_change_rate": 0.4006,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.3887,
+        "mean_confidence_vs_layer_50_change_rate": 0.3481,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.2416,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3741,
+        "mean_confidence_vs_mamba_mean_norm": 0.2078
+      },
+      "incorrect_trials": {},
+      "n_correct": 10,
+      "n_incorrect": 0
+    },
+    {
+      "problem_id": "warehouse_hard",
+      "aggregate": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.0829,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.0534,
+        "mean_confidence_vs_layer_48_change_rate": 0.385,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.4227,
+        "mean_confidence_vs_layer_50_change_rate": 0.3565,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.3813,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3759,
+        "mean_confidence_vs_mamba_mean_norm": 0.3995
+      },
+      "correct_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.0842,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.0228,
+        "mean_confidence_vs_layer_48_change_rate": 0.4589,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.411,
+        "mean_confidence_vs_layer_50_change_rate": 0.4332,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.3642,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.4473,
+        "mean_confidence_vs_mamba_mean_norm": 0.3835
+      },
+      "incorrect_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.0711,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.3285,
+        "mean_confidence_vs_layer_48_change_rate": -0.2799,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.5278,
+        "mean_confidence_vs_layer_50_change_rate": -0.3338,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.5344,
+        "mean_confidence_vs_mamba_mean_change_rate": -0.2667,
+        "mean_confidence_vs_mamba_mean_norm": 0.5437
+      },
+      "n_correct": 9,
+      "n_incorrect": 1
+    },
+    {
+      "problem_id": "bank_hard",
+      "aggregate": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.4122,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.4277,
+        "mean_confidence_vs_layer_48_change_rate": 0.2477,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.3096,
+        "mean_confidence_vs_layer_50_change_rate": 0.2274,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.2966,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.2197,
+        "mean_confidence_vs_mamba_mean_norm": 0.3247
+      },
+      "correct_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.485,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.435,
+        "mean_confidence_vs_layer_48_change_rate": 0.2606,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.3529,
+        "mean_confidence_vs_layer_50_change_rate": 0.3078,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.3616,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.2996,
+        "mean_confidence_vs_mamba_mean_norm": 0.4237
+      },
+      "incorrect_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.3212,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.4187,
+        "mean_confidence_vs_layer_48_change_rate": 0.2315,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.2556,
+        "mean_confidence_vs_layer_50_change_rate": 0.1268,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.2153,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.12,
+        "mean_confidence_vs_mamba_mean_norm": 0.2009
+      },
+      "n_correct": 6,
+      "n_incorrect": 4
+    },
+    {
+      "problem_id": "inventory_vhard",
+      "aggregate": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.0463,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.122,
+        "mean_confidence_vs_layer_48_change_rate": 0.3552,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.4153,
+        "mean_confidence_vs_layer_50_change_rate": 0.3215,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.4319,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3067,
+        "mean_confidence_vs_mamba_mean_norm": 0.4247
+      },
+      "correct_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": 0.0591,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.1118,
+        "mean_confidence_vs_layer_48_change_rate": 0.3593,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.4338,
+        "mean_confidence_vs_layer_50_change_rate": 0.3252,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.463,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3071,
+        "mean_confidence_vs_mamba_mean_norm": 0.455
+      },
+      "incorrect_trials": {
+        "mean_claim_correctness_vs_mamba_mean_change_rate": -0.069,
+        "mean_claim_correctness_vs_mamba_mean_norm": 0.2146,
+        "mean_confidence_vs_layer_48_change_rate": 0.3186,
+        "mean_confidence_vs_layer_48_output_norm_mean": 0.2482,
+        "mean_confidence_vs_layer_50_change_rate": 0.2874,
+        "mean_confidence_vs_layer_50_output_norm_mean": 0.1516,
+        "mean_confidence_vs_mamba_mean_change_rate": 0.3032,
+        "mean_confidence_vs_mamba_mean_norm": 0.1522
+      },
+      "n_correct": 9,
+      "n_incorrect": 1
+    }
+  ],
+  "verdict": "moderate_correlation"
+}

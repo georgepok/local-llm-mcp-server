@@ -1,0 +1,67 @@
+{
+  "cycles_completed": 11,
+  "best_score": 14,
+  "baseline_score": 14,
+  "total_problems": 20,
+  "total_accepted": 4,
+  "total_rejected": 0,
+  "accepted_modifications": [
+    {
+      "cycle": 1,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "params": {
+        "value": 0.95
+      },
+      "score_before": 14,
+      "score_after": 14,
+      "reasoning": ""
+    },
+    {
+      "cycle": 2,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.97
+      },
+      "score_before": 14,
+      "score_after": 14,
+      "reasoning": ""
+    },
+    {
+      "cycle": 3,
+      "tensor": "model.layers.42.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.95
+      },
+      "score_before": 14,
+      "score_after": 14,
+      "reasoning": ""
+    },
+    {
+      "cycle": 4,
+      "tensor": "model.layers.50.mixer.dt_bias",
+      "op": "scale",
+      "params": {
+        "value": 0.95
+      },
+      "score_before": 14,
+      "score_after": 14,
+      "reasoning": ""
+    }
+  ],
+  "compressed_history": [
+    "Cycle 1: model.layers.48.mixer.A scale value=0.95 \u2192 14\u219214 KEPT (233s)",
+    "Cycle 2: model.layers.33.mixer.qkv_proj.weight scale value=0.97 \u2192 14\u219214 KEPT (223s)",
+    "Cycle 3: model.layers.42.mixer.qkv_proj.weight scale value=0.95 \u2192 14\u219214 KEPT (234s)",
+    "Cycle 4: model.layers.50.mixer.dt_bias scale value=0.95 \u2192 14\u219214 KEPT (224s)",
+    "Cycle 5: no MODIFY tag in response",
+    "Cycle 6: no MODIFY tag in response",
+    "Cycle 7: no MODIFY tag in response",
+    "Cycle 8: no MODIFY tag in response",
+    "Cycle 9: no MODIFY tag in response",
+    "Cycle 10: no MODIFY tag in response",
+    "Cycle 11: proposal request failed (Network error: timed out)"
+  ]
+}

@@ -1,0 +1,54 @@
+# Agentic Persistent State — Sequential Episode Training
+d_model: 768
+d_metric: 192
+d_ffn: 1536
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+ode_chunk_size: 4
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+geo_loss_enabled: false
+tau_freeze_steps: 0
+use_procedural: false
+
+# Persistent state
+persist_alpha: 0.7
+persist_learnable_alpha: false
+
+# Sequential episode config
+episode_total_ops: 8
+episode_ops_per_turn: 2
+episode_n_vars: 4
+
+# Training
+batch_size: 4
+lr: 1.0e-4
+warmup_steps: 100
+
+# Solver flags
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+# TTT disabled for speed
+ttt_enabled: false

@@ -1,0 +1,2 @@
+{"timestamp": "2026-03-11T09:13:38.803762", "action": {"type": "CHECKPOINT", "tensor": "model.layers.50.mixer.A", "name": "baseline_A_layer50"}, "result": {"status": "saved", "tensor": "model.layers.50.mixer.A", "checkpoint": "baseline_A_layer50", "shape": [64], "n_checkpoints": 2}}
+{"timestamp": "2026-03-11T09:14:29.627987", "action": {"type": "CHECKPOINT", "tensor": "model.layers.50.mixer.A", "name": "pre_scale_0.6065_layer50"}, "result": {"status": "saved", "tensor": "model.layers.50.mixer.A", "checkpoint": "pre_scale_0.6065_layer50", "shape": [64], "n_checkpoints": 3}}

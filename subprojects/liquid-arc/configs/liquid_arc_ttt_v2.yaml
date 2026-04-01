@@ -1,0 +1,74 @@
+# LiquidARC TTT V2 — Metric Plasticity + Real ARC + 2048 Context
+#
+# V2 changes from V1:
+#   A. CV floor penalty prevents metric plasticity collapse (CV 7.7→3.5 in V1)
+#   B. Context window 1024→2048 (60% of eval tasks were skipped)
+#   C. TTT depth 30→100 with early stop (adaptive per-task)
+#   D. Real ARC data mixed in at 30% (breaks procedural memorization)
+#
+# Phase 1 (0-5K):  L_geo only (squared Manhattan MSE). CE=0. Only MetricNet trains.
+# Phase 2 (5K+):   L_geo DIES. Pure CE + curvature + CV floor penalty.
+# Deployment:      TTT sculpts MetricNet/TauNet per-task at test time.
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_freeze_steps: 5000
+
+# Geometric auxiliary loss — Phase 1 only, hard cutoff at 5K
+geo_loss_enabled: true
+geo_cutoff_step: 5000
+geo_wall_distance: 50.0
+geo_lambda_init: 1.0
+geo_lambda_final: 0.0
+geo_ce_ramp_start: 5000
+geo_ce_ramp_end: 5001
+geo_lambda_decay_start: 5000
+geo_lambda_decay_end: 5001
+geo_phase2_start: 999999
+geo_phase2_interp_steps: 1
+geo_use_h0: true
+geo_detach_h: false
+
+# Metric plasticity — CV floor penalty (V2)
+cv_floor_target: 3.0
+cv_floor_lambda: 0.1
+
+# Real ARC data mixing (V2)
+real_arc_mix_ratio: 0.3
+
+# TTT — adaptive depth with early stop (V2)
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

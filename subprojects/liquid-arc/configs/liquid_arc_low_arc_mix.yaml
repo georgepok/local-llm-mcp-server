@@ -1,0 +1,57 @@
+# LiquidARC Zero-Scaffold — Low ARC Mix (15% real ARC)
+#
+# Testing whether reduced ARC mixing accelerates the phase transition.
+# 70% mix delayed transition to step ~7500 (vs 30%'s ~5350).
+# 15% should push CV faster via stronger procedural gradient pressure.
+# Question: does faster transition + less ARC still reach 42% eval ceiling?
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+
+# Zero-scaffold
+tau_freeze_steps: 0
+geo_loss_enabled: false
+
+# Metric plasticity
+cv_floor_target: 3.0
+cv_floor_lambda: 0.1
+
+# LOW real ARC mixing — 15% real, 85% procedural
+real_arc_mix_ratio: 0.15
+
+# TTT for eval diagnostics
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

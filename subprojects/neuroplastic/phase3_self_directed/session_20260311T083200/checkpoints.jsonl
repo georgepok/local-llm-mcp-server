@@ -1,0 +1,1 @@
+{"timestamp": "2026-03-11T08:33:13.076562", "action": {"type": "CHECKPOINT", "tensor": "model.layers.50.mixer.A", "name": "layer50_A_baseline"}, "result": {"status": "saved", "tensor": "model.layers.50.mixer.A", "checkpoint": "layer50_A_baseline", "shape": [64], "n_checkpoints": 41}}

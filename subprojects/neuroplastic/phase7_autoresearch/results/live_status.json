@@ -1,0 +1,82 @@
+{
+  "phase": "autoresearch",
+  "cycle": 37,
+  "max_cycles": 200,
+  "current_score": 15,
+  "best_score": 15,
+  "total_problems": 20,
+  "accuracy": 0.75,
+  "total_accepted": 10,
+  "total_rejected": 19,
+  "acceptance_rate": 0.3448275862068966,
+  "last_decision": "KEPT",
+  "last_tensor": "model.layers.21.mixer.a",
+  "last_op": "scale",
+  "last_delta": 0,
+  "accepted_mods_count": 10,
+  "recent_accepted": [
+    {
+      "cycle": 2,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 10,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 16,
+      "tensor": "model.layers.42.mixer.o_proj.weight",
+      "op": "scale",
+      "delta": 1
+    },
+    {
+      "cycle": 17,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 18,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 20,
+      "tensor": "model.layers.46.mixer.dt_bias",
+      "op": "add",
+      "delta": 0
+    },
+    {
+      "cycle": 22,
+      "tensor": "model.layers.49.mlp_one_hot",
+      "op": "add",
+      "delta": 0
+    },
+    {
+      "cycle": 34,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 36,
+      "tensor": "model.layers.22.mixer.a",
+      "op": "scale",
+      "delta": 0
+    },
+    {
+      "cycle": 37,
+      "tensor": "model.layers.21.mixer.a",
+      "op": "scale",
+      "delta": 0
+    }
+  ],
+  "last_updated": "2026-03-13T15:24:36Z",
+  "elapsed_s": 5596.7,
+  "elapsed_human": "1h33m16s"
+}

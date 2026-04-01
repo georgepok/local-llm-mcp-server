@@ -1,0 +1,32 @@
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304  # GPT-2 has 50257 tokens, round up to multiple of 128 for tensor cores
+max_seq_len: 2048
+
+metric_type: diagonal
+metric_activation: softplus
+
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+
+# Curvature regularization — Phase 1a.1 tuning
+# Reduced lambda (0.001) → lower smoothness eta (eta = lambda * ell^2 = 0.025)
+# Reward mu=0.1 with tanh saturation (prevents runaway past |kappa|~3)
+curvature_lambda: 0.001
+correlation_length_init: 5.0
+curvature_reward_mu: 0.1
+
+# Curriculum: 1K steps (metric fully develops by then — 1200 showed runaway)
+curriculum_steps: 1000
+curriculum_metric_lr_mult: 2.0  # 2x base LR for metric during curriculum
+curriculum_freeze_qkv: true     # Force metric-only learning during curriculum
+
+dropout: 0.1
+
+transport_rank: 8
+
+use_fp8_metric: false
+use_torch_compile: true  # Re-enabled: forward returns values instead of caching on self

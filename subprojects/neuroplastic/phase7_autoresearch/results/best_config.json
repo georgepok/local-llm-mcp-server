@@ -1,0 +1,119 @@
+{
+  "best_score": 15,
+  "current_score": 15,
+  "total": 20,
+  "accepted_modifications": [
+    {
+      "cycle": 2,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "params": {
+        "value": 0.98
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 10,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.975
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 16,
+      "tensor": "model.layers.42.mixer.o_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.92
+      },
+      "score_before": 14,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 17,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.92
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 18,
+      "tensor": "model.layers.48.mixer.A",
+      "op": "scale",
+      "params": {
+        "value": 0.95
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 20,
+      "tensor": "model.layers.46.mixer.dt_bias",
+      "op": "add",
+      "params": {
+        "value": 0.02,
+        "seed": 0
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 22,
+      "tensor": "model.layers.49.mlp_one_hot",
+      "op": "add",
+      "params": {
+        "value": -0.02,
+        "seed": 0
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 34,
+      "tensor": "model.layers.33.mixer.qkv_proj.weight",
+      "op": "scale",
+      "params": {
+        "value": 0.952
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 36,
+      "tensor": "model.layers.22.mixer.a",
+      "op": "scale",
+      "params": {
+        "value": 14.0
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    },
+    {
+      "cycle": 37,
+      "tensor": "model.layers.21.mixer.a",
+      "op": "scale",
+      "params": {
+        "value": 14.0
+      },
+      "score_before": 15,
+      "score_after": 15,
+      "reasoning": ""
+    }
+  ]
+}

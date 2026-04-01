@@ -1,0 +1,2460 @@
+[
+  {
+    "tensor": "model.layers.0.mixer.A",
+    "layer": 0,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 2029.3709716796875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.0.mixer.D",
+    "layer": 0,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 52.62226104736328,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.0.mixer.dt_bias",
+    "layer": 0,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 64.9838638305664,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.0.mixer.out_proj.weight",
+    "layer": 0,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 45291.8828125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.2.mixer.A",
+    "layer": 2,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 98.07987976074219,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.2.mixer.D",
+    "layer": 2,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 25.186857223510742,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.2.mixer.dt_bias",
+    "layer": 2,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 39.39468002319336,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.2.mixer.out_proj.weight",
+    "layer": 2,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 23631.1953125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.4.mixer.A",
+    "layer": 4,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 20130.8125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.4.mixer.D",
+    "layer": 4,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 12.578961372375488,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.4.mixer.dt_bias",
+    "layer": 4,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 39.04193115234375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.4.mixer.out_proj.weight",
+    "layer": 4,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 79.42382049560547,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.7.mixer.A",
+    "layer": 7,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 70.95067596435547,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.7.mixer.D",
+    "layer": 7,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 17.692811965942383,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.7.mixer.dt_bias",
+    "layer": 7,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 28.816307067871094,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.7.mixer.out_proj.weight",
+    "layer": 7,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 31650.990234375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.9.mixer.A",
+    "layer": 9,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 1335.6337890625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.9.mixer.D",
+    "layer": 9,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 5.4007086753845215,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.9.mixer.dt_bias",
+    "layer": 9,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 31.453264236450195,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.9.mixer.out_proj.weight",
+    "layer": 9,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 24342.26953125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.11.mixer.A",
+    "layer": 11,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 180.55894470214844,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.11.mixer.D",
+    "layer": 11,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 6.49852991104126,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.11.mixer.dt_bias",
+    "layer": 11,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 33.061763763427734,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.11.mixer.out_proj.weight",
+    "layer": 11,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 78.42129516601562,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.14.mixer.A",
+    "layer": 14,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 557.1064453125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.14.mixer.D",
+    "layer": 14,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 7.937500476837158,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.14.mixer.dt_bias",
+    "layer": 14,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 28.06810188293457,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.14.mixer.out_proj.weight",
+    "layer": 14,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 28973.501953125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.16.mixer.A",
+    "layer": 16,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 1409.8577880859375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.16.mixer.D",
+    "layer": 16,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 1.444274663925171,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.16.mixer.dt_bias",
+    "layer": 16,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 24.277603149414062,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.25,
+    "delta_up": -0.125,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.16.mixer.out_proj.weight",
+    "layer": 16,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 25431.017578125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.18.mixer.A",
+    "layer": 18,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 2471.6259765625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.18.mixer.D",
+    "layer": 18,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 2.455833911895752,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.18.mixer.dt_bias",
+    "layer": 18,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 29.020105361938477,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.18.mixer.out_proj.weight",
+    "layer": 18,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 76.35700225830078,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.21.mixer.A",
+    "layer": 21,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 7251.85888671875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.21.mixer.D",
+    "layer": 21,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 1.422060251235962,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.21.mixer.dt_bias",
+    "layer": 21,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 32.92752456665039,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.21.mixer.out_proj.weight",
+    "layer": 21,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 30768.6328125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.23.mixer.A",
+    "layer": 23,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 2165.812744140625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.23.mixer.D",
+    "layer": 23,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 1.5188393592834473,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.23.mixer.dt_bias",
+    "layer": 23,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 26.07785987854004,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.23.mixer.out_proj.weight",
+    "layer": 23,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 22738.6875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.25.mixer.A",
+    "layer": 25,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 3306.9404296875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.25.mixer.D",
+    "layer": 25,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 3.622441291809082,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.25.mixer.dt_bias",
+    "layer": 25,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 26.277326583862305,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.25.mixer.out_proj.weight",
+    "layer": 25,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 76.89242553710938,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.28.mixer.A",
+    "layer": 28,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 21.436363220214844,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.28.mixer.D",
+    "layer": 28,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 2.4030909538269043,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.28.mixer.dt_bias",
+    "layer": 28,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 27.924381256103516,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.28.mixer.out_proj.weight",
+    "layer": 28,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 29716.439453125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.30.mixer.A",
+    "layer": 30,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 159.89047241210938,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.30.mixer.D",
+    "layer": 30,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 3.5097479820251465,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.30.mixer.dt_bias",
+    "layer": 30,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 31.806394577026367,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.30.mixer.out_proj.weight",
+    "layer": 30,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 32603.203125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.32.mixer.A",
+    "layer": 32,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 130.50967407226562,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.32.mixer.D",
+    "layer": 32,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 5.570533275604248,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.25,
+    "delta_up": -0.125,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.32.mixer.dt_bias",
+    "layer": 32,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 38.45179748535156,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.32.mixer.out_proj.weight",
+    "layer": 32,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 76.95734405517578,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.75,
+    "delta_down": 0.0,
+    "delta_up": -0.25,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.35.mixer.A",
+    "layer": 35,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 45.814876556396484,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.35.mixer.D",
+    "layer": 35,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 6.269820213317871,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.35.mixer.dt_bias",
+    "layer": 35,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 32.191246032714844,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.35.mixer.out_proj.weight",
+    "layer": 35,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 35820.6328125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.37.mixer.A",
+    "layer": 37,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 93.9615249633789,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.37.mixer.D",
+    "layer": 37,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 4.829978942871094,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.37.mixer.dt_bias",
+    "layer": 37,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 34.79372024536133,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.37.mixer.out_proj.weight",
+    "layer": 37,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 34248.33203125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.39.mixer.A",
+    "layer": 39,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 176.34600830078125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.39.mixer.D",
+    "layer": 39,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 16.882078170776367,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.39.mixer.dt_bias",
+    "layer": 39,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 34.607765197753906,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.39.mixer.out_proj.weight",
+    "layer": 39,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 26647.373046875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.41.mixer.A",
+    "layer": 41,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 7151.20458984375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.41.mixer.D",
+    "layer": 41,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 12.37192153930664,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.41.mixer.dt_bias",
+    "layer": 41,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 35.06230545043945,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.41.mixer.out_proj.weight",
+    "layer": 41,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 77.91336059570312,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.44.mixer.A",
+    "layer": 44,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 16.37005043029785,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.44.mixer.D",
+    "layer": 44,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 10.31060791015625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.44.mixer.dt_bias",
+    "layer": 44,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 36.049007415771484,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.44.mixer.out_proj.weight",
+    "layer": 44,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 25187.466796875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.46.mixer.A",
+    "layer": 46,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 1072.197509765625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.46.mixer.D",
+    "layer": 46,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 17.660491943359375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.46.mixer.dt_bias",
+    "layer": 46,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 37.88068389892578,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.46.mixer.out_proj.weight",
+    "layer": 46,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 31330.810546875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.48.mixer.A",
+    "layer": 48,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 21763.642578125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.75,
+    "delta_down": 0.0,
+    "delta_up": -0.25,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.48.mixer.D",
+    "layer": 48,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 14.53225040435791,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.48.mixer.dt_bias",
+    "layer": 48,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 38.62617111206055,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.48.mixer.out_proj.weight",
+    "layer": 48,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 28150.306640625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.50.mixer.A",
+    "layer": 50,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.A",
+    "shape": [
+      64
+    ],
+    "norm": 7371.34619140625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.50.mixer.D",
+    "layer": 50,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.D",
+    "shape": [
+      64
+    ],
+    "norm": 9.626267433166504,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.50.mixer.dt_bias",
+    "layer": 50,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.dt_bias",
+    "shape": [
+      64
+    ],
+    "norm": 41.99944305419922,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.50.mixer.out_proj.weight",
+    "layer": 50,
+    "layer_type": "mamba",
+    "tensor_suffix": "mixer.out_proj.weight",
+    "shape": [
+      4096,
+      2688
+    ],
+    "norm": 26518.44921875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.5.mixer.o_proj.weight",
+    "layer": 5,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 58.30270767211914,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.5.mixer.qkv_proj.weight",
+    "layer": 5,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 106.03009796142578,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.12.mixer.o_proj.weight",
+    "layer": 12,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 69.40925598144531,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.12.mixer.qkv_proj.weight",
+    "layer": 12,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 105.69525146484375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.19.mixer.o_proj.weight",
+    "layer": 19,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 75.36375427246094,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.19.mixer.qkv_proj.weight",
+    "layer": 19,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 99.42171478271484,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.75,
+    "delta_down": -0.125,
+    "delta_up": -0.25,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.26.mixer.o_proj.weight",
+    "layer": 26,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 82.18952941894531,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.26.mixer.qkv_proj.weight",
+    "layer": 26,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 93.84496307373047,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.33.mixer.o_proj.weight",
+    "layer": 33,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 90.67288970947266,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.25,
+    "delta_up": 0.0,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.33.mixer.qkv_proj.weight",
+    "layer": 33,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 93.69081115722656,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.375,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.625,
+    "delta_up": 0.0,
+    "sensitivity": 0.625
+  },
+  {
+    "tensor": "model.layers.42.mixer.o_proj.weight",
+    "layer": 42,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.o_proj.weight",
+    "shape": [
+      2688,
+      4096
+    ],
+    "norm": 100.99652099609375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.42.mixer.qkv_proj.weight",
+    "layer": 42,
+    "layer_type": "attention",
+    "tensor_suffix": "mixer.qkv_proj.weight",
+    "shape": [
+      4608,
+      2688
+    ],
+    "norm": 96.5886001586914,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.1.mixer.gate.weight",
+    "layer": 1,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 40.2142333984375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.1.mixer.gate.e_score_correction_bias",
+    "layer": 1,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 642.052978515625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.3.mixer.gate.weight",
+    "layer": 3,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 37.98305130004883,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.3.mixer.gate.e_score_correction_bias",
+    "layer": 3,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 746.7047729492188,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.6.mixer.gate.weight",
+    "layer": 6,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 31.848064422607422,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.6.mixer.gate.e_score_correction_bias",
+    "layer": 6,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 625.0382690429688,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.8.mixer.gate.weight",
+    "layer": 8,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 22.33039093017578,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.8.mixer.gate.e_score_correction_bias",
+    "layer": 8,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 506.26641845703125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.10.mixer.gate.weight",
+    "layer": 10,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 19.795459747314453,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.10.mixer.gate.e_score_correction_bias",
+    "layer": 10,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 477.9601135253906,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.13.mixer.gate.weight",
+    "layer": 13,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 19.38751220703125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.13.mixer.gate.e_score_correction_bias",
+    "layer": 13,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 489.2738342285156,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.15.mixer.gate.weight",
+    "layer": 15,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 18.30841636657715,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.25,
+    "delta_up": -0.125,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.15.mixer.gate.e_score_correction_bias",
+    "layer": 15,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 483.6169738769531,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.17.mixer.gate.weight",
+    "layer": 17,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 19.29153823852539,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.17.mixer.gate.e_score_correction_bias",
+    "layer": 17,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 499.10888671875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.20.mixer.gate.weight",
+    "layer": 20,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 17.8699893951416,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.20.mixer.gate.e_score_correction_bias",
+    "layer": 20,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 475.0876159667969,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.22.mixer.gate.weight",
+    "layer": 22,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 18.26346206665039,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.22.mixer.gate.e_score_correction_bias",
+    "layer": 22,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 543.0579833984375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  },
+  {
+    "tensor": "model.layers.24.mixer.gate.weight",
+    "layer": 24,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 14.743517875671387,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.24.mixer.gate.e_score_correction_bias",
+    "layer": 24,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 486.4233703613281,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.27.mixer.gate.weight",
+    "layer": 27,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 14.575506210327148,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.27.mixer.gate.e_score_correction_bias",
+    "layer": 27,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 503.41595458984375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.25,
+    "delta_up": 0.0,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.29.mixer.gate.weight",
+    "layer": 29,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 14.154126167297363,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.29.mixer.gate.e_score_correction_bias",
+    "layer": 29,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 531.9439086914062,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.31.mixer.gate.weight",
+    "layer": 31,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 13.218424797058105,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.31.mixer.gate.e_score_correction_bias",
+    "layer": 31,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 506.22235107421875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.34.mixer.gate.weight",
+    "layer": 34,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 13.106172561645508,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.34.mixer.gate.e_score_correction_bias",
+    "layer": 34,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 483.5950622558594,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.36.mixer.gate.weight",
+    "layer": 36,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 11.589509010314941,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.36.mixer.gate.e_score_correction_bias",
+    "layer": 36,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 514.7076416015625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.38.mixer.gate.weight",
+    "layer": 38,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 10.856837272644043,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.38.mixer.gate.e_score_correction_bias",
+    "layer": 38,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 514.6856079101562,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.25,
+    "delta_up": -0.125,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.40.mixer.gate.weight",
+    "layer": 40,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 9.792407035827637,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.40.mixer.gate.e_score_correction_bias",
+    "layer": 40,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 534.4625244140625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.43.mixer.gate.weight",
+    "layer": 43,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 9.98454475402832,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.43.mixer.gate.e_score_correction_bias",
+    "layer": 43,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 520.364501953125,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.45.mixer.gate.weight",
+    "layer": 45,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 11.289020538330078,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.45.mixer.gate.e_score_correction_bias",
+    "layer": 45,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 534.5506591796875,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 1.0,
+    "delta_down": -0.125,
+    "delta_up": 0.0,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.47.mixer.gate.weight",
+    "layer": 47,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 9.840797424316406,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.47.mixer.gate.e_score_correction_bias",
+    "layer": 47,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 551.4771728515625,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.875,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.125,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.49.mixer.gate.weight",
+    "layer": 49,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 9.844648361206055,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.49.mixer.gate.e_score_correction_bias",
+    "layer": 49,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 554.261474609375,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 0.75,
+    "acc_scale_up": 0.875,
+    "delta_down": -0.25,
+    "delta_up": -0.125,
+    "sensitivity": 0.25
+  },
+  {
+    "tensor": "model.layers.51.mixer.gate.weight",
+    "layer": 51,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.weight",
+    "shape": [
+      128,
+      2688
+    ],
+    "norm": 11.234892845153809,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 0.875,
+    "delta_down": 0.0,
+    "delta_up": -0.125,
+    "sensitivity": 0.125
+  },
+  {
+    "tensor": "model.layers.51.mixer.gate.e_score_correction_bias",
+    "layer": 51,
+    "layer_type": "moe",
+    "tensor_suffix": "mixer.gate.e_score_correction_bias",
+    "shape": [
+      128
+    ],
+    "norm": 545.7982788085938,
+    "baseline_acc": 1.0,
+    "acc_scale_down": 1.0,
+    "acc_scale_up": 1.0,
+    "delta_down": 0.0,
+    "delta_up": 0.0,
+    "sensitivity": 0.0
+  }
+]

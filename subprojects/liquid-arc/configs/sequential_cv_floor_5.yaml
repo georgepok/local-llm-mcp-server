@@ -1,0 +1,80 @@
+# LiquidARC Sequential Curriculum — CV Floor Raised to 5.0
+#
+# Experiment: Resume from 30% ARC post-transition checkpoint (~step 6500-7500),
+# switch to 50% real ARC mix, with CV floor RAISED from 3.0 to 5.0.
+#
+# Hypothesis: Raising the CV floor prevents geometric consolidation after the
+# phase transition. The model's geometry can't settle into the rigid post-
+# transition basin (where CV oscillates 3.1-5.2 between ARC and procedural
+# batches). Instead, real ARC batches that would normally crash CV to 3.1-3.3
+# will be penalized, forcing the model to develop geometry that MAINTAINS
+# high CV even on diverse real ARC tasks.
+#
+# This is the minimum-risk test of whether the existing architecture has
+# additional phase-transition potential beyond the first transition.
+#
+# Expected behavior:
+#   - CV floor penalty activates on real ARC batches (where CV was dropping to 3.1-3.3)
+#   - Model forced to develop ARC-compatible high-CV geometry
+#   - If a second transition exists: eval xform should jump discontinuously
+#   - If no second transition: eval xform should improve gradually (like 30%→50%)
+#     but possibly faster due to maintained geometric diversity
+#
+# Compare against: 30%→50% sequential without raised floor (peaked at 47.8%)
+#
+# Resume from: output_reproduce/checkpoints/step_7500.pt (or nearest post-transition)
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 2048
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+
+# Zero-scaffold: no geo phase, no tau freeze
+tau_freeze_steps: 0
+geo_loss_enabled: false
+
+# KEY CHANGE: CV floor raised to 5.0 (from 3.0)
+# This prevents post-transition geometric consolidation.
+# Real ARC batches that would crash CV to 3.1-3.3 will now
+# face a quadratic penalty pushing CV back above 5.0.
+cv_floor_target: 5.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# 50% real ARC mixing (sequential: post-transition diversification)
+real_arc_mix_ratio: 0.5
+
+# TTT for eval diagnostics
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

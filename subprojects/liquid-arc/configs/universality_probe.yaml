@@ -1,0 +1,80 @@
+# Universality Probe — Single-domain config for non-spatial task testing
+#
+# Use with --domain {sorting,logic,pattern,graph} flag.
+# Based on liquid_arc_5m.yaml but with:
+#   - No procedural curriculum (single domain via --domain)
+#   - No real ARC mixing
+#   - No CA/conditional mixing
+#
+# Transfer condition: --resume <5M_checkpoint> --max_steps 5000
+# Baseline condition: fresh init --max_steps 15000
+
+# Architecture — same 5M model (d=768)
+d_model: 768
+d_metric: 192
+d_ffn: 1536
+
+# Training
+batch_size: 16
+grad_accum_steps: 1
+lr: 1.7e-4
+warmup_steps: 500
+
+# No curriculum — single domain via --domain flag
+use_procedural: false
+curriculum_stage1_end: 0
+curriculum_stage2_end: 0
+
+# No mixing
+real_arc_mix_ratio: 0.0
+ca_ratio: 0.0
+conditional_ratio: 0.0
+procedural_ratio: 0.0
+
+# Zero-scaffold (same as 5M run)
+geo_loss_enabled: false
+tau_freeze_steps: 0
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+curvature_lambda: 0.05
+
+# ODE / solver
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+ode_chunk_size: 4
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+
+# Sequence / task
+max_seq_len: 2048
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+model_type: liquid
+
+# Loss weights
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_var_lambda: 0.001
+dropout: 0.1
+use_torch_compile: true
+chunk_size: 256
+
+# Solver flags
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+# TTT (for eval)
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

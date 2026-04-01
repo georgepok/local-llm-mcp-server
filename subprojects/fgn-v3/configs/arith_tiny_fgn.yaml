@@ -1,0 +1,32 @@
+# FGN v3 Phase 1b v3 — Arithmetic Chains (Tiny FGN)
+# Severely capacity-constrained: d=64, 3L, 4H (~148K transformer params)
+# Task F: variable-depth mod-100 arithmetic chains
+
+d_model: 64
+n_heads: 4
+n_layers: 3
+d_ff: 256
+vocab_size: 50304
+max_seq_len: 512
+
+model_type: fgn
+
+metric_type: diagonal
+metric_activation: softplus
+
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+
+# Task-driven geometry only (Ablation A settings)
+curvature_lambda: 0.0
+correlation_length_init: 5.0
+curvature_reward_mu: 0.0
+
+# Equal LR for random init
+metric_lr_mult: 1.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
