@@ -219,7 +219,7 @@ def test_time_adapt(
     # W_o: WHAT transformation to apply to routed values (content)
     melt_modules = [
         adapted.dynamics.metric_net_linear1,
-        adapted.dynamics.metric_net_linear2,
+        adapted.dynamics.metric_net_linear2_diag,
         adapted.dynamics.W_o,
     ]
     if config.channel_gate_enabled:

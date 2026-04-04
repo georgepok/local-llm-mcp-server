@@ -37,7 +37,7 @@ def get_melt_modules(model: LiquidARCModel, include_ffn: bool) -> List[Tuple[str
     """Return [(name, module)] list matching ttt.py's melt set."""
     modules = [
         ("metric_net_linear1", model.dynamics.metric_net_linear1),
-        ("metric_net_linear2", model.dynamics.metric_net_linear2),
+        ("metric_net_linear2_diag", model.dynamics.metric_net_linear2_diag),
         ("tau_net_linear1", model.dynamics.tau_net_linear1),
         ("tau_net_linear2", model.dynamics.tau_net_linear2),
         ("W_o", model.dynamics.W_o),

@@ -71,7 +71,7 @@ def run_ttt_with_tracking(
 
     melt_modules = [
         adapted.dynamics.metric_net_linear1,
-        adapted.dynamics.metric_net_linear2,
+        adapted.dynamics.metric_net_linear2_diag,
         adapted.dynamics.W_o,
     ]
     if getattr(config, 'channel_gate_enabled', False):

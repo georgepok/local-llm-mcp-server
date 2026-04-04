@@ -21,6 +21,10 @@ class LiquidARCConfig:
     tau_max: float = 1.0     # hard ceiling via sigmoid — prevents ODE freeze escape
     t_diffusion_init: float = 1.0
 
+    # Fluid metric (low-rank + wider bottleneck)
+    d_metric_bottleneck: int = 0  # 0 = use d_metric (backward compat), >0 = override MetricNet bottleneck
+    metric_rank: int = 0          # 0 = diagonal only, >0 = diagonal + low-rank L·L^T
+
     # Geometry
     chunk_size: int = 256    # for chunked distance computation
 

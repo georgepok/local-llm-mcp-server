@@ -228,8 +228,12 @@ class LiquidARCModel(nn.Module):
         """Re-apply special init after _init_weights zeroes biases."""
         with torch.no_grad():
             # Identity metric: Softplus(1.3133) ~ 1.0
-            self.dynamics.metric_net_linear2.bias.fill_(math.log(math.e - 1))
-            nn.init.normal_(self.dynamics.metric_net_linear2.weight, std=0.05)
+            self.dynamics.metric_net_linear2_diag.bias.fill_(math.log(math.e - 1))
+            nn.init.normal_(self.dynamics.metric_net_linear2_diag.weight, std=0.05)
+            # Low-rank factors: small random init (zero-init = zero gradient trap)
+            if hasattr(self.dynamics, 'metric_net_linear2_lr'):
+                nn.init.normal_(self.dynamics.metric_net_linear2_lr.weight, std=0.001)
+                nn.init.zeros_(self.dynamics.metric_net_linear2_lr.bias)
             if self.config.channel_gate_enabled:
                 # Gate: sigmoid(2.0) ≈ 0.88 ≈ current 1/tau_init
                 self.dynamics.gate_net_linear2.bias.fill_(2.0)
@@ -283,7 +287,7 @@ class LiquidARCModel(nn.Module):
         self.dynamics.set_n_steps(actual_steps)
 
         # Diagnostics from initial state
-        g_init = self.dynamics.compute_metric(h0)
+        g_init = self.dynamics.compute_metric_diag(h0)
         kappa = self.curvature_engine(g_init)
         metric_cv = g_init.std() / (g_init.mean() + 1e-8)
 
@@ -370,7 +374,7 @@ class LiquidARCModel(nn.Module):
         if (self.geo_loss_module is not None and geo_phase > 0
                 and grid_ids is not None and not self.config.geo_use_h0
                 and geo_result is None):
-            g_final = self.dynamics.compute_metric(h)
+            g_final = self.dynamics.compute_metric_diag(h)
             h_normed_geo = self.dynamics.norm_geo(h)
             geo_result = self.geo_loss_module(
                 h_normed_geo, g_final,
@@ -491,7 +495,9 @@ class LiquidARCModel(nn.Module):
         """Metric, tau/gate, t_diffusion, context pool, step_embeds (for differentiated LR)."""
         params = list(self.context_pool.parameters())
         params.extend(self.dynamics.metric_net_linear1.parameters())
-        params.extend(self.dynamics.metric_net_linear2.parameters())
+        params.extend(self.dynamics.metric_net_linear2_diag.parameters())
+        if hasattr(self.dynamics, 'metric_net_linear2_lr'):
+            params.extend(self.dynamics.metric_net_linear2_lr.parameters())
         if self.config.channel_gate_enabled:
             params.extend(self.dynamics.gate_net_linear1.parameters())
             params.extend(self.dynamics.gate_net_linear2.parameters())

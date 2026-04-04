@@ -1,0 +1,34 @@
+# LiquidARC Mind — Fluid Metric Architecture
+# Low-rank metric + wider bottleneck, text-trained dynamics
+d_model: 768
+d_metric: 192               # TauNet bottleneck (unchanged)
+d_metric_bottleneck: 256     # MetricNet bottleneck (wider)
+metric_rank: 8               # low-rank off-diagonal factors
+d_ffn: 768                   # reduced FFN (matched to training config)
+n_ode_steps: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+dropout: 0.1
+
+use_torch_compile: false     # Not needed for MCP server
+
+# CV floor/ceiling
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Conversation-specific
+max_context_events: 64
+content_embed_dim: 384
+n_metadata_features: 8
+n_event_types: 8
+
+# Online learning
+online_lr: 0.00001
+feedback_grad_clip: 0.1
+lambda_eff: 0.001
+
+# MCP server
+port: 8420
+host: "0.0.0.0"

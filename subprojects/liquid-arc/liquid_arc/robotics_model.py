@@ -123,7 +123,7 @@ class LiquidARCRoboticsModel(nn.Module):
 
         actions = self.action_head(h_final, actuated_indices)
 
-        g = self.dynamics.compute_metric(h0)
+        g = self.dynamics.compute_metric_diag(h0)
         metric_cv = g.std() / (g.mean() + 1e-8)
         tau = self.dynamics.compute_tau(h0)
 

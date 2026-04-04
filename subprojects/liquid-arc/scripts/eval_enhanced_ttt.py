@@ -60,7 +60,7 @@ def run_ttt(base_model, task, config, device, ttt_steps, ttt_lr, curv_lambda,
 
     melt_modules = [
         adapted.dynamics.metric_net_linear1,
-        adapted.dynamics.metric_net_linear2,
+        adapted.dynamics.metric_net_linear2_diag,
         adapted.dynamics.W_o,
     ]
     if getattr(config, 'channel_gate_enabled', False):

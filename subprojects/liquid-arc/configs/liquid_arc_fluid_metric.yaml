@@ -1,0 +1,57 @@
+# LiquidARC — Fluid Metric Architecture
+# Low-rank metric + wider bottleneck + geometry distillation
+#
+# Key architectural changes from standard 5M config:
+#   - d_metric_bottleneck: 256 (was 64 via d_metric)
+#   - metric_rank: 8 (low-rank L·L^T off-diagonal factors)
+#   - d_ffn: 768 (reduced from 1536 to stay within param budget)
+
+d_model: 768
+d_metric: 192              # TauNet bottleneck (unchanged)
+d_metric_bottleneck: 256   # MetricNet bottleneck (wider)
+metric_rank: 8             # low-rank factors for off-diagonal metric
+d_ffn: 768                 # reduced FFN to fit 5-7M budget
+max_seq_len: 2048
+n_ode_steps: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+dropout: 0.1
+
+# ARC-specific
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+model_type: liquid
+alpha_logit_init: 2.2
+
+# Loss weights
+transform_weight: 5.0
+copy_weight: 0.05
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+
+# CV floor/ceiling
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Optimizer
+base_lr: 0.0003
+geometric_lr_ratio: 0.01   # 100x slower for geometric params
+warmup_steps: 500
+weight_decay: 0.01
+
+# Training
+use_procedural: true
+real_arc_mix_ratio: 0.3
+batch_size: 4
+use_torch_compile: true
+
+# No structural tau
+structural_tau_enabled: false
+
+# Tau freeze: first 5K steps
+tau_freeze_steps: 5000

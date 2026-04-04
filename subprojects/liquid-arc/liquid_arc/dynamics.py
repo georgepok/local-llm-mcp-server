@@ -46,20 +46,32 @@ class ContinuousDynamics(nn.Module):
         self.norm_ff = nn.LayerNorm(d)
 
         # MetricNet: [LN(h) || ctx] -> bottleneck -> g via Softplus
-        self.metric_net_linear1 = nn.Linear(2 * d, d_met)
-        self.metric_net_linear2 = nn.Linear(d_met, d)
+        # Fluid metric: optionally wider bottleneck + low-rank off-diagonal
+        d_metric_bn = getattr(config, 'd_metric_bottleneck', 0) or d_met
+        self.metric_rank = getattr(config, 'metric_rank', 0)
+        self._d_metric_bn = d_metric_bn
+
+        self.metric_net_linear1 = nn.Linear(2 * d, d_metric_bn)
+        self.metric_net_linear2_diag = nn.Linear(d_metric_bn, d)
 
         # Init for identity metric: Softplus(1.3133) ~ 1.0
         with torch.no_grad():
-            self.metric_net_linear2.bias.fill_(math.log(math.e - 1))
-            nn.init.normal_(self.metric_net_linear2.weight, std=0.05)
+            self.metric_net_linear2_diag.bias.fill_(math.log(math.e - 1))
+            nn.init.normal_(self.metric_net_linear2_diag.weight, std=0.05)
+
+        # Low-rank factors: g = diag(D) + L·L^T
+        # Small random init (not zero!) — bilinear form has zero gradient at zero
+        if self.metric_rank > 0:
+            self.metric_net_linear2_lr = nn.Linear(d_metric_bn, d * self.metric_rank)
+            nn.init.normal_(self.metric_net_linear2_lr.weight, std=0.001)
+            nn.init.zeros_(self.metric_net_linear2_lr.bias)
 
         # Step-evolving metric: learnable step embeddings modulate MetricNet
         self.step_embed_enabled = getattr(config, 'step_embed_enabled', False)
         if self.step_embed_enabled:
             n_embeds = getattr(config, 'n_step_embeds', 20)
-            self.step_embeds = nn.Parameter(torch.zeros(n_embeds, d_met))
-            self.register_buffer('_current_step_embed', torch.zeros(d_met),
+            self.step_embeds = nn.Parameter(torch.zeros(n_embeds, d_metric_bn))
+            self.register_buffer('_current_step_embed', torch.zeros(d_metric_bn),
                                  persistent=False)
 
         # Channel-wise gate (working memory) OR scalar TauNet
@@ -155,6 +167,9 @@ class ContinuousDynamics(nn.Module):
         self._context: Optional[torch.Tensor] = None
         self._mask: Optional[torch.Tensor] = None
 
+        # External τ bias (set by Mind for per-event τ floor)
+        self._tau_external_bias: Optional[torch.Tensor] = None  # [N] or None
+
         # Tau freeze flag — plain bool, one recompile at unfreeze is acceptable
         self.freeze_tau: bool = True
 
@@ -215,6 +230,7 @@ class ContinuousDynamics(nn.Module):
         self._context = context
         self._mask = mask
         self._cached_g = None  # reset metric cache for new input
+        self._cached_L = None
 
     def set_n_steps(self, n_steps: int):
         """Override step count for FFN amortization — no inplace to avoid autograd conflicts."""
@@ -274,19 +290,27 @@ class ContinuousDynamics(nn.Module):
                 and self._cached_g is not None):
             # FROZEN: reuse metric from the freeze step (no grad through cache)
             g = self._cached_g
+            L = self._cached_L if hasattr(self, '_cached_L') else None
         else:
             # LIVE: compute metric normally
-            met_hidden = F.gelu(self.metric_net_linear1(cat_input))  # [B, N, d_met]
+            met_hidden = F.gelu(self.metric_net_linear1(cat_input))  # [B, N, d_metric_bn]
             # Fast metric overlay from working memory (per-input routing bias)
             if self._metric_overlay is not None:
-                met_hidden = met_hidden + self._metric_overlay  # [B, 1, d_met] broadcasts
+                met_hidden = met_hidden + self._metric_overlay  # [B, 1, d_metric_bn] broadcasts
             if self.step_embed_enabled:
-                met_hidden = met_hidden + self._current_step_embed  # [d_met] broadcasts
-            g = F.softplus(self.metric_net_linear2(met_hidden))  # [B, N, d]
+                met_hidden = met_hidden + self._current_step_embed  # [d_metric_bn] broadcasts
+            g = F.softplus(self.metric_net_linear2_diag(met_hidden))  # [B, N, d]
+
+            # Low-rank factors (zero-init → starts as no-op)
+            L = None
+            if self.metric_rank > 0:
+                L_flat = self.metric_net_linear2_lr(met_hidden)  # [B, N, d*rank]
+                L = L_flat.view(B, N, d, self.metric_rank)  # [B, N, d, rank]
 
             # Cache at the freeze step
             if freeze_active and step_idx == self.metric_freeze_step:
                 self._cached_g = g.detach()
+                self._cached_L = L.detach() if self.metric_rank > 0 else None
 
         # System 2: blend fast metric with slow EMA for multi-timescale stability
         # (only when metric is computed live, not frozen)
@@ -308,8 +332,8 @@ class ContinuousDynamics(nn.Module):
                 m = self._ema_momentum
                 w1 = self.metric_net_linear1.weight.data
                 b1 = self.metric_net_linear1.bias.data
-                w2 = self.metric_net_linear2.weight.data
-                b2 = self.metric_net_linear2.bias.data
+                w2 = self.metric_net_linear2_diag.weight.data
+                b2 = self.metric_net_linear2_diag.bias.data
                 if self._ema_w1 is None:
                     self._ema_w1 = w1.clone()
                     self._ema_b1 = b1.clone()
@@ -324,20 +348,29 @@ class ContinuousDynamics(nn.Module):
         # 2. SDPA-based heat kernel (FlashAttention compatible)
         # Factor: K = softmax(-D^2/(4t)) = softmax(q.k/(2t) - ||k||^2/(4t))
         # where q = k = h_normed * sqrt(g)  (geometric mean metric)
+        # With low-rank: D^2 = diag_term + ||L^T(h_i - h_j)||^2
+        # Both factor as SDPA via Q/K concatenation: Q=[q_diag, q_proj], K=[k_diag, k_proj]
         t_diff = F.softplus(self.t_diffusion)
 
         sqrt_g = torch.sqrt(g)
-        q = h_normed * sqrt_g  # [B, N, d]
-        k = h_normed * sqrt_g  # [B, N, d]
+        q_diag = h_normed * sqrt_g  # [B, N, d]
+        k_diag = h_normed * sqrt_g  # [B, N, d]
 
-        # Additive bias: -||k_j||^2 / (4t)  [column-wise, constant across rows]
-        k_norm_sq = (k * k).sum(dim=-1, keepdim=True)  # [B, N, 1]
+        if self.metric_rank > 0:
+            # Low-rank projection: h_proj_i = L_i^T @ h_i
+            h_proj = torch.einsum('bnd,bndr->bnr', h_normed, L)  # [B, N, rank]
+            # Concatenate diagonal and low-rank Q/K
+            Q = torch.cat([q_diag, h_proj], dim=-1)  # [B, N, d+rank]
+            K = torch.cat([k_diag, h_proj], dim=-1)  # [B, N, d+rank]
+            d_qk = d + self.metric_rank
+        else:
+            Q = q_diag
+            K = k_diag
+            d_qk = d
+
+        # Additive bias: -||K_j||^2 / (4t)  [column-wise, constant across rows]
+        k_norm_sq = (K * K).sum(dim=-1, keepdim=True)  # [B, N, 1]
         attn_bias = -k_norm_sq.transpose(1, 2) / (4.0 * t_diff)  # [B, 1, N]
-
-        # Pre-scale Q: SDPA divides by sqrt(d), we want division by 2t
-        # q_scaled @ k^T / sqrt(d) = q * sqrt(d)/(2t) @ k^T / sqrt(d) = q @ k^T / (2t)
-        scale_factor = math.sqrt(d) / (2.0 * t_diff)
-        q_scaled = q * scale_factor  # [B, N, d]
 
         # Value projection
         V = self.W_v(self.norm_val(h))  # [B, N, d]
@@ -348,13 +381,21 @@ class ContinuousDynamics(nn.Module):
             full_bias.masked_fill_(mask.unsqueeze(0), float('-inf'))
             attn_bias = full_bias
 
-        # SDPA: routes through FlashAttention — N*N never materialized to HBM
-        routed_v = F.scaled_dot_product_attention(
-            query=q_scaled,
-            key=k,
-            value=V,
-            attn_mask=attn_bias,
-        )  # [B, N, d]
+        if self.metric_rank > 0:
+            # Explicit logits: Q @ K^T / (2t) + bias, then softmax @ V
+            # This avoids V-padding and SDPA dimension mismatch issues
+            logits = torch.bmm(Q, K.transpose(1, 2)) / (2.0 * t_diff)  # [B, N, N]
+            logits = logits + attn_bias
+            attn_weights = F.softmax(logits, dim=-1)
+            routed_v = torch.bmm(attn_weights, V)  # [B, N, d]
+        else:
+            # Pure diagonal: use SDPA with FlashAttention (no N×N materialized)
+            scale_factor = math.sqrt(d_qk) / (2.0 * t_diff)
+            Q_scaled = Q * scale_factor
+            routed_v = F.scaled_dot_product_attention(
+                query=Q_scaled, key=K, value=V,
+                attn_mask=attn_bias,
+            )  # [B, N, d]
         # No identity residual — zero-init W_o already provides identity ODE at start.
         # Alpha residual was blocking 90% of cross-position information flow.
 
@@ -387,6 +428,10 @@ class ContinuousDynamics(nn.Module):
                 step_idx = self._current_step_index_buf.long().clamp(0, 19)
                 tau_hidden = tau_hidden + self.tau_step_embed(step_idx)
                 tau_logits = self.tau_net_linear2(tau_hidden)
+                # External τ bias (from Mind's per-event τ floor)
+                if self._tau_external_bias is not None:
+                    bias = self._tau_external_bias[:N].unsqueeze(0).unsqueeze(-1)  # [1, N, 1]
+                    tau_logits = tau_logits + bias
                 tau = torch.sigmoid(tau_logits) * (self.tau_max - self.tau_min) + self.tau_min
                 # Structural tau: input-independent per-position multiplier
                 if self.structural_tau_enabled:
@@ -472,24 +517,40 @@ class ContinuousDynamics(nn.Module):
             F.gelu(self.gate_net_linear1(h_normed))
         ))
 
-    def compute_metric(self, h: torch.Tensor) -> torch.Tensor:
-        """Compute metric field from h (for diagnostics).
+    def compute_metric_diag(self, h: torch.Tensor) -> torch.Tensor:
+        """Compute diagonal metric only (for diagnostics that expect [B,N,d]).
+        Standalone implementation — does NOT call compute_metric() to avoid
+        isinstance branching issues inside torch.compile."""
+        B, N, d = h.shape
+        context = self._context
+        h_normed = self.norm_geo(h)
+        ctx_exp = context.unsqueeze(1).expand(B, N, d)
+        cat_input = torch.cat([h_normed, ctx_exp], dim=-1)
+        met_hidden = F.gelu(self.metric_net_linear1(cat_input))
+        return F.softplus(self.metric_net_linear2_diag(met_hidden))
+
+    def compute_metric(self, h: torch.Tensor):
+        """Compute metric field from h.
 
         Args:
             h: [B, N, d] hidden states
 
         Returns:
-            g: [B, N, d] positive metric components
+            If metric_rank > 0: (D, L) where D=[B,N,d], L=[B,N,d,rank]
+            If metric_rank == 0: D [B,N,d] (backward compatible)
         """
         B, N, d = h.shape
         context = self._context
         h_normed = self.norm_geo(h)
         ctx_exp = context.unsqueeze(1).expand(B, N, d)
         cat_input = torch.cat([h_normed, ctx_exp], dim=-1)
-        g = F.softplus(self.metric_net_linear2(
-            F.gelu(self.metric_net_linear1(cat_input))
-        ))
-        return g
+        met_hidden = F.gelu(self.metric_net_linear1(cat_input))
+        D = F.softplus(self.metric_net_linear2_diag(met_hidden))
+        if self.metric_rank > 0:
+            L_flat = self.metric_net_linear2_lr(met_hidden)
+            L = L_flat.view(B, N, d, self.metric_rank)
+            return D, L
+        return D
 
     def compute_tau(self, h: torch.Tensor) -> torch.Tensor:
         """Compute tau field from h (for diagnostics).
@@ -535,7 +596,8 @@ if __name__ == "__main__":
     assert h_g.grad is not None
 
     # Diagnostic methods
-    g = dyn.compute_metric(h_g.detach())
+    g_result = dyn.compute_metric(h_g.detach())
+    g = g_result[0] if isinstance(g_result, tuple) else g_result
     assert g.shape == (B, N, 64)
     tau = dyn.compute_tau(h_g.detach())
     assert tau.shape == (B, N, 1)

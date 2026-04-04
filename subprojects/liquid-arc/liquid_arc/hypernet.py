@@ -161,7 +161,7 @@ def _get_melt_module_specs(
     """
     specs = [
         ("metric_net_linear1", model.dynamics.metric_net_linear1),
-        ("metric_net_linear2", model.dynamics.metric_net_linear2),
+        ("metric_net_linear2_diag", model.dynamics.metric_net_linear2_diag),
         ("tau_net_linear1", model.dynamics.tau_net_linear1),
         ("tau_net_linear2", model.dynamics.tau_net_linear2),
         ("W_o", model.dynamics.W_o),

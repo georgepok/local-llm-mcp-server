@@ -253,7 +253,7 @@ class ContinuousLifecycleRunner(nn.Module):
         self._steps_since_reset += 1
 
         # Diagnostics
-        g = self.dynamics.compute_metric(h_after_auto.detach())
+        g = self.dynamics.compute_metric_diag(h_after_auto.detach())
         metric_cv = g.std() / (g.mean() + 1e-8)
         tau = self.dynamics.compute_tau(h_after_auto.detach())
 

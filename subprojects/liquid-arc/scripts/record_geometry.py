@@ -54,7 +54,7 @@ class GeometryRecorder:
     def record_step(self, step_idx: int, h: torch.Tensor):
         """Record geometry at one ODE step."""
         with torch.no_grad():
-            g = self.dynamics.compute_metric(h)
+            g = self.dynamics.compute_metric_diag(h)
             tau = self.dynamics.compute_tau(h)
 
             g_mean = g.mean().item()
