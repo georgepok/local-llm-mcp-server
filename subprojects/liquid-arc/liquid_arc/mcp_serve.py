@@ -259,25 +259,60 @@ def get_curriculum_stats() -> str:
     Shows which domains have been presented, the Mind's PE response
     to each, domain effectiveness scores, and growth zone domains.
     """
-    if _mind.curriculum is None:
-        return json.dumps({'status': 'curriculum_not_enabled'})
-    return json.dumps(_mind.curriculum.get_stats(), indent=2)
+    # Qwen3 geometric curriculum stats
+    stats = getattr(_mind, '_curriculum_stats', None)
+    if stats is not None:
+        total = sum(stats['domain_counts'].values())
+        if total > 0:
+            all_pe = [v for v in stats['domain_avg_pe'].values() if v > 0]
+            pe_max = max(all_pe) if all_pe else 1
+            pe_min = min(all_pe) if all_pe else 0
+            return json.dumps({
+                'total_stimuli': total,
+                'domain_counts': stats['domain_counts'],
+                'domain_avg_pe': {d: round(v, 1) for d, v in stats['domain_avg_pe'].items()},
+                'domain_avg_cv': {d: round(v, 2) for d, v in stats.get('domain_avg_cv', {}).items()},
+                'domain_avg_tau': {d: round(v, 2) for d, v in stats.get('domain_avg_tau', {}).items()},
+                'domain_effectiveness': stats.get('domain_effectiveness', {}),
+                'most_familiar_domain': min(stats['domain_avg_pe'], key=stats['domain_avg_pe'].get) if stats['domain_avg_pe'] else None,
+                'most_novel_domain': max(stats['domain_avg_pe'], key=stats['domain_avg_pe'].get) if stats['domain_avg_pe'] else None,
+                'growth_zone_domains': stats.get('growth_zone_domains', []),
+                'pe_spread_pct': round(100 * (pe_max - pe_min) / pe_max, 1) if pe_max > 0 else 0,
+            }, indent=2)
+    # Legacy Nemotron curriculum
+    if _mind.curriculum is not None:
+        return json.dumps(_mind.curriculum.get_stats(), indent=2)
+    return json.dumps({'status': 'curriculum_not_enabled'})
 
 
 @mcp.tool()
 def inject_stimulus(domain: Optional[str] = None,
                     custom_content: Optional[str] = None) -> str:
-    """Manually inject a curriculum stimulus.
+    """Manually inject a curriculum stimulus through the geometric coupling.
 
-    Either specify a domain (Nemotron generates content) or provide
-    custom content directly. Returns the Mind's PE response.
+    Either specify a domain (Qwen3 generates content conditioned on state)
+    or provide custom content directly.
 
     Args:
         domain: Domain key (topology, music_theory, biology, physics,
                 philosophy, mathematics, poetry, ecology).
-        custom_content: Direct content to inject (bypasses Nemotron).
+        custom_content: Direct content to inject through geometric path.
     """
     if custom_content:
+        if _mind._qwen_available:
+            signal = _mind._encode_through_qwen(custom_content)
+            if signal is not None:
+                _mind._force_geometric_signal(
+                    signal, custom_content[:200],
+                    event_type='context',
+                    metadata={'source': 'manual_stimulus'})
+                diag = _mind.get_diagnostics()
+                return json.dumps({
+                    'source': 'manual_geometric',
+                    'signal_norm': signal.norm().item(),
+                    'cv': diag.get('metric_cv', 0),
+                }, indent=2)
+        # Fallback: legacy text path
         result = _mind.observe_event(
             event_type='context',
             content=custom_content,
@@ -285,37 +320,44 @@ def inject_stimulus(domain: Optional[str] = None,
         )
         return json.dumps({
             'source': 'manual',
-            'prediction_error': result['prediction_error'],
-            'cv': result['cv'],
+            'prediction_error': result.get('prediction_error', 0),
+            'cv': result.get('cv', 0),
         }, indent=2)
 
-    if _mind.curriculum is None:
-        return json.dumps({'status': 'curriculum_not_enabled'})
+    # Generate stimulus through Qwen3 for specified domain
+    if not _mind._qwen_available:
+        return json.dumps({'status': 'qwen3_coupling_not_available'})
 
-    domain = domain or _mind.curriculum.select_domain()
-    mind_focus = _mind._last_reflection_text or ""
-    stimulus = _mind.curriculum.generate_stimulus(domain, mind_focus)
+    domains = list(_mind.CURRICULUM_PROMPTS.keys())
+    if domain and domain not in domains:
+        return json.dumps({'error': f'Unknown domain: {domain}. Available: {domains}'})
 
-    result = _mind.observe_event(
-        event_type='context',
-        content=stimulus['stimulus'],
-        metadata={'source': 'manual_curriculum', 'domain': domain},
-    )
+    domain = domain or domains[_mind._curriculum_idx % len(domains)]
+    prompt = _mind.CURRICULUM_PROMPTS[domain]
+    result = _mind.query_knowledge(prompt, max_new_tokens=150, temperature=0.7)
+    stimulus_text = result.get('response', '')
 
-    _mind.curriculum.record_response(domain, result['prediction_error'])
+    if stimulus_text and len(stimulus_text) > 10:
+        signal = _mind._encode_through_qwen(stimulus_text)
+        if signal is not None:
+            _mind._force_geometric_signal(
+                signal, stimulus_text[:200],
+                event_type='context',
+                metadata={'source': 'manual_curriculum', 'domain': domain})
+        diag = _mind.get_diagnostics()
+        return json.dumps({
+            'domain': domain,
+            'stimulus_preview': stimulus_text[:200],
+            'signal_norm': signal.norm().item() if signal is not None else 0,
+            'cv': diag.get('metric_cv', 0),
+        }, indent=2)
 
-    return json.dumps({
-        'domain': domain,
-        'stimulus_preview': stimulus['stimulus'][:200],
-        'prediction_error': result['prediction_error'],
-        'cv': result['cv'],
-        'domain_effectiveness': _mind.curriculum.domain_effectiveness[domain],
-    }, indent=2)
+    return json.dumps({'status': 'generation_failed', 'domain': domain})
 
 
 @mcp.tool()
 def set_curriculum(enabled: bool, interval: Optional[int] = None) -> str:
-    """Toggle the curriculum feed on/off and adjust stimulus interval.
+    """Toggle the geometric curriculum feed on/off and adjust stimulus interval.
 
     Turn off to give the Mind time to consolidate what it has received.
     Turn on to resume diverse stimulation.
@@ -324,10 +366,7 @@ def set_curriculum(enabled: bool, interval: Optional[int] = None) -> str:
         enabled: True to enable, False to pause curriculum
         interval: Optional new stimulus interval in ODE cycles (default 14)
     """
-    if _mind.curriculum is None:
-        return json.dumps({'status': 'curriculum_not_configured'})
-
-    was_enabled = _mind._stimulus_interval > 0
+    was_enabled = _mind._stimulus_interval < 999
     if enabled:
         _mind._stimulus_interval = interval or 14
         status = 'enabled'
@@ -339,7 +378,7 @@ def set_curriculum(enabled: bool, interval: Optional[int] = None) -> str:
         'status': status,
         'was': 'enabled' if was_enabled else 'paused',
         'stimulus_interval': _mind._stimulus_interval,
-        'total_stimuli_so_far': _mind.curriculum.stimulus_count,
+        'total_stimuli_so_far': getattr(_mind, '_curriculum_count', 0),
     }, indent=2)
 
 
@@ -368,6 +407,69 @@ def get_routing_stats() -> str:
         stats['cycles_per_reflection'] = stats['total_ode_cycles'] / total_ref
 
     return json.dumps(stats, indent=2)
+
+
+@mcp.tool()
+def converse(message: str, max_tokens: int = 300, temperature: float = 0.7) -> str:
+    """Send a message to the Mind and get a response through Qwen3.
+
+    This is the primary interaction interface. The complete loop:
+    1. Your message enters LiquidARC as sensory forcing (ODE state updates)
+    2. LiquidARC's accumulated state projects into Qwen3 as virtual prefix tokens
+    3. Qwen3 generates a response shaped by that geometric context
+    4. The response feeds back into LiquidARC (self-referential integration)
+
+    The response reflects not just your message, but everything the Mind
+    has experienced — all prior conversations, curriculum, reflections —
+    compressed into geometry and rendered through Qwen3's language.
+
+    Args:
+        message: Your message to the Mind
+        max_tokens: Maximum response length (default 300)
+        temperature: Sampling temperature (default 0.7, 0 = deterministic)
+    """
+    result = _mind.converse(message, max_new_tokens=max_tokens,
+                            temperature=temperature)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def query_qwen(prompt: str, max_tokens: int = 200, temperature: float = 0.7) -> str:
+    """Query Qwen3-4B conditioned on LiquidARC's geometric state.
+
+    Projects h(t) → virtual prefix tokens → Qwen3 generates response.
+    The response is shaped by LiquidARC's accumulated temporal context.
+    This is the geometric knowledge interface — no tokenization of the state,
+    pure vector projection.
+
+    Args:
+        prompt: Question or instruction for Qwen3
+        max_tokens: Maximum tokens to generate (default 200)
+        temperature: Sampling temperature (default 0.7, 0 = greedy)
+    """
+    result = _mind.query_knowledge(prompt, max_new_tokens=max_tokens,
+                                   temperature=temperature)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def express_through_qwen(focus_query: Optional[str] = None) -> str:
+    """Let the Mind express its state through Qwen3's language.
+
+    Projects LiquidARC's ODE state into Qwen3's representation space as
+    virtual prefix tokens. Qwen3 generates natural language conditioned
+    on this geometric state. Different accumulated contexts produce
+    different expressions.
+
+    Unlike probe_encoding (which projects through the Mind's own embedding
+    table), this uses Qwen3's 4B parameters of world knowledge to
+    render the geometric state as natural language.
+
+    Args:
+        focus_query: Optional topic to focus the expression on
+    """
+    result = _mind.express_through_qwen(focus_query)
+    return json.dumps(result, indent=2)
 
 
 @mcp.tool()
@@ -454,7 +556,7 @@ def set_learning_rates(
 
 
 def create_mind(args) -> LiquidARCMind:
-    """Initialize the LiquidARC Mind with optional Voice."""
+    """Initialize the LiquidARC Mind with optional Voice and Qwen3 coupling."""
     config = LiquidARCConfig.from_yaml(args.config)
 
     # Sentence-transformer: only needed if NOT using ODE encoder, or for bootstrap
@@ -468,6 +570,74 @@ def create_mind(args) -> LiquidARCMind:
             if not use_ode:
                 raise RuntimeError("sentence-transformers required when use_ode_encoder=False")
             print("  sentence-transformers not available, skipping bootstrap blending")
+
+    # ── Qwen3 Geometric Coupling (Phase 5) ──
+    qwen_model = None
+    qwen_tokenizer = None
+    coupling = None
+    qwen_vllm_url = getattr(args, 'qwen_vllm_url', None)
+    qwen_path = getattr(args, 'qwen_model_path', None)
+    coupling_ckpt_path = getattr(args, 'coupling_checkpoint', None)
+
+    if coupling_ckpt_path:
+        import os
+        if os.path.exists(coupling_ckpt_path):
+            print(f"\n═══ Loading Qwen3 Geometric Coupling ═══")
+            from .coupling import GeometricCoupling
+
+            # Load coupling weights
+            coupling_ckpt = torch.load(coupling_ckpt_path, map_location=args.device,
+                                       weights_only=False)
+            coupling_cfg = coupling_ckpt.get('config', {})
+            n_vt = int(coupling_cfg.get('n_virtual_tokens', 8))
+            d_qwen = int(coupling_cfg.get('d_qwen', 2560))
+
+            coupling = GeometricCoupling(
+                d_arc=config.d_model, d_qwen=d_qwen,
+                n_virtual_tokens=n_vt,
+            ).to(args.device).to(torch.bfloat16)
+            coupling.load_state_dict(coupling_ckpt['coupling_state_dict'])
+            coupling.eval()
+            print(f"  Coupling: {coupling.param_count()/1e6:.2f}M params, "
+                  f"{n_vt} virtual tokens, d_qwen={d_qwen}")
+            print(f"  Loaded from step {coupling_ckpt.get('step', '?')}")
+
+            eval_result = coupling_ckpt.get('eval_result', {})
+            if eval_result:
+                print(f"  Training eval: coupled_ppl={eval_result.get('coupled_ppl', '?')}, "
+                      f"improvement={eval_result.get('ppl_improvement', '?'):.1f}%")
+
+            # Connect to Qwen3 via vLLM API (preferred) or load in-process (fallback)
+            if qwen_vllm_url:
+                from .qwen_client import QwenVLLMClient
+                tokenizer_path = qwen_path or '/workspace/models/qwen3-4b'
+                qwen_model = QwenVLLMClient(
+                    vllm_url=qwen_vllm_url,
+                    tokenizer_path=tokenizer_path,
+                    device=args.device,
+                )
+                qwen_tokenizer = qwen_model.tokenizer
+                if qwen_model.is_available():
+                    print(f"  Qwen3: vLLM API at {qwen_vllm_url}")
+                else:
+                    print(f"  WARNING: vLLM not responding at {qwen_vllm_url}")
+            elif qwen_path and os.path.exists(qwen_path):
+                from transformers import AutoModelForCausalLM, AutoTokenizer
+                print(f"  Loading Qwen3 in-process from {qwen_path}...")
+                qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_path)
+                if qwen_tokenizer.pad_token is None:
+                    qwen_tokenizer.pad_token = qwen_tokenizer.eos_token
+                qwen_model = AutoModelForCausalLM.from_pretrained(
+                    qwen_path, dtype=torch.bfloat16,
+                    device_map={'': args.device},
+                )
+                qwen_model.eval()
+                for p in qwen_model.parameters():
+                    p.requires_grad_(False)
+                print(f"  Qwen3: in-process HF, "
+                      f"{sum(p.numel() for p in qwen_model.parameters())/1e9:.2f}B params")
+        else:
+            print(f"  WARNING: Coupling checkpoint not found at {coupling_ckpt_path}")
 
     mind = LiquidARCMind(
         checkpoint_path=args.checkpoint,
@@ -484,6 +654,9 @@ def create_mind(args) -> LiquidARCMind:
         bootstrap_mode=getattr(args, 'bootstrap_mode', True),
         bootstrap_events=getattr(args, 'bootstrap_events', 5000),
         use_trained_text_embed=getattr(args, 'use_trained_text_embed', False),
+        qwen_model=qwen_model,
+        qwen_tokenizer=qwen_tokenizer,
+        coupling=coupling,
     )
 
     # Warm up tokenizer eagerly so first MCP call doesn't block
@@ -515,10 +688,10 @@ def create_mind(args) -> LiquidARCMind:
                           metadata={'source': 'internal_reflection'})
         print(f"  ODE encoder: tokenizer loaded, bootstrap event seeded")
 
-    # Initialize Voice (local LLM connection)
+    # Initialize Voice (legacy — only if Qwen3 coupling is not available)
     global _voice
     voice = None
-    if args.enable_voice:
+    if args.enable_voice and not mind._qwen_available:
         voice = Voice(
             lm_studio_url=args.lm_studio_url,
             model=args.lm_studio_model,
@@ -527,19 +700,23 @@ def create_mind(args) -> LiquidARCMind:
         )
         _voice = voice
         mind._reflection_interval = args.reflection_interval
+        print("  Voice: Nemotron (legacy — Qwen3 coupling not available)")
 
-    # Initialize curriculum
-    if args.enable_curriculum and voice:
+    # Initialize curriculum (legacy — only if Qwen3 coupling is not available)
+    if args.enable_curriculum and voice and not mind._qwen_available:
         mind.curriculum = CurriculumGenerator(voice=voice)
         mind._stimulus_interval = args.stimulus_interval
-        print(f"  Curriculum enabled: {len(mind.curriculum.domains)} domains, "
-              f"interval={args.stimulus_interval} cycles")
+        print(f"  Curriculum: Nemotron (legacy), {len(mind.curriculum.domains)} domains")
+
+    # Geometric curriculum via Qwen3 coupling
+    if mind._qwen_available:
+        mind._stimulus_interval = args.stimulus_interval
+        print(f"  Reflection + Curriculum: Qwen3 geometric coupling, "
+              f"stimulus interval={args.stimulus_interval} cycles")
 
     if args.enable_autonomous:
-        mind.start_autonomous(voice=voice)
+        mind.start_autonomous(voice=voice if not mind._qwen_available else None)
         print("Autonomous processing started")
-        if voice:
-            print(f"  Reflection cycle: every {args.reflection_interval}s")
 
     return mind
 
@@ -586,6 +763,12 @@ def main():
                         help='ODE cycles between curriculum stimuli')
     parser.add_argument('--distilled_embeddings', type=str, default=None,
                         help='Path to distilled embedding checkpoint (from distill_embeddings.py)')
+    parser.add_argument('--qwen_model_path', type=str, default=None,
+                        help='Path to Qwen3-4B model/tokenizer (Phase 5 geometric coupling)')
+    parser.add_argument('--qwen_vllm_url', type=str, default=None,
+                        help='vLLM API URL for Qwen3 (e.g. http://localhost:30100/v1). Preferred over in-process.')
+    parser.add_argument('--coupling_checkpoint', type=str, default=None,
+                        help='Path to trained coupling checkpoint (from train_coupling.py)')
     parser.add_argument('--ssl_certfile', type=str, default=None,
                         help='SSL certificate file for HTTPS')
     parser.add_argument('--ssl_keyfile', type=str, default=None,

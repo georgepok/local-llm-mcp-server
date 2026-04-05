@@ -1,0 +1,44 @@
+# Geometric Coupling: LiquidARC × Qwen3-4B
+# Coupling layers project between d_arc=768 and d_qwen=2560
+
+# === LiquidARC config (must match fluid metric checkpoint) ===
+d_model: 768
+d_metric: 192
+d_metric_bottleneck: 256
+metric_rank: 8
+d_ffn: 768
+n_ode_steps: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+use_torch_compile: true
+
+# === Coupling config ===
+d_qwen: 2560
+n_virtual_tokens: 8
+qwen_model_path: /workspace/models/qwen3-4b
+arc_checkpoint: /workspace/liquid-arc/output_fluid/stage_b/step_10000.pt
+
+# === Training ===
+coupling_lr: 1e-4
+arc_dynamics_lr: 1e-6          # 100x slower for geometric params
+weight_decay: 0.01
+ntp_weight: 1.0
+state_pred_weight: 0.01        # reduced — NTP signal alone is sufficient
+max_steps: 5000
+eval_interval: 100
+log_interval: 10
+batch_size: 1                   # sequential event processing
+max_seq_len: 512                # Qwen3 context per event
+gradient_checkpointing: true    # save memory on Qwen3 backward
+
+# === Training data ===
+text_dataset: wikitext
+text_dataset_config: wikitext-2-raw-v1
+n_events_per_sequence: 8        # events in each training sequence
+event_seq_len: 128              # tokens per event for LiquidARC processing
