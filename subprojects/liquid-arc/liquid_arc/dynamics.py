@@ -96,6 +96,16 @@ class ContinuousDynamics(nn.Module):
         self.tau_step_embed = nn.Embedding(20, d_met)  # 20 max steps
         nn.init.zeros_(self.tau_step_embed.weight)
 
+        # τ-CV coupling: tau responds to local metric complexity
+        self.tau_cv_coupling_enabled = getattr(config, 'tau_cv_coupling_enabled', False)
+        self.cv_coupling_target = getattr(config, 'cv_coupling_target', 3.5)
+        self.cv_coupling_strength = getattr(config, 'cv_coupling_strength', 0.5)
+
+        # Tau-convergence coupling: positions struggling to converge get faster integration
+        self.tau_convergence_coupling_enabled = getattr(config, 'tau_convergence_coupling_enabled', False)
+        self.tau_convergence_beta = getattr(config, 'tau_convergence_beta', 1.0)
+        self.tau_convergence_floor = getattr(config, 'tau_convergence_floor', 0.5)
+
         # Structural tau — input-INDEPENDENT per-position timescale.
         # Modulates dynamic tau at BOTH inference time (tau_dynamic * s_tau)
         # and learning time (gradient scaling via apply_structural_gradient_coupling).
@@ -134,6 +144,12 @@ class ContinuousDynamics(nn.Module):
 
         # Fast metric overlay from working memory (set by euler_solve_with_memory)
         self._metric_overlay = None
+
+        # Norm homeostasis: soft decay that activates above a reference norm.
+        # norm_ref = typical embedding scale the ODE should operate at.
+        # norm_lambda = strength of restoring force (higher = stronger pull back).
+        self._norm_ref = getattr(config, 'norm_ref', 50.0)  # per-position L2 reference
+        self._norm_lambda = getattr(config, 'norm_lambda', 0.1)  # decay rate
 
         # Progressive damping: later ODE steps make smaller updates
         self._progressive_damping = getattr(config, 'progressive_damping', False)
@@ -444,6 +460,48 @@ class ContinuousDynamics(nn.Module):
                         min=self.tau_min,
                         max=self.tau_max * self.structural_tau_max,
                     )
+                # τ-CV coupling: tau responds to local metric complexity
+                if self.tau_cv_coupling_enabled:
+                    with torch.no_grad():
+                        g_mean_local = g.mean(dim=-1, keepdim=True)   # [B, N, 1]
+                        g_std_local = g.std(dim=-1, keepdim=True)      # [B, N, 1]
+                        local_cv = g_std_local / (g_mean_local + 1e-8) # [B, N, 1]
+                    cv_target = self.cv_coupling_target
+                    alpha = self.cv_coupling_strength
+                    coupling_factor = 1.0 + alpha * (local_cv - cv_target)
+                    coupling_factor = coupling_factor.clamp(0.3, 3.0)
+                    tau = (tau * coupling_factor).clamp(
+                        min=self.tau_min, max=self.tau_max * 3.0)
+                # Tau-convergence coupling: positions struggling to converge get faster integration
+                if self.tau_convergence_coupling_enabled:
+                    with torch.no_grad():
+                        residual = (h - target).norm(dim=-1, keepdim=True)  # [B, N, 1]
+                        residual_norm = residual / (residual.mean() + 1e-8)
+                        conv_factor = 1.0 / (1.0 + self.tau_convergence_beta * residual_norm)
+                        _floor = self.tau_convergence_floor
+                        tau_scale = _floor + (1.0 - _floor) * conv_factor  # modulate within [floor*τ, τ]
+                        # Store diagnostics as detached tensors (no .item() → no compile break)
+                        self._last_convergence_residual_mean = residual.mean().detach()
+                        self._last_convergence_residual_std = residual.std().detach()
+                    tau = (tau * tau_scale).clamp(min=self.tau_min, max=self.tau_max)
+            # Structural tau anchor: rescale tau to target range.
+            # TauNet was trained on ARC and produces low tau on text deltas.
+            # Instead of fighting the weights, rescale the output: map
+            # [current_min, current_max] → [target*0.5, target*1.5]
+            # preserving relative per-position differentiation.
+            tau_anchor_target = getattr(self, '_tau_anchor_target', 0.0)
+            if tau_anchor_target > 0:
+                with torch.no_grad():
+                    tau_min_val = tau.min()
+                    tau_max_val = tau.max()
+                    tau_range = tau_max_val - tau_min_val + 1e-8
+                    # Normalize to [0, 1], then rescale to [target*0.3, target*1.5]
+                    tau_norm = (tau - tau_min_val) / tau_range
+                    target_lo = tau_anchor_target * 0.3
+                    target_hi = min(tau_anchor_target * 1.5, self.tau_max)
+                    tau = target_lo + tau_norm * (target_hi - target_lo)
+                tau = tau.clamp(min=self.tau_min, max=self.tau_max)
+
             # 6. LTC: decay toward diffusion target
             dh_dt = -(1.0 / tau) * (h - target)
 
@@ -456,13 +514,13 @@ class ContinuousDynamics(nn.Module):
         dh_dt = dh_dt + self.ffn(self.norm_ff(h)) / self._n_ode_steps
 
         # 8. Adaptive stability damping: restoring force that grows with ||dh/dt||
-        # When dynamics are calm (small dh/dt), damping ≈ 1 (no effect).
-        # When dynamics are turbulent (large dh/dt), damping < 1 (pulls back).
-        # This prevents runaway without limiting normal operation.
         dh_norm = dh_dt.detach().norm(dim=-1, keepdim=True)  # [B, N, 1]
-        stability_threshold = 50.0  # normal dynamics stay well below this
-        damping_factor = stability_threshold / (dh_norm + stability_threshold)  # → 1 when small, → 0 when huge
+        stability_threshold = 50.0
+        damping_factor = stability_threshold / (dh_norm + stability_threshold)
         dh_dt = dh_dt * damping_factor
+
+        # Norm homeostasis applied in solver (euler_solve) after each step,
+        # not here — dynamics-level decay fights stability damping.
 
         # Progressive damping: later ODE steps make smaller updates
         if self._progressive_damping and self._current_step_index_buf > 0:
@@ -572,6 +630,19 @@ class ContinuousDynamics(nn.Module):
             F.gelu(self.tau_net_linear1(h_normed))
         )
         tau = torch.sigmoid(tau_logits) * (self.tau_max - self.tau_min) + self.tau_min
+
+        # Apply same rescaling as forward() for consistent diagnostics
+        tau_anchor_target = getattr(self, '_tau_anchor_target', 0.0)
+        if tau_anchor_target > 0:
+            tau_min_val = tau.min()
+            tau_max_val = tau.max()
+            tau_range = tau_max_val - tau_min_val + 1e-8
+            tau_norm = (tau - tau_min_val) / tau_range
+            target_lo = tau_anchor_target * 0.3
+            target_hi = min(tau_anchor_target * 1.5, self.tau_max)
+            tau = target_lo + tau_norm * (target_hi - target_lo)
+            tau = tau.clamp(min=self.tau_min, max=self.tau_max)
+
         return tau
 
 

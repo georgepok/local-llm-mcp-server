@@ -1,0 +1,44 @@
+# LiquidARC Mind — Direct Nemotron Architecture
+# d_model=2688 matches Nemotron hidden_size
+# ODE state lives in LLM embedding space — no coupling layer
+# Geometry distilled from d=768 teacher via cross-dimension transfer
+
+d_model: 2688
+d_metric: 672              # 25% of d_model (proportional to teacher's 192/768)
+d_metric_bottleneck: 0     # use d_metric directly
+metric_rank: 0             # diagonal only (matching distillation config)
+d_ffn: 5376                # 2x d_model (matching distillation config)
+n_ode_steps: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 0    # TauNet active — no freeze for deployed Mind
+dropout: 0.1
+
+use_torch_compile: false
+
+# Norm homeostasis — soft ODE-level decay prevents h runaway
+# norm_ref: per-position L2 reference (~sqrt(d) for unit-variance embeddings)
+# norm_lambda: restoring force strength (0.1 = gentle, 0.5 = aggressive)
+norm_ref: 55.0               # ~sqrt(2688) ≈ 52, slight headroom
+norm_lambda: 0.3             # per-step shrink rate above norm_ref (0.3 = ~95% reduction in 16 steps)
+
+# CV floor/ceiling
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Conversation-specific
+max_context_events: 64
+content_embed_dim: 384
+n_metadata_features: 8
+n_event_types: 8
+
+# Online learning
+online_lr: 0.00001
+feedback_grad_clip: 0.1
+lambda_eff: 0.001
+
+# MCP server
+port: 8420
+host: "0.0.0.0"

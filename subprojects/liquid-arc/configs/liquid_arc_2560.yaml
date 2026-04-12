@@ -1,0 +1,108 @@
+# LiquidARC d=2560 — Native match for Qwen3-4B (hidden_size=2560)
+#
+# No projection needed. ODE operates in LLM's native space.
+#
+# Scaling from d=768 (phase transition at step ~5500):
+#   d_model:  768 → 2560  (3.33x)
+#   d_metric: 192 → 640   (d/4 ratio)
+#   d_ffn:   1536 → 5120  (2d ratio)
+#   LR:      1.7e-4 → 0.9e-4 (sqrt scaling)
+#
+# Criticality target scales linearly with d:
+#   d=768  → D²/4τ = 18
+#   d=2560 → D²/4τ = 60  (18 × 2560/768)
+#
+# d=2560 exceeds Triton shared memory limit → torch.compile OFF
+#
+# Training on DGX Spark (fgn-train container):
+#   export PYTHONPATH=/workspace/liquid-arc:/workspace/fgn-v3
+#   export TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
+#   python scripts/train.py --config configs/liquid_arc_2560.yaml \
+#       --data_dir /workspace/arc-agi/data --max_steps 6000
+
+# Architecture
+d_model: 2560
+d_metric: 640
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 5120
+max_seq_len: 512
+
+# ODE integration
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 0
+t_diffusion_init: 1.0
+alpha_logit_init: 2.2
+
+# Solver
+use_torch_compile: false
+ode_chunk_size: 4
+invertible_solver: false
+deq_solver: false
+chunk_size: 256
+
+# Training
+base_lr: 0.9e-4
+warmup_steps: 1000
+weight_decay: 0.01
+batch_size: 4
+grad_accum_steps: 2
+dropout: 0.1
+
+# Task & curriculum
+model_type: liquid
+use_procedural: true
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+
+# ARC data mixing
+real_arc_mix_ratio: 0.3
+
+# Loss weights
+transform_weight: 5.0
+copy_weight: 0.05
+curvature_lambda: 0.05
+
+# Sustained criticality
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 60.0     # D²/4τ target (18 × 2560/768)
+criticality_D_sq_target: 0.0
+
+# Tau quality
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 1.0
+tau_log_spread_target: 0.6
+tau_var_lambda: 0.0
+
+# CV homeostasis
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Convergence coupling
+tau_convergence_coupling_enabled: true
+tau_convergence_beta: 1.0
+tau_convergence_floor: 0.5
+
+# Norm homeostasis
+norm_ref: 50.0                     # sqrt(2560) ≈ 50.6
+norm_lambda: 0.1
+
+# TTT (for eval)
+ttt_enabled: true
+ttt_steps: 100
+ttt_lr: 0.001
+ttt_curvature_lambda: 0.01
+ttt_early_stop_threshold: 0.01

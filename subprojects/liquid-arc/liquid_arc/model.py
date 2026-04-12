@@ -370,6 +370,20 @@ class LiquidARCModel(nn.Module):
         if gate_dim_std is not None:
             result["gate_dim_std"] = gate_dim_std
 
+        # Log-space tau spread (multiplicative diversity across positions)
+        if not self.config.channel_gate_enabled and tau_init is not None:
+            log_tau = torch.log(tau_init.squeeze(-1) + 1e-8)
+            result["log_tau_std"] = log_tau.std().item()
+
+        # Convergence residual from dynamics (populated when coupling enabled)
+        # Stored as detached tensors in dynamics to avoid compile breaks; read as scalars here.
+        _conv_mean = getattr(self.dynamics, '_last_convergence_residual_mean', 0.0)
+        _conv_std = getattr(self.dynamics, '_last_convergence_residual_std', 0.0)
+        result["convergence_residual_mean"] = (
+            _conv_mean.item() if isinstance(_conv_mean, torch.Tensor) else float(_conv_mean))
+        result["convergence_residual_std"] = (
+            _conv_std.item() if isinstance(_conv_std, torch.Tensor) else float(_conv_std))
+
         # Geo loss at h_final if geo_use_h0=False
         if (self.geo_loss_module is not None and geo_phase > 0
                 and grid_ids is not None and not self.config.geo_use_h0
@@ -396,15 +410,25 @@ class LiquidARCModel(nn.Module):
 
         # Loss + accuracy
         if target_labels is not None:
+            # Pass g_init and tau_init for criticality losses
+            # tau_init is None when channel_gate_enabled (not supported for criticality)
+            _tau_init = None if self.config.channel_gate_enabled else tau_init
             result.update(self._compute_loss(
                 logits, target_labels, target_mask, target_input_colors,
                 kappa, tau_var_val, metric_cv, device,
+                h_final=h, g_init=g_init, tau_init=_tau_init,
             ))
+
+        # CV·τ product (always logged, no loss)
+        tau_avg_item = tau_avg_val.item() if hasattr(tau_avg_val, 'item') else float(tau_avg_val)
+        cv_item = metric_cv.item() if hasattr(metric_cv, 'item') else float(metric_cv)
+        result["cv_tau_product"] = cv_item * tau_avg_item
 
         return result
 
     def _compute_loss(self, logits, target_labels, target_mask,
-                      target_input_colors, kappa, tau_var, metric_cv, device):
+                      target_input_colors, kappa, tau_var, metric_cv, device,
+                      h_final=None, g_init=None, tau_init=None):
         """Compute curriculum-weighted CE loss, curvature reg, tau variance penalty, and accuracy."""
         B = logits.shape[0]
         preds = logits.argmax(dim=-1)
@@ -461,11 +485,60 @@ class LiquidARCModel(nn.Module):
             excess = torch.clamp(metric_cv - ceiling, min=0.0) if ceiling > 0 else torch.tensor(0.0, device=device)
             cv_floor_loss = self.config.cv_floor_lambda * (deficit ** 2 + excess ** 2)
 
+        # Sustained criticality losses
+        criticality_loss = torch.tensor(0.0, device=device)
+        if (self.config.criticality_loss_enabled
+                and h_final is not None and g_init is not None
+                and tau_init is not None):
+            from .sustained_criticality import compute_criticality_loss
+            _crit_loss, _crit_diag = compute_criticality_loss(
+                h_final, g_init, tau_init, self.dynamics.t_diffusion,
+                target_ratio=self.config.criticality_target_ratio,
+                d_sq_target=self.config.criticality_D_sq_target,
+            )
+            criticality_loss = self.config.criticality_loss_lambda * _crit_loss
+            result["criticality_loss"] = criticality_loss
+            result["crit_ratio"] = _crit_diag["ratio"]
+            result["crit_D_sq_median"] = _crit_diag["D_sq_median"]
+            result["crit_attn_entropy"] = _crit_diag["attn_entropy"]
+            result["crit_entropy_ratio"] = _crit_diag["entropy_ratio"]
+            result["crit_D_sq_anchor"] = _crit_diag["D_sq_anchor"]
+
+        curvature_diversity_loss = torch.tensor(0.0, device=device)
+        if self.config.curvature_diversity_loss_enabled and g_init is not None:
+            from .sustained_criticality import compute_curvature_diversity_loss
+            _curv_div = compute_curvature_diversity_loss(
+                g_init,
+                cv_floor=self.config.curvature_cv_floor,
+                cv_ceiling=self.config.curvature_cv_ceiling,
+            )
+            curvature_diversity_loss = self.config.curvature_diversity_lambda * _curv_div
+            result["curvature_diversity_loss"] = curvature_diversity_loss
+
+        # Tau quality loss (replaces tau_var_loss when tau_quality_loss_enabled=True)
+        tau_quality_loss = torch.tensor(0.0, device=device)
+        if self.config.tau_quality_loss_enabled and tau_init is not None:
+            from .sustained_criticality import compute_tau_quality_loss
+            # Adaptive target: 0 = auto-scale with integration params (T/n_steps * 16)
+            tmt = self.config.tau_mean_target
+            if tmt <= 0:
+                T = getattr(self.config, 'integration_time', 2.0)
+                tmt = T / self.config.n_ode_steps * 16
+            tau_q_loss = self.config.tau_quality_lambda * compute_tau_quality_loss(
+                tau_init,
+                mean_target=tmt,
+                log_spread_target=self.config.tau_log_spread_target,
+            )
+            tau_quality_loss = tau_q_loss
+            result["tau_quality_loss"] = tau_quality_loss
+
         result["ce_loss"] = ce_loss
         result["curv_loss"] = curv_loss
         result["tau_var_loss"] = tau_var_loss
         result["cv_floor_loss"] = cv_floor_loss
-        result["loss"] = ce_loss + curv_loss + tau_var_loss + cv_floor_loss
+        result["loss"] = (ce_loss + curv_loss + tau_var_loss + cv_floor_loss
+                          + criticality_loss + curvature_diversity_loss
+                          + tau_quality_loss)
 
         # Accuracy
         flat_preds = preds.reshape(-1)

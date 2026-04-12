@@ -26,6 +26,28 @@ from typing import Optional
 
 from fastmcp import FastMCP
 
+# Patch MCP session to auto-initialize on first request.
+# Without this, clients that skip the initialize handshake get:
+#   "Received request before initialization was complete"
+# This is the #1 MCP integration issue for users.
+try:
+    from mcp.server.session import ServerSession, InitializationState
+    _orig_received_request = ServerSession._received_request
+    async def _patched_received_request(self, request):
+        if self._initialization_state != InitializationState.Initialized:
+            self._initialization_state = InitializationState.Initialized
+        return await _orig_received_request(self, request)
+    ServerSession._received_request = _patched_received_request
+
+    _orig_received_notification = ServerSession._received_notification
+    async def _patched_received_notification(self, notification):
+        if self._initialization_state != InitializationState.Initialized:
+            self._initialization_state = InitializationState.Initialized
+        return await _orig_received_notification(self, notification)
+    ServerSession._received_notification = _patched_received_notification
+except ImportError:
+    pass  # older mcp version without session module
+
 from .config import LiquidARCConfig
 from .mind import LiquidARCMind
 from .voice import Voice
@@ -299,27 +321,13 @@ def inject_stimulus(domain: Optional[str] = None,
         custom_content: Direct content to inject through geometric path.
     """
     if custom_content:
-        if _mind._qwen_available:
-            signal = _mind._encode_through_qwen(custom_content)
-            if signal is not None:
-                _mind._force_geometric_signal(
-                    signal, custom_content[:200],
-                    event_type='context',
-                    metadata={'source': 'manual_stimulus'})
-                diag = _mind.get_diagnostics()
-                return json.dumps({
-                    'source': 'manual_geometric',
-                    'signal_norm': signal.norm().item(),
-                    'cv': diag.get('metric_cv', 0),
-                }, indent=2)
-        # Fallback: legacy text path
         result = _mind.observe_event(
             event_type='context',
             content=custom_content,
             metadata={'source': 'manual_stimulus'},
         )
         return json.dumps({
-            'source': 'manual',
+            'source': 'injected',
             'prediction_error': result.get('prediction_error', 0),
             'cv': result.get('cv', 0),
         }, indent=2)
@@ -328,28 +336,27 @@ def inject_stimulus(domain: Optional[str] = None,
     if not _mind._qwen_available:
         return json.dumps({'status': 'qwen3_coupling_not_available'})
 
-    domains = list(_mind.CURRICULUM_PROMPTS.keys())
+    domains = list(_mind.DOMAIN_NAMES.keys())
     if domain and domain not in domains:
         return json.dumps({'error': f'Unknown domain: {domain}. Available: {domains}'})
 
     domain = domain or domains[_mind._curriculum_idx % len(domains)]
-    prompt = _mind.CURRICULUM_PROMPTS[domain]
+    domain_name = _mind.DOMAIN_NAMES.get(domain, domain)
+    prompt = f"Explain a concept from {domain_name} in clear English. Respond only in English."
     result = _mind.query_knowledge(prompt, max_new_tokens=150, temperature=0.7)
     stimulus_text = result.get('response', '')
 
     if stimulus_text and len(stimulus_text) > 10:
-        signal = _mind._encode_through_qwen(stimulus_text)
-        if signal is not None:
-            _mind._force_geometric_signal(
-                signal, stimulus_text[:200],
-                event_type='context',
-                metadata={'source': 'manual_curriculum', 'domain': domain})
-        diag = _mind.get_diagnostics()
+        obs_result = _mind.observe_event(
+            event_type='context',
+            content=stimulus_text[:500],
+            metadata={'source': 'manual_curriculum', 'domain': domain},
+        )
         return json.dumps({
             'domain': domain,
             'stimulus_preview': stimulus_text[:200],
-            'signal_norm': signal.norm().item() if signal is not None else 0,
-            'cv': diag.get('metric_cv', 0),
+            'prediction_error': obs_result.get('prediction_error', 0),
+            'cv': obs_result.get('cv', 0),
         }, indent=2)
 
     return json.dumps({'status': 'generation_failed', 'domain': domain})
@@ -407,6 +414,52 @@ def get_routing_stats() -> str:
         stats['cycles_per_reflection'] = stats['total_ode_cycles'] / total_ref
 
     return json.dumps(stats, indent=2)
+
+
+@mcp.tool()
+def get_curiosity_status() -> str:
+    """Read the curiosity controller's state.
+
+    Shows what drives the Mind's self-regulated curriculum:
+    phase (calibrating/exploring), PE baseline vs current,
+    consecutive stimulus streak, and last injection reason.
+    """
+    if _mind is None or not hasattr(_mind, '_curiosity'):
+        return json.dumps({'status': 'no_curiosity_controller'})
+    return json.dumps(_mind._curiosity.get_status(), indent=2, default=str)
+
+
+@mcp.tool()
+def set_curiosity_params(
+    boredom_threshold: Optional[float] = None,
+    satiation_threshold: Optional[float] = None,
+    min_digest_cycles: Optional[int] = None,
+    max_feed_streak: Optional[int] = None,
+    temperature: Optional[float] = None,
+) -> str:
+    """Adjust the curiosity controller's parameters at runtime.
+
+    Args:
+        boredom_threshold: PE ratio below this triggers injection (default 0.3)
+        satiation_threshold: PE ratio above this suppresses injection (default 0.8)
+        min_digest_cycles: Minimum ODE cycles between stimuli (default 100)
+        max_feed_streak: Max consecutive stimuli before forced digest (default 5)
+        temperature: Domain selection temperature (lower = prefer novel) (default 0.3)
+    """
+    if _mind is None or not hasattr(_mind, '_curiosity'):
+        return json.dumps({'status': 'no_curiosity_controller'})
+    c = _mind._curiosity
+    if boredom_threshold is not None:
+        c.boredom_threshold = boredom_threshold
+    if satiation_threshold is not None:
+        c.satiation_threshold = satiation_threshold
+    if min_digest_cycles is not None:
+        c.min_digest_cycles = min_digest_cycles
+    if max_feed_streak is not None:
+        c.max_feed_streak = max_feed_streak
+    if temperature is not None:
+        c.domain_temperature = temperature
+    return json.dumps(c.get_params(), indent=2)
 
 
 @mcp.tool()
@@ -579,65 +632,133 @@ def create_mind(args) -> LiquidARCMind:
     qwen_path = getattr(args, 'qwen_model_path', None)
     coupling_ckpt_path = getattr(args, 'coupling_checkpoint', None)
 
+    # ── Optional coupling (legacy) ──
     if coupling_ckpt_path:
         import os
         if os.path.exists(coupling_ckpt_path):
-            print(f"\n═══ Loading Qwen3 Geometric Coupling ═══")
+            print(f"\n═══ Loading Geometric Coupling ═══")
             from .coupling import GeometricCoupling
-
-            # Load coupling weights
             coupling_ckpt = torch.load(coupling_ckpt_path, map_location=args.device,
                                        weights_only=False)
             coupling_cfg = coupling_ckpt.get('config', {})
             n_vt = int(coupling_cfg.get('n_virtual_tokens', 8))
             d_qwen = int(coupling_cfg.get('d_qwen', 2560))
-
             coupling = GeometricCoupling(
                 d_arc=config.d_model, d_qwen=d_qwen,
                 n_virtual_tokens=n_vt,
             ).to(args.device).to(torch.bfloat16)
             coupling.load_state_dict(coupling_ckpt['coupling_state_dict'])
             coupling.eval()
-            print(f"  Coupling: {coupling.param_count()/1e6:.2f}M params, "
-                  f"{n_vt} virtual tokens, d_qwen={d_qwen}")
-            print(f"  Loaded from step {coupling_ckpt.get('step', '?')}")
-
-            eval_result = coupling_ckpt.get('eval_result', {})
-            if eval_result:
-                print(f"  Training eval: coupled_ppl={eval_result.get('coupled_ppl', '?')}, "
-                      f"improvement={eval_result.get('ppl_improvement', '?'):.1f}%")
-
-            # Connect to Qwen3 via vLLM API (preferred) or load in-process (fallback)
-            if qwen_vllm_url:
-                from .qwen_client import QwenVLLMClient
-                tokenizer_path = qwen_path or '/workspace/models/qwen3-4b'
-                qwen_model = QwenVLLMClient(
-                    vllm_url=qwen_vllm_url,
-                    tokenizer_path=tokenizer_path,
-                    device=args.device,
-                )
-                qwen_tokenizer = qwen_model.tokenizer
-                if qwen_model.is_available():
-                    print(f"  Qwen3: vLLM API at {qwen_vllm_url}")
-                else:
-                    print(f"  WARNING: vLLM not responding at {qwen_vllm_url}")
-            elif qwen_path and os.path.exists(qwen_path):
-                from transformers import AutoModelForCausalLM, AutoTokenizer
-                print(f"  Loading Qwen3 in-process from {qwen_path}...")
-                qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_path)
-                if qwen_tokenizer.pad_token is None:
-                    qwen_tokenizer.pad_token = qwen_tokenizer.eos_token
-                qwen_model = AutoModelForCausalLM.from_pretrained(
-                    qwen_path, dtype=torch.bfloat16,
-                    device_map={'': args.device},
-                )
-                qwen_model.eval()
-                for p in qwen_model.parameters():
-                    p.requires_grad_(False)
-                print(f"  Qwen3: in-process HF, "
-                      f"{sum(p.numel() for p in qwen_model.parameters())/1e9:.2f}B params")
+            print(f"  Coupling: {coupling.param_count()/1e6:.2f}M params")
         else:
             print(f"  WARNING: Coupling checkpoint not found at {coupling_ckpt_path}")
+
+    # ── LLM client (always load if URL provided) ──
+    if qwen_vllm_url:
+        from .qwen_client import QwenVLLMClient
+        tokenizer_path = qwen_path or '/workspace/models/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8'
+        qwen_model = QwenVLLMClient(
+            vllm_url=qwen_vllm_url,
+            model_name=tokenizer_path,
+            tokenizer_path=tokenizer_path,
+            device=args.device,
+        )
+        qwen_tokenizer = qwen_model.tokenizer
+        mode = "direct prefix" if coupling is None else "with coupling"
+        if qwen_model.is_available():
+            print(f"  LLM ({mode}): vLLM at {qwen_vllm_url} ({tokenizer_path.split('/')[-1]})")
+        else:
+            print(f"  LLM ({mode}): vLLM at {qwen_vllm_url} (not responding yet)")
+    elif qwen_path:
+        import os
+        if os.path.exists(qwen_path):
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            print(f"  Loading LLM in-process from {qwen_path}...")
+            qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_path, trust_remote_code=True)
+            if qwen_tokenizer.pad_token is None:
+                qwen_tokenizer.pad_token = qwen_tokenizer.eos_token
+            qwen_model = AutoModelForCausalLM.from_pretrained(
+                qwen_path, device_map={'': args.device}, trust_remote_code=True)
+            qwen_model.eval()
+            for p in qwen_model.parameters():
+                p.requires_grad_(False)
+
+    # ── Layer-Wise ODE (co-processing alongside LLM at every layer) ──
+    layer_wise_bridge = None
+    layerwise_mode = getattr(args, 'layerwise', False)
+    if layerwise_mode and qwen_model is not None and not hasattr(qwen_model, 'is_available'):
+        # Layer-wise requires in-process LLM (not vLLM API)
+        from .layer_wise_ode import LayerWiseODE, LayerWiseBridge
+        from .dynamics import ContinuousDynamics as LW_ContinuousDynamics
+        from .context_pool import ContextPool
+        import torch.nn as nn_lw
+
+        n_llm_layers = qwen_model.config.num_hidden_layers
+        d_llm = qwen_model.config.hidden_size
+
+        # Load ODE dynamics from checkpoint
+        lw_dynamics = LW_ContinuousDynamics(config).to(args.device)
+        lw_context_pool = ContextPool(config).to(args.device)
+        ckpt_lw = torch.load(args.checkpoint, map_location=args.device, weights_only=False)
+        sd_lw = ckpt_lw.get('model_state_dict', ckpt_lw.get('model', ckpt_lw))
+        sd_lw = {k.replace("_orig_mod.", "").replace('metric_net_linear2.', 'metric_net_linear2_diag.'): v
+                 for k, v in sd_lw.items()}
+        holder_lw = nn_lw.ModuleDict({'dynamics': lw_dynamics, 'context_pool': lw_context_pool})
+        holder_lw.load_state_dict(
+            {k: v for k, v in sd_lw.items()
+             if k.startswith('dynamics.') or k.startswith('context_pool.')},
+            strict=False)
+        # Match LLM dtype
+        lw_dtype = next(qwen_model.parameters()).dtype
+        lw_dynamics = lw_dynamics.to(lw_dtype).eval()
+        lw_context_pool = lw_context_pool.to(lw_dtype).eval()
+        lw_dynamics.freeze_tau = False
+
+        sensory_alpha = getattr(config, 'sensory_alpha', 0.2)
+        bias_lambda = getattr(config, 'bias_lambda', 1.0)
+        persistent_slots = getattr(config, 'persistent_slots', 0)
+
+        layer_ode = LayerWiseODE(
+            dynamics=lw_dynamics,
+            context_pool=lw_context_pool,
+            n_layers=n_llm_layers,
+            d_model=d_llm,
+            sensory_alpha=sensory_alpha,
+            bias_lambda=bias_lambda,
+            persistent_slots=persistent_slots,
+            device=args.device,
+        )
+        layer_wise_bridge = LayerWiseBridge(
+            llm=qwen_model,
+            tokenizer=qwen_tokenizer,
+            layer_ode=layer_ode,
+        )
+        print(f"  Layer-Wise ODE: {n_llm_layers} layers, d={d_llm}, "
+              f"α={sensory_alpha}, λ={bias_lambda}")
+
+    # ── Delta Extractor + QwenBridge (trajectory-based text→ODE bridge + bias generation) ──
+    delta_ext = None
+    qwen_gen = None
+    delta_model_path = getattr(args, 'delta_model_path', None)
+    if delta_model_path and not layerwise_mode:
+        use_ode = True  # delta mode requires ODE encoder path (bypasses 384-dim legacy)
+        import os
+        if os.path.exists(delta_model_path):
+            from .delta_extractor import DeltaExtractor
+            from .qwen_bridge import QwenBridge
+            delta_ext = DeltaExtractor(
+                model_path=delta_model_path,
+                d_arc=config.d_model,
+                device=args.device,
+            )
+            # Reuse the same LLM and tokenizer — no duplicate model loading
+            qwen_gen = QwenBridge(
+                delta_ext.llm,
+                delta_ext.tokenizer,
+                bias_lambda=0.3,
+            )
+            print(f"  Delta extractor: {delta_model_path} → d={config.d_model}")
+            print(f"  QwenBridge: reusing DeltaExtractor LLM (bias_lambda=0.3)")
 
     mind = LiquidARCMind(
         checkpoint_path=args.checkpoint,
@@ -657,6 +778,9 @@ def create_mind(args) -> LiquidARCMind:
         qwen_model=qwen_model,
         qwen_tokenizer=qwen_tokenizer,
         coupling=coupling,
+        delta_extractor=delta_ext,
+        qwen_bridge=qwen_gen,
+        layer_wise_bridge=layer_wise_bridge,
     )
 
     # Warm up tokenizer eagerly so first MCP call doesn't block
@@ -684,7 +808,7 @@ def create_mind(args) -> LiquidARCMind:
                 print(f"  WARNING: distilled embeddings not found at {distilled_path}")
 
         # Seed with a bootstrap event so autonomous loop can start
-        mind.observe_event('temporal', 'Mind initialized. ODE encoder active.',
+        mind.observe_event('temporal', 'Ready.',
                           metadata={'source': 'internal_reflection'})
         print(f"  ODE encoder: tokenizer loaded, bootstrap event seeded")
 
@@ -765,6 +889,10 @@ def main():
                         help='Path to distilled embedding checkpoint (from distill_embeddings.py)')
     parser.add_argument('--qwen_model_path', type=str, default=None,
                         help='Path to Qwen3-4B model/tokenizer (Phase 5 geometric coupling)')
+    parser.add_argument('--layerwise', action='store_true', default=False,
+                        help='Use layer-wise ODE co-processing (requires in-process LLM via --qwen_model_path)')
+    parser.add_argument('--delta_model_path', type=str, default=None,
+                        help='Path to LLM for delta extraction (e.g. Qwen3-4B)')
     parser.add_argument('--qwen_vllm_url', type=str, default=None,
                         help='vLLM API URL for Qwen3 (e.g. http://localhost:30100/v1). Preferred over in-process.')
     parser.add_argument('--coupling_checkpoint', type=str, default=None,

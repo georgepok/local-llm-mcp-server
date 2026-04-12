@@ -17,6 +17,7 @@ class LiquidARCConfig:
     n_ode_steps: int = 16    # Euler steps (weight-tied) — also used as eval default
     ode_steps_min: int = 12  # temporal invariance: sample from [min, max] during training
     ode_steps_max: int = 20
+    integration_time: float = 2.0  # ODE integration interval T (dt = T / n_ode_steps)
     tau_min: float = 0.5     # minimum time constant — prevents hyper-viscous collapse
     tau_max: float = 1.0     # hard ceiling via sigmoid — prevents ODE freeze escape
     t_diffusion_init: float = 1.0
@@ -127,6 +128,36 @@ class LiquidARCConfig:
     oracle_distill_ramp_end: int = 5000      # step when distill reaches full weight
     oracle_similarity_path: str = ""         # path to precomputed similarity matrices
 
+    # Norm homeostasis: soft ODE-level decay prevents h runaway in deployment
+    norm_ref: float = 50.0    # per-position L2 reference scale (~sqrt(d))
+    norm_lambda: float = 0.1  # restoring force strength above norm_ref
+
+    # Sustained criticality (self-organized phase transition)
+    criticality_loss_enabled: bool = False
+    criticality_loss_lambda: float = 0.01
+    criticality_target_ratio: float = 18.0  # D²/4τ target
+    criticality_D_sq_target: float = 60.0   # D² median anchor target
+
+    curvature_diversity_loss_enabled: bool = False
+    curvature_diversity_lambda: float = 0.01
+    curvature_cv_floor: float = 2.0
+    curvature_cv_ceiling: float = 10.0
+
+    tau_cv_coupling_enabled: bool = False
+    cv_coupling_target: float = 3.5    # target local CV (near critical)
+    cv_coupling_strength: float = 0.5  # coupling strength alpha
+
+    # Tau quality (REPLACES tau_var_loss)
+    tau_quality_loss_enabled: bool = False
+    tau_quality_lambda: float = 0.05
+    tau_mean_target: float = 0.0  # 0 = auto: T / n_ode_steps * 16 (scales with integration params)
+    tau_log_spread_target: float = 0.6
+
+    # Tau-convergence coupling (structural, not loss)
+    tau_convergence_coupling_enabled: bool = False
+    tau_convergence_beta: float = 1.0
+    tau_convergence_floor: float = 0.5  # min modulation factor (0.5 = halve tau, 0.3 = aggressive)
+
     # Progressive damping: later ODE steps make smaller updates
     progressive_damping: bool = False
     damping_strength: float = 0.5  # 0.0 = no damping, 1.0 = last step is zero
@@ -153,6 +184,11 @@ class LiquidARCConfig:
     structural_tau_enabled: bool = False
     structural_tau_min: float = 0.3
     structural_tau_max: float = 3.0
+
+    # Layer-wise ODE co-processing
+    sensory_alpha: float = 0.2     # coupling: residual → ODE per layer step
+    bias_lambda: float = 1.0       # attention bias scaling
+    persistent_slots: int = 0      # persistent state positions across turns
 
     # Training config (v2 — used when present in YAML, ignored otherwise)
     base_lr: float = 3e-4

@@ -1,0 +1,59 @@
+# LiquidARC Mind — Layer-Wise ODE Co-Processing
+# ODE runs as parallel processor alongside Qwen3-4B (36 layers)
+# One Euler step per LLM layer — ODE and LLM co-evolve through depth
+#
+# Architecture:
+#   Layer 0:  h₀ → ODE step 0/36 → B₀ (syntactic bias)
+#   Layer 12: h₁₂ → ODE step 12/36 → B₁₂ (semantic bias)
+#   Layer 35: h₃₅ → ODE step 35/36 → B₃₅ (structural bias)
+#
+# No delta extraction, no token buffer — the LLM IS the input source.
+# d=2048 matches Qwen3-4B hidden_size natively.
+
+d_model: 2560
+d_metric: 640
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 5120
+
+# ODE steps = LLM layers (36 for Qwen3-4B)
+# ContinuousDynamics was trained with n_ode_steps=16.
+# Layer-wise uses 36 steps, dt=1/36. Step embeddings interpolate.
+n_ode_steps: 36
+integration_time: 1.0     # dt = 1/36 per layer ≈ 0.028
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 0
+dropout: 0.0              # inference only
+
+# Layer-wise specific
+sensory_alpha: 0.2        # coupling: how much residual enters ODE per step
+bias_lambda: 1.0          # bias scaling (normalized internally)
+persistent_slots: 0       # Phase 1: no persistent state across turns
+
+use_torch_compile: false
+
+# Sustained criticality — Phase 1: observe only, no loss
+criticality_loss_enabled: false
+criticality_loss_lambda: 0.0
+criticality_target_ratio: 60.0   # D²/4τ target (18 × 2560/768)
+
+tau_quality_loss_enabled: false
+
+# CV homeostasis — Phase 1: observe, don't control
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.0
+
+# Norm homeostasis
+norm_ref: 50.0            # sqrt(2560) ≈ 50.6
+norm_lambda: 0.1
+
+# MCP server
+port: 8420
+host: "0.0.0.0"
+max_context_events: 64
+content_embed_dim: 384
+n_metadata_features: 8
+n_event_types: 8
+online_lr: 0.0            # Phase 1: no online learning

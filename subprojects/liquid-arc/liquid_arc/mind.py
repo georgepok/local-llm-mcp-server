@@ -223,6 +223,221 @@ class ReflectionTrigger:
                     0.3, self.trigger_sensitivity[trigger_type] * 0.9)
 
 
+class CuriosityController:
+    """Intrinsic motivation: reads PE trajectory and drives curriculum selection.
+
+    Replaces fixed-interval feed/digest with self-regulated exploration:
+    - Boredom (low stable PE) → inject from most-novel domain
+    - Satiation (high PE) → digest, let ODE consolidate
+    - Reflection stagnation → break fixation with novel domain injection
+    """
+
+    def __init__(self,
+                 pe_history_size=50,
+                 boredom_threshold=0.3,
+                 satiation_threshold=0.8,
+                 min_digest_cycles=100,
+                 max_feed_streak=5,
+                 domain_temperature=0.3):
+        import collections
+        self.pe_history = collections.deque(maxlen=pe_history_size)
+        self.pe_baseline = None
+        self.boredom_threshold = boredom_threshold
+        self.satiation_threshold = satiation_threshold
+        self.min_digest_cycles = min_digest_cycles
+        self.max_feed_streak = max_feed_streak
+        self.domain_temperature = domain_temperature
+
+        self.cycles_since_stimulus = 0
+        self.consecutive_stimuli = 0
+        self.current_phase = 'calibrating'
+        self.calibration_count = 0
+        self.total_injections = 0
+        self.last_reason = ''
+
+    def select_domain(self, curriculum_stats):
+        """Choose domain where the Mind has most to learn (highest PE)."""
+        import math
+        import random
+        domain_pe = curriculum_stats.get('domain_avg_pe', {})
+        if not domain_pe:
+            domains = curriculum_stats.get('domains', [])
+            return random.choice(domains) if domains else None
+
+        domains = list(domain_pe.keys())
+        pes = [domain_pe[d] for d in domains]
+        max_pe, min_pe = max(pes), min(pes)
+        if max_pe == min_pe:
+            return random.choice(domains)
+
+        weights = [(pe - min_pe) / (max_pe - min_pe) for pe in pes]
+        exp_weights = [math.exp(w / self.domain_temperature) for w in weights]
+        total = sum(exp_weights)
+        probs = [w / total for w in exp_weights]
+        return random.choices(domains, weights=probs, k=1)[0]
+
+    def detect_reflection_stagnation(self, recent_reflections, n=5):
+        """Check if recent reflections repeat the same content."""
+        from collections import Counter
+        if len(recent_reflections) < n:
+            return False, None
+
+        texts = [r.get('text', '') for r in recent_reflections[-n:]]
+        phrases = Counter()
+        for text in texts:
+            words = text.split()
+            for i in range(len(words) - 1):
+                if words[i][0:1].isupper() and words[i + 1][0:1].isupper():
+                    phrase = f"{words[i]} {words[i + 1]}"
+                    phrases[phrase] += 1
+
+        if not phrases:
+            return False, None
+
+        most_common, count = phrases.most_common(1)[0]
+        if count >= n * 0.6:
+            return True, most_common
+        return False, None
+
+    def should_inject(self, current_pe, curriculum_stats,
+                      recent_reflections=None):
+        """Main decision: should the Mind receive a stimulus now?
+
+        Returns: (should_inject: bool, domain: str|None, reason: str)
+        """
+        self.cycles_since_stimulus += 1
+        self.pe_history.append(current_pe)
+
+        # Phase: CALIBRATING — inject at fixed interval to build PE baseline
+        if self.current_phase == 'calibrating':
+            self.calibration_count += 1
+            non_zero = [p for p in self.pe_history if p > 0]
+            if len(non_zero) >= 10:
+                self.pe_baseline = sum(non_zero) / len(non_zero)
+                self.current_phase = 'exploring'
+                self.consecutive_stimuli = 0
+                print(f"  [curiosity] Calibrated: PE baseline={self.pe_baseline:.0f}")
+                return False, None, 'calibrated'
+            # Inject every 50 cycles during calibration to gather PE data
+            if self.cycles_since_stimulus >= 50:
+                import random
+                domains = curriculum_stats.get('domains', [])
+                domain = random.choice(domains) if domains else None
+                self._record_injection('calibrating')
+                return True, domain, 'calibrating'
+            return False, None, 'calibrating'
+
+        # Minimum digest time
+        if self.cycles_since_stimulus < self.min_digest_cycles:
+            return False, None, 'digesting'
+
+        # Forced digest after streak
+        if self.consecutive_stimuli >= self.max_feed_streak:
+            if self.cycles_since_stimulus < self.min_digest_cycles * 3:
+                return False, None, 'forced_digest'
+            else:
+                self.consecutive_stimuli = 0
+
+        # Reflection stagnation override
+        if recent_reflections:
+            stagnant, stuck_topic = self.detect_reflection_stagnation(recent_reflections)
+            if stagnant:
+                domain = self.select_domain(curriculum_stats)
+                self._record_injection(f'breaking_fixation_on_{stuck_topic}')
+                return True, domain, self.last_reason
+
+        # Need enough PE history
+        if len(self.pe_history) < 10:
+            return False, None, 'insufficient_history'
+
+        recent_pe = list(self.pe_history)[-10:]
+        pe_mean = sum(recent_pe) / len(recent_pe)
+        pe_std = (sum((p - pe_mean) ** 2 for p in recent_pe) / len(recent_pe)) ** 0.5
+
+        pe_relative = pe_mean / max(self.pe_baseline, 100.0)
+        pe_cv = pe_std / max(pe_mean, 1.0)
+
+        # Boredom: PE is low AND stable → inject immediately
+        if pe_relative < self.boredom_threshold and pe_cv < 0.3:
+            domain = self.select_domain(curriculum_stats)
+            self._record_injection('bored')
+            return True, domain, self.last_reason
+
+        # Satiation: PE still high → wait longer (but not forever)
+        if pe_relative > self.satiation_threshold:
+            # Even when satiated, inject at reduced rate (3× minimum) to keep PE fresh
+            if self.cycles_since_stimulus >= self.min_digest_cycles * 3:
+                domain = self.select_domain(curriculum_stats)
+                self._record_injection('satiated_refresh')
+                return True, domain, self.last_reason
+            return False, None, 'satiated'
+
+        # Moderate: allow injection at standard rate (2× minimum)
+        if self.cycles_since_stimulus >= self.min_digest_cycles * 2:
+            domain = self.select_domain(curriculum_stats)
+            self._record_injection('moderate_curiosity')
+            return True, domain, self.last_reason
+
+        return False, None, 'waiting'
+
+    def _record_injection(self, reason):
+        self.cycles_since_stimulus = 0
+        self.consecutive_stimuli += 1
+        self.total_injections += 1
+        self.last_reason = reason
+
+    def get_status(self):
+        recent_pe = list(self.pe_history)[-10:] if len(self.pe_history) >= 10 else list(self.pe_history)
+        pe_mean = sum(recent_pe) / len(recent_pe) if recent_pe else 0
+        pe_std = (sum((p - pe_mean) ** 2 for p in recent_pe) / len(recent_pe)) ** 0.5 if recent_pe else 0
+        return {
+            'phase': self.current_phase,
+            'pe_mean': round(pe_mean, 1),
+            'pe_std': round(pe_std, 1),
+            'pe_baseline': round(self.pe_baseline, 1) if self.pe_baseline else None,
+            'cycles_since_stimulus': self.cycles_since_stimulus,
+            'consecutive_stimuli': self.consecutive_stimuli,
+            'max_feed_streak': self.max_feed_streak,
+            'total_injections': self.total_injections,
+            'last_reason': self.last_reason,
+            'boredom_threshold': self.boredom_threshold,
+            'satiation_threshold': self.satiation_threshold,
+        }
+
+    def get_params(self):
+        return {
+            'boredom_threshold': self.boredom_threshold,
+            'satiation_threshold': self.satiation_threshold,
+            'min_digest_cycles': self.min_digest_cycles,
+            'max_feed_streak': self.max_feed_streak,
+            'domain_temperature': self.domain_temperature,
+        }
+
+
+class ReflectionLimiter:
+    """Rate-limit reflections to prevent buffer crowding.
+
+    Ensures curriculum content dominates the event buffer (~67%)
+    instead of being crowded out by reflections (~33%).
+    """
+
+    def __init__(self, max_ratio=0.33):
+        self.max_ratio = max_ratio
+        self.curriculum_count = 0
+        self.reflection_count = 0
+
+    def on_curriculum(self):
+        self.curriculum_count += 1
+
+    def can_reflect(self):
+        if self.curriculum_count == 0:
+            return self.reflection_count < 1
+        return (self.reflection_count / max(1, self.curriculum_count)) < self.max_ratio
+
+    def on_reflection(self):
+        self.reflection_count += 1
+
+
 class LiquidARCMind:
     """Persistent conversational mind.
 
@@ -239,7 +454,7 @@ class LiquidARCMind:
         device: str = 'cuda',
         max_context_events: int = 64,
         lambda_eff: float = 0.001,
-        freeze_dynamics: bool = True,
+        freeze_dynamics: bool = False,  # unfrozen by default — self-adapting system
         online_lr: float = 1e-5,
         enable_online_learning: bool = True,
         use_ode_encoder: bool = False,
@@ -250,11 +465,17 @@ class LiquidARCMind:
         qwen_model: Any = None,
         qwen_tokenizer: Any = None,
         coupling: Any = None,
+        delta_extractor: Any = None,
+        qwen_bridge: Any = None,
+        layer_wise_bridge: Any = None,
     ):
         self.device = device
         self.text_embedder = text_embedder  # legacy sentence-transformer (None if ODE encoder)
         self.max_events = max_context_events
         self.lambda_eff = lambda_eff
+        self._delta_extractor = delta_extractor  # DeltaExtractor for LLM trajectory deltas
+        self._qwen_bridge = qwen_bridge  # QwenBridge for bias-injected generation
+        self._layer_wise_bridge = layer_wise_bridge  # LayerWiseBridge for co-processing
 
         # Two-phase ODE encoding
         self.use_ode_encoder = use_ode_encoder
@@ -280,6 +501,22 @@ class LiquidARCMind:
         holder.load_state_dict(dynamics_keys, strict=False)
         print(f"Loaded {len(dynamics_keys)} dynamics/context_pool parameters")
 
+        # Unfreeze tau if past tau_freeze_steps (dynamics inits with freeze_tau=True)
+        if getattr(config, 'tau_freeze_steps', 5000) == 0:
+            self.dynamics.freeze_tau = False
+            print(f"  TauNet: unfrozen (tau_freeze_steps=0)")
+
+        # Set structural tau anchor for deployment (prevents tau collapse)
+        tau_target = getattr(config, 'tau_mean_target', 0.0)
+        if tau_target <= 0:
+            T = getattr(config, 'integration_time', 2.0)
+            tau_target = T / config.n_ode_steps * 16
+        self.dynamics._tau_anchor_target = tau_target
+
+        # Tau rescaling handled in dynamics forward — maps TauNet output to [target*0.3, target*1.5]
+        print(f"  Tau anchor: target={tau_target:.2f} "
+              f"(rescale: [{tau_target*0.3:.1f}, {min(tau_target*1.5, config.tau_max):.1f}])")
+
         if freeze_dynamics:
             for param in self.dynamics.parameters():
                 param.requires_grad = False
@@ -290,15 +527,30 @@ class LiquidARCMind:
         self.use_trained_text_embed = use_trained_text_embed
         self._text_embed = None
         self._text_tokenizer = None
+        # Determine direct prefix mode early (needed for TextEmbedding tokenizer choice)
+        _is_direct = (coupling is None and qwen_model is not None)
         if use_trained_text_embed and use_ode_encoder:
             try:
                 from .tasks.text_task import TextEmbedding
                 from transformers import AutoTokenizer
-                self._text_tokenizer = AutoTokenizer.from_pretrained("gpt2")
+                # Use LLM tokenizer if direct prefix, otherwise GPT-2
+                if _is_direct and qwen_tokenizer is not None:
+                    self._text_tokenizer = qwen_tokenizer
+                    te_vocab = len(qwen_tokenizer)
+                    print(f"  TextEmbedding: using LLM tokenizer (vocab={te_vocab})")
+                else:
+                    self._text_tokenizer = AutoTokenizer.from_pretrained("gpt2")
+                    te_vocab = self._text_tokenizer.vocab_size
+                # Detect max_seq_len from checkpoint if available
+                te_max_seq = 2048
+                if isinstance(ckpt, dict) and 'text_embed_state' in ckpt:
+                    pos_shape = ckpt['text_embed_state'].get('pos_embed.weight')
+                    if pos_shape is not None:
+                        te_max_seq = pos_shape.shape[0]
                 self._text_embed = TextEmbedding(
-                    vocab_size=self._text_tokenizer.vocab_size,
+                    vocab_size=te_vocab,
                     d_model=d,
-                    max_seq_len=2048,
+                    max_seq_len=te_max_seq,
                 ).to(device)
                 # Load trained TextEmbedding weights
                 # First check main checkpoint, then look for separate file alongside it
@@ -418,18 +670,26 @@ class LiquidARCMind:
             lr_emergency_factor=0.1,
         ) if self.optimizer is not None else None
 
-        # ──── QWEN3 GEOMETRIC COUPLING ────
-        # Phase 5: LiquidARC provides persistent state, Qwen3 provides knowledge
-        # qwen_model can be either in-process HF model or QwenVLLMClient
+        # ──── LLM INTERFACE ────
+        # Direct architecture: ODE state lives in LLM's embedding space (d=2688)
+        # h(t) [N, d] → N prefix tokens, no coupling projection needed
+        # Inbound: LLM embed_tokens → ODE forcing in same space
         self._qwen_model = qwen_model
         self._qwen_tokenizer = qwen_tokenizer
-        self._coupling = coupling
-        self._qwen_available = (qwen_model is not None and coupling is not None)
-        # Detect if using vLLM client vs in-process model
+        self._coupling = coupling  # legacy, may be None for direct architecture
+        self._qwen_available = qwen_model is not None or layer_wise_bridge is not None
         self._qwen_is_vllm = hasattr(qwen_model, 'generate') and hasattr(qwen_model, 'is_available')
-        if self._qwen_available:
+        self._direct_prefix = (coupling is None and (qwen_model is not None or delta_extractor is not None))
+        self._layerwise_mode = layer_wise_bridge is not None
+        if self._layerwise_mode:
+            print(f"  LLM layer-wise ODE: co-processing at every layer "
+                  f"(no delta extraction, no token buffer)")
+        elif self._direct_prefix:
+            print(f"  LLM direct prefix: ODE state [{max_context_events}, {d}] "
+                  f"→ {max_context_events} prefix tokens (no coupling)")
+        elif self._qwen_available:
             mode = "vLLM API" if self._qwen_is_vllm else "in-process HF"
-            print(f"  Qwen3 coupling active ({mode}): {coupling.n_virtual_tokens} virtual tokens, "
+            print(f"  LLM coupling active ({mode}): {coupling.n_virtual_tokens} virtual tokens, "
                   f"d_arc={coupling.d_arc} → d_qwen={coupling.d_qwen}")
 
         # Autonomous processing thread
@@ -446,9 +706,11 @@ class LiquidARCMind:
         # Adaptive routing
         self.trigger: Optional['ReflectionTrigger'] = None
         self._external_event_pending = False
+        self._last_user_event_time = 0.0  # timestamp of last user interaction
+        self._conversation_quiet_period = 120  # seconds before resuming curriculum
         self._cycles_since_reflection = 0
         self._last_reflection_pe = 0.0
-        self.maintenance_interval = 30
+        self.maintenance_interval = 500  # reduced frequency to prevent CUDA OOM from reflection+generation
 
         # Curriculum
         self.curriculum = None  # set by mcp_serve.py
@@ -486,8 +748,31 @@ class LiquidARCMind:
         # Geometric prediction error (distance between new signal and current state)
         self._last_geometric_pe = 0.0
 
+        # Event embedding cache for text similarity scoring (Channel 1 of hybrid interface)
+        # Stores normalized embeddings [max_events, d] — updated on every observe_event
+        self._event_embed_cache = torch.zeros(max_context_events, d, device=device)
+
+        # Autonomous ODE norm ceiling — prevents unbounded growth during consolidation.
+        # Updated from running norm during active event processing (observe_event).
+        # 2x headroom allows geometry to breathe while preventing runaway.
+        self._h_norm_ceiling = 50000.0  # initial conservative ceiling
+        self._h_norm_ema = 0.0  # running EMA of h_norm during active operation
+
         # Initialize state
         self._h = torch.zeros(1, max_context_events, d, device=device)
+
+        # ──── TOKEN BUFFER (per-token ODE positions when delta_extractor is active) ────
+        # Each entry: {delta_h: [d], source: str, text: str, timestamp: float}
+        # When _delta_extractor is set, ODE state is rebuilt from this buffer
+        # instead of from the legacy per-event mean-pooled embeddings.
+        self._token_buffer: List[Dict] = []
+        self._max_tokens_idle: int = 512   # during autonomous cycling
+        self._max_tokens_convo: int = 1024  # during active conversation (more retention)
+        self._max_tokens: int = 512  # current limit (switches based on activity)
+
+        # Adaptive criticality: EMA of actual D² for automatic target calibration
+        self._D_sq_ema: float = 0.0
+        self._D_sq_ema_alpha: float = 0.05  # update rate
 
     # ──────────────────── TEXT ENCODING ────────────────────
 
@@ -557,12 +842,27 @@ class LiquidARCMind:
             return h_pooled.squeeze(0)  # [768]
 
     def _embed_text(self, text: str) -> torch.Tensor:
-        """Encode text — dual-path with optional bootstrap blending.
+        """Encode text into ODE-compatible representation.
 
-        If use_ode_encoder=True: uses Phase 1 ODE encoding (768-dim)
-        If bootstrap_mode: blends legacy (384-dim projected) with ODE (768-dim)
-        Otherwise: legacy sentence-transformer (384-dim)
+        Delta mode: LLM hidden state deltas → mean pool → [d] (trajectory signal)
+        Direct mode: LLM embed_tokens → mean pool → [d] in LLM's native space
+        ODE encoder: GPT-2 TextEmbedding → ODE → [d]
+        Legacy: sentence-transformer → [384]
         """
+        # Delta extraction: feed LiquidARC the LLM's velocity through meaning-space
+        if self._delta_extractor is not None:
+            result = self._delta_extractor.extract(text, max_tokens=128)
+            return result['delta_h'].float().mean(dim=1).squeeze(0)  # [d_arc], float32
+
+        # Direct architecture: use trained TextEmbedding co-adapted with ODE
+        if self._direct_prefix and self.use_trained_text_embed and self._text_embed is not None:
+            with torch.no_grad():
+                token_ids = self._text_tokenizer(
+                    text, return_tensors='pt', truncation=True,
+                    max_length=128).input_ids.to(self.device)
+                token_embeds = self._text_embed(token_ids)  # [1, T, d]
+                return token_embeds.mean(dim=1).squeeze(0)  # [d]
+
         if not self.use_ode_encoder:
             return self._embed_text_legacy(text)
 
@@ -577,6 +877,69 @@ class LiquidARCMind:
             return (1 - alpha) * legacy_768 + alpha * ode_repr
 
         return ode_repr
+
+    def _process_text_tokens(self, text: str, source: str = 'unknown') -> Dict:
+        """Process text into per-token deltas and append to ODE token buffer.
+
+        When a DeltaExtractor is active, every token becomes an individual
+        ODE position rather than mean-pooling to a single event vector.
+        The _h tensor is rebuilt from the token buffer after each call.
+
+        Args:
+            text: input text to process
+            source: event type label for token metadata (e.g. 'user_message')
+
+        Returns:
+            dict with n_new (tokens added) and n_total (total buffer size)
+        """
+        if self._delta_extractor is None:
+            return {}
+
+        result = self._delta_extractor.extract(text, max_tokens=128)
+        n_new = result['n_tokens']
+        delta_h_all = result['delta_h'][0]  # [N, d_arc]
+        token_texts = result.get('token_texts', [''] * n_new)
+
+        # Append each token as a separate buffer entry
+        now = time.time()
+        event_id = self.event_count  # unique per observe_event call
+        for i in range(n_new):
+            self._token_buffer.append({
+                'delta_h': delta_h_all[i].detach().float(),  # [d]
+                'source': source,
+                'event_id': event_id,  # unique per event for cross-event D² diagnostic
+                'text': token_texts[i] if i < len(token_texts) else '',
+                'timestamp': now,
+            })
+
+        # Drop tokens if over limit — priority: keep user/assistant, drop bootstrap/generated
+        if len(self._token_buffer) > self._max_tokens:
+            n_drop = len(self._token_buffer) - self._max_tokens
+            # Score each token: 0=drop first (bootstrap/generated), 1=keep (user/assistant)
+            priorities = []
+            for t in self._token_buffer:
+                src = t.get('source', '')
+                if src in ('temporal', 'generated', 'internal_reflection'):
+                    priorities.append(0)  # low priority
+                elif src in ('user_message', 'assistant_message'):
+                    priorities.append(1)  # high priority
+                else:
+                    priorities.append(0)  # default: low
+            # Drop lowest-priority tokens first (by index, preserving temporal order within priority)
+            indexed = sorted(enumerate(priorities), key=lambda x: (x[1], x[0]))
+            drop_indices = set(idx for idx, _ in indexed[:n_drop])
+            self._token_buffer = [t for i, t in enumerate(self._token_buffer) if i not in drop_indices]
+
+        # Rebuild ODE state from token buffer
+        N = len(self._token_buffer)
+        if N > 0:
+            stacked = torch.stack(
+                [t['delta_h'] for t in self._token_buffer]
+            )  # [N, d]
+            self._h = stacked.unsqueeze(0).to(self.device)  # [1, N, d]
+
+        print(f"  [tokens] buffer: +{n_new} new, total={N} tokens (source={source})")
+        return {'n_new': n_new, 'n_total': N}
 
     # ──────────────────── EVENT MANAGEMENT ────────────────────
 
@@ -616,8 +979,8 @@ class LiquidARCMind:
             event_embeds = []
             for i, ev in enumerate(recent):
                 emb = ev['embedding']
-                if ev.get('geometric', False):
-                    # Geometric signal from Qwen3 coupling — use directly
+                if ev.get('geometric', False) or self._direct_prefix:
+                    # Direct prefix / geometric: use embedding directly, no metadata wrapper
                     e_emb = emb.unsqueeze(0).unsqueeze(0) if emb.dim() == 1 else emb.unsqueeze(0)
                     e_emb = e_emb.to(self.device)
                 else:
@@ -661,7 +1024,10 @@ class LiquidARCMind:
     def _update_salience(self, h: torch.Tensor):
         """Update per-event salience from sustained high-τ attention.
         Must be called inside _gpu_lock. Modifies _salience in-place.
+        Skipped in token-level mode (salience is event-level, not token-level).
         """
+        if self._delta_extractor is not None:
+            return  # token-level mode — salience doesn't map to token positions
         N = min(len(self.events), self.max_events)
         if N == 0:
             return
@@ -710,8 +1076,12 @@ class LiquidARCMind:
         self._tau_bias[:N] = bias
         self._tau_bias[N:] = 0
 
-        # Push to dynamics
-        self.dynamics._tau_external_bias = self._tau_bias
+        # Push to dynamics — token-level mode has more positions than events,
+        # so tau_bias (per-event) doesn't map 1:1. Disable per-event bias in token mode.
+        if self._delta_extractor is not None:
+            self.dynamics._tau_external_bias = None
+        else:
+            self.dynamics._tau_external_bias = self._tau_bias
 
     def _hebbian_nudge(self, h: torch.Tensor, focus_indices: List[int]):
         """Co-reflection Hebbian update on consolidation embeddings.
@@ -737,9 +1107,16 @@ class LiquidARCMind:
 
     def _run_ode_segment(self, h: torch.Tensor, n_steps: int,
                          forcing: Optional[torch.Tensor] = None,
-                         return_efficiency: bool = False):
+                         return_efficiency: bool = False,
+                         accumulate_bias: bool = False):
         """Run n_steps of ODE. Caller must hold _gpu_lock.
         Applies consolidation embeddings to h before dynamics computation.
+
+        If accumulate_bias=True, computes and sums the SDPA bias logits
+        B_ij at each step across the full ODE trajectory. The accumulated
+        bias captures which tokens the ODE consistently routed together —
+        the trajectory of routing decisions, not a snapshot. Stored in
+        self._accumulated_bias [N, N].
         """
         dt = self.T / n_steps
         t = 0.0
@@ -769,6 +1146,38 @@ class LiquidARCMind:
                 eff_accum = eff_accum + (dy.detach() ** 2).mean()
 
             h = h + dt * dy
+
+            # Accumulate bias logits across ODE trajectory
+            if accumulate_bias and N <= 512:
+                with torch.no_grad():
+                    h_n = self.dynamics.norm_geo(h)
+                    g_step = torch.nn.functional.softplus(
+                        self.dynamics.metric_net_linear2_diag(
+                            torch.nn.functional.gelu(
+                                self.dynamics.metric_net_linear1(
+                                    torch.cat([h_n, self.dynamics._context.unsqueeze(1).expand(-1, N, -1)], dim=-1)
+                                )
+                            )
+                        )
+                    )
+                    qk = h_n * g_step.sqrt()
+                    t_d = torch.nn.functional.softplus(self.dynamics.t_diffusion)
+                    B_step = (torch.bmm(qk, qk.transpose(1, 2)) / (2.0 * t_d)
+                              - (qk * qk).sum(dim=-1, keepdim=True).transpose(1, 2) / (4.0 * t_d))
+                    self._accumulated_bias = self._accumulated_bias + B_step[0]
+
+            # Per-position norm homeostasis — same as euler_solve
+            norm_ref = getattr(self.dynamics, '_norm_ref', 0.0)
+            norm_lambda = getattr(self.dynamics, '_norm_lambda', 0.0)
+            if norm_ref > 0 and norm_lambda > 0:
+                pos_norm = h.detach().norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                scale = torch.where(
+                    pos_norm > norm_ref,
+                    1.0 - norm_lambda * (1.0 - norm_ref / pos_norm),
+                    torch.ones_like(pos_norm),
+                )
+                h = h * scale
+
             t = t + dt
 
         if return_efficiency:
@@ -781,18 +1190,183 @@ class LiquidARCMind:
                       metadata: Optional[Dict] = None) -> Dict:
         """Inject a conversation event as sensory forcing.
 
-        SAFE CURIOSITY: Uses prediction error ||embed(obs) - h||,
+        When _delta_extractor is active: processes text into per-token ODE
+        positions via _process_text_tokens, then runs ODE integration over the
+        full token buffer. Events list still stores metadata for context building.
+
+        When _delta_extractor is None: falls back to legacy mean-pooled embedding.
+
+        SAFE CURIOSITY: Uses prediction error ||h_before - h_after||,
         NOT dynamics magnitude ||dh/dt|| (which causes NaN).
         """
         # Flag for adaptive routing — only HUMAN events trigger immediate reflection
         # Internal events (reflection, expression, curriculum) should not cascade
         is_internal = (
             event_type in ('reflection', 'expression', 'voice_response') or
-            (metadata and metadata.get('source', '').startswith(('curriculum', 'internal', 'express_state', 'self_', 'adaptive_', 'manual_curriculum')))
+            (metadata and metadata.get('source', '').startswith(
+                ('curriculum', 'geometric_curriculum', 'internal', 'express_state',
+                 'self_', 'adaptive_', 'geometric_', 'manual_', 'qwen3_')))
         )
         if not is_internal:
             self._external_event_pending = True
+            self._last_user_event_time = time.time()
+            self._max_tokens = self._max_tokens_convo  # expand buffer for conversation
 
+        # ── Token-level path (DeltaExtractor active) ──
+        if self._delta_extractor is not None:
+            # Extract tokens OUTSIDE lock (Qwen3 forward pass is slow)
+            result = self._delta_extractor.extract(content, max_tokens=128)
+
+            with self._gpu_lock:
+                # Rebuild token buffer and self._h INSIDE lock to prevent race with autonomous loop
+                n_new = result['n_tokens']
+                delta_h_all = result['delta_h'][0]  # [N, d_arc]
+                token_texts = result.get('token_texts', [''] * n_new)
+                now = time.time()
+                event_id = self.event_count  # unique per observe_event call
+                for i in range(n_new):
+                    self._token_buffer.append({
+                        'delta_h': delta_h_all[i].detach().float(),
+                        'source': event_type,
+                        'event_id': event_id,
+                        'text': token_texts[i] if i < len(token_texts) else '',
+                        'timestamp': now,
+                    })
+                if len(self._token_buffer) > self._max_tokens:
+                    self._token_buffer = self._token_buffer[-self._max_tokens:]
+                N = len(self._token_buffer)
+                if N > 0:
+                    self._h = torch.stack(
+                        [t['delta_h'] for t in self._token_buffer]
+                    ).unsqueeze(0).to(self.device)
+                print(f"  [tokens] buffer: +{n_new} new, total={N} tokens (source={event_type})")
+
+                # Store event metadata
+                meta, type_id = self._build_metadata(event_type, content, metadata)
+                self.events.append({
+                    'embedding': self._h[0, -1, :].detach().float() if N > 0
+                                 else torch.zeros(self.dynamics.norm_geo.normalized_shape[0],
+                                                  device=self.device),
+                    'metadata': meta,
+                    'type': type_id,
+                    'content_preview': content[:200],
+                    'timestamp': now,
+                    'n_tokens': n_new,
+                })
+                self.event_count += 1
+                if len(self.events) > self.max_events:
+                    self.events = self.events[-self.max_events:]
+
+                # Run ODE integration over full token buffer
+                N = self._h.shape[1]
+                if N == 0:
+                    return {'prediction_error': 0.0, 'cv': 0.0,
+                            'events_in_context': len(self.events), 'h_norm': 0.0,
+                            'n_tokens': 0}
+
+                context = self.context_pool(
+                    self._h, torch.ones(1, N, dtype=torch.bool, device=self.device))
+                self.dynamics.set_context(context, mask=None)
+                self.dynamics.set_n_steps(self.internal_steps)
+
+                h_before = self._h.detach().clone()
+                h_new = self._run_ode_segment(
+                    self._h, self.internal_steps, forcing=None)
+
+                with torch.no_grad():
+                    h_b_norm = h_before.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                    h_a_norm = h_new.detach().norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                    cos_disp = (h_before / h_b_norm * h_new.detach() / h_a_norm).sum(dim=-1)
+                    pe = (1.0 - cos_disp).mean().item() * 500.0
+
+                    # Displacement correlation bias: tokens that the ODE moved in the
+                    # same direction were geometrically connected by routing.
+                    # This IS the ODE's computation — extracted from dynamics, not metric.
+                    delta_h = h_new.detach() - h_before  # [1, N, d] — how each position changed
+                    delta_norm = delta_h.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                    delta_unit = delta_h / delta_norm  # [1, N, d] unit displacement vectors
+                    # Correlation: cosine similarity of displacement vectors
+                    # corr_ij = Δh_i · Δh_j / (||Δh_i|| · ||Δh_j||)
+                    self._displacement_bias = torch.bmm(
+                        delta_unit, delta_unit.transpose(1, 2)
+                    )[0]  # [N, N] in [-1, +1]
+
+                self._h = h_new.detach()
+
+                # ── Self-supervised MetricNet adaptation ──
+                # Run a SEPARATE gradient-enabled ODE step on a small subsample
+                # to compute routing quality loss and update MetricNet.
+                # This is cheap (subsample of 32 tokens, 1 ODE step) and runs
+                # every observe_event, allowing MetricNet to adapt to text.
+                if self.optimizer is not None and N >= 8:
+                    try:
+                        n_sub = min(32, N)
+                        # Sample tokens spread across events
+                        step_s = max(1, N // n_sub)
+                        sub_idx = list(range(0, N, step_s))[:n_sub]
+                        h_sub = self._h[:, sub_idx, :].clone().requires_grad_(True)
+
+                        # One ODE step with gradients
+                        context_sub = self.context_pool(h_sub)
+                        self.dynamics.set_context(context_sub, mask=None)
+                        self.dynamics.set_n_steps(1)
+                        dy = self.dynamics(0.0, h_sub)
+                        h_sub_post = h_sub + (self.T / self.internal_steps) * dy
+
+                        # Self-supervised loss: CV should stay in productive range
+                        g_sub = self.dynamics.compute_metric_diag(h_sub_post)
+                        cv_sub = g_sub.std() / (g_sub.mean() + 1e-8)
+                        cv_loss = torch.nn.functional.relu(3.0 - cv_sub) ** 2  # floor at 3.0
+
+                        # Tau quality: mean near target
+                        tau_sub = self.dynamics.compute_tau(h_sub_post)
+                        tau_anchor_target = getattr(self.dynamics, '_tau_anchor_target', 2.0)
+                        tau_loss = (tau_sub.mean() - tau_anchor_target) ** 2
+
+                        adapt_loss = 0.1 * cv_loss + 0.05 * tau_loss
+                        if adapt_loss.item() > 1e-6 and not torch.isnan(adapt_loss):
+                            self.optimizer.zero_grad()
+                            adapt_loss.backward()
+                            torch.nn.utils.clip_grad_norm_(self.dynamics.parameters(), 0.1)
+                            self.optimizer.step()
+                    except Exception:
+                        pass  # don't crash on adaptation failure
+
+                g = self.dynamics.compute_metric_diag(self._h.detach())
+                cv = (g.std() / (g.mean() + 1e-8)).item()
+                h_norm_val = self._h.detach().norm().item()
+                tau_val = self.dynamics.compute_tau(self._h.detach()).mean().item()
+
+                alpha = 0.05
+                self._h_norm_ema = (alpha * h_norm_val +
+                                    (1 - alpha) * self._h_norm_ema
+                                    ) if self._h_norm_ema > 0 else h_norm_val
+
+            import math
+            h_norm_per_pos = h_norm_val / math.sqrt(N) if N > 0 else 0.0
+            tau_std_val = self.dynamics.compute_tau(h_new.detach()).std().item()
+
+            print(f"  [observe] #{self.event_count} type={event_type} "
+                  f"PE={pe:.1f} CV={cv:.2f} tau={tau_val:.2f}±{tau_std_val:.4f} "
+                  f"h={h_norm_val:.0f} h/√N={h_norm_per_pos:.1f} "
+                  f"tokens={N} events={len(self.events)} "
+                  f"\"{content[:60]}\"")
+
+            return {
+                'prediction_error': pe,
+                'prediction_error_per_event': [pe],
+                'cv': cv,
+                'metric_cv': cv,
+                'tau_mean': tau_val,
+                'tau_std': tau_std_val,
+                'events_in_context': len(self.events),
+                'h_norm': h_norm_val,
+                'h_norm_per_position': h_norm_per_pos,
+                'n_tokens': n_new,
+                'token_buffer_size': len(self._token_buffer),
+            }
+
+        # ── Legacy mean-pooled embedding path ──
         embedding = self._embed_text(content)
         meta, type_id = self._build_metadata(event_type, content, metadata)
 
@@ -808,23 +1382,31 @@ class LiquidARCMind:
         if len(self.events) > self.max_events:
             self.events = self.events[-self.max_events:]
 
+        # Update event embedding cache — rebuild from current buffer
+        self._rebuild_event_embed_cache()
+
         with self._gpu_lock:
             N = min(len(self.events), self.max_events)
             recent = self.events[-N:]
 
             if self.use_ode_encoder:
-                # ODE encoder path: embeddings are already 768-dim
-                # Add metadata/type/position via embed_event
                 event_embeds = []
                 for i, ev in enumerate(recent):
-                    e_emb = self.embedding.embed_event(
-                        ev['embedding'].unsqueeze(0) if ev['embedding'].dim() == 1 else ev['embedding'],
-                        ev['metadata'].unsqueeze(0),
-                        torch.tensor([ev['type']], device=self.device),
-                        torch.tensor([i], device=self.device),
-                    )
+                    emb = ev['embedding']
+                    if ev.get('geometric', False) or self._direct_prefix:
+                        # Direct prefix / geometric: use embedding directly
+                        e_emb = emb.unsqueeze(0).unsqueeze(0) if emb.dim() == 1 else emb.unsqueeze(0)
+                        e_emb = e_emb.to(self.device)
+                    else:
+                        # Legacy: embed through ConversationEmbedding
+                        e_emb = self.embedding.embed_event(
+                            emb.unsqueeze(0) if emb.dim() == 1 else emb,
+                            ev['metadata'].unsqueeze(0),
+                            torch.tensor([ev['type']], device=self.device),
+                            torch.tensor([i], device=self.device),
+                        )
                     event_embeds.append(e_emb)
-                obs_embed = torch.cat(event_embeds, dim=1)  # [1, N, 768]
+                obs_embed = torch.cat(event_embeds, dim=1)  # [1, N, d]
             else:
                 # Legacy path: 384-dim sentence-transformer embeddings
                 tokens = self._tokenize_current_events()
@@ -837,7 +1419,7 @@ class LiquidARCMind:
                 )
 
             h_slice = self._h[:, :N, :]
-            prediction_error = self.forcing.get_prediction_error(h_slice, obs_embed)
+
             forcing = self.forcing.compute_forcing(h_slice, obs_embed)
 
             context_mask = torch.ones(1, N, dtype=torch.bool, device=self.device)
@@ -845,7 +1427,19 @@ class LiquidARCMind:
             self.dynamics.set_context(context, mask=None)
             self.dynamics.set_n_steps(self.internal_steps)
 
+            h_before = h_slice.detach().clone()
             h_new = self._run_ode_segment(h_slice, self.internal_steps, forcing=forcing)
+
+            # PE = state displacement from forcing injection.
+            # Measures how much the observation actually perturbed the ODE state.
+            # Novel content → large displacement (system had to reorganize).
+            # Familiar content → small displacement (system already aligned).
+            # Per-position cosine distance between h_before and h_after, scaled to [0, 1000].
+            with torch.no_grad():
+                h_b_norm = h_before.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                h_a_norm = h_new.detach().norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                cos_displacement = (h_before / h_b_norm * h_new.detach() / h_a_norm).sum(dim=-1)
+                prediction_error = (1.0 - cos_displacement) * 500.0  # [B, N]
 
             self._h = self._h.clone()
             self._h[:, :N, :] = h_new.detach()
@@ -853,12 +1447,26 @@ class LiquidARCMind:
             g = self.dynamics.compute_metric_diag(h_new.detach())
             cv = (g.std() / (g.mean() + 1e-8)).item()
 
+            # Track h_norm for diagnostics (homeostasis handled in ODE dynamics)
+            current_norm = h_new.detach().norm().item()
+            alpha = 0.05
+            self._h_norm_ema = (alpha * current_norm +
+                                (1 - alpha) * self._h_norm_ema) if self._h_norm_ema > 0 else current_norm
+
+        pe_val = prediction_error.mean().item()
+        h_norm_val = h_new.detach().norm().item()
+        tau_val = self.dynamics.compute_tau(h_new.detach()).mean().item()
+        print(f"  [observe] #{self.event_count} type={event_type} "
+              f"PE={pe_val:.1f} CV={cv:.2f} tau={tau_val:.2f} "
+              f"h={h_norm_val:.0f} events={len(self.events)} "
+              f"\"{content[:60]}\"")
+
         return {
-            'prediction_error': prediction_error.mean().item(),
+            'prediction_error': pe_val,
             'prediction_error_per_event': prediction_error[0].cpu().tolist()[:10],
             'cv': cv,
             'events_in_context': len(self.events),
-            'h_norm': h_new.detach().norm().item(),
+            'h_norm': h_norm_val,
         }
 
     def get_context(self, query: Optional[str] = None) -> Dict:
@@ -915,41 +1523,283 @@ class LiquidARCMind:
 
         with self._gpu_lock:
             h = self._h
-            N = min(len(self.events), self.max_events)
-            if N == 0:
-                return {'status': 'no_events', 'h_norm': h.norm().item()}
+            N_tokens = h.shape[1]
+            N_events = min(len(self.events), self.max_events)
 
-            g = self.dynamics.compute_metric_diag(h[:, :N, :].detach())
-            tau = self.dynamics.compute_tau(h[:, :N, :].detach())
-            beta = self.forcing.beta[:N]
+            if N_tokens == 0:
+                return {'status': 'no_events', 'h_norm': 0.0}
+
+            # Use full token buffer for geometry diagnostics
+            g = self.dynamics.compute_metric_diag(h.detach())
+            tau = self.dynamics.compute_tau(h.detach())
+
+            import math
+            h_norm_val = h.norm().item()
+            h_norm_per_pos = h_norm_val / math.sqrt(N_tokens)
+
+            # Beta only available for event-level N
+            beta_mean = 0.0
+            if N_events > 0 and not self._delta_extractor:
+                beta = self.forcing.beta[:N_events]
+                beta_mean = beta.mean().item()
 
         return {
             'status': 'active',
-            'h_norm': h.norm().item(),
+            'h_norm': h_norm_val,
+            'h_norm_per_position': h_norm_per_pos,
             'metric_cv': (g.std() / (g.mean() + 1e-8)).item(),
             'tau_mean': tau.mean().item(),
             'tau_std': tau.std().item(),
-            'beta_mean': beta.mean().item(),
-            'beta_std': beta.std().item(),
-            'beta_per_type': {
-                'user_msg': beta[0].item() if N > 0 else 0,
-                'goal': beta[min(3, N - 1)].item() if N > 3 else 0,
-            },
-            'events_in_context': N,
+            'events_in_context': N_events,
+            'token_buffer_size': N_tokens,
             'event_count_total': self.event_count,
+        }
+
+    # ──────────────────── HYBRID INTERFACE HELPERS ────────────────────
+
+    def _rebuild_event_embed_cache(self):
+        """Rebuild the normalized event embedding cache from current buffer.
+
+        Called after every observe_event and _force_geometric_signal.
+        Stores F.normalize'd embeddings for fast cosine similarity at query time.
+        """
+        N = min(len(self.events), self.max_events)
+        self._event_embed_cache.zero_()
+        with torch.no_grad():
+            for i, ev in enumerate(self.events[-N:]):
+                emb = ev.get('embedding')
+                if emb is not None:
+                    if emb.dim() == 1:
+                        self._event_embed_cache[i] = F.normalize(emb.float(), dim=0)
+                    else:
+                        self._event_embed_cache[i] = F.normalize(
+                            emb.float().mean(dim=0), dim=0)
+
+    def _compute_text_relevance(self, query: str, n_events: int) -> List[float]:
+        """Score events by text similarity to the query.
+
+        Layer 1 of three-layer relevance scoring.
+        Uses cached normalized embeddings — only one embed call for the query.
+        """
+        if n_events == 0:
+            return []
+
+        # Encode query using the same path as events
+        with torch.no_grad():
+            q_emb = self._embed_text(query)
+            if q_emb.dim() > 1:
+                q_emb = q_emb.mean(dim=0)
+            q_emb = F.normalize(q_emb.float(), dim=0)
+
+            # Batch dot product against cache
+            scores = (self._event_embed_cache[:n_events] @ q_emb).cpu().tolist()
+
+        return scores
+
+    def _compute_structural_relevance(self, events: List[Dict],
+                                       query_type: str = 'conversation') -> List[float]:
+        """Score events by type and recency.
+
+        Layer 2 of three-layer relevance scoring.
+        Conversation queries boost user/assistant events, deprioritize curriculum.
+        """
+        import math
+        type_names = ['user_msg', 'assistant_msg', 'tool_result',
+                      'goal', 'context', 'temporal', 'reflection',
+                      'expression', 'voice_response']
+        scores = []
+        for ev in events:
+            score = 1.0
+            type_id = ev.get('type', 0)
+            etype = type_names[type_id] if type_id < len(type_names) else 'unknown'
+            age = time.time() - ev.get('timestamp', time.time())
+
+            if query_type == 'conversation':
+                if etype in ('user_msg', 'assistant_msg'):
+                    score *= 2.0
+                elif etype == 'goal':
+                    score *= 1.5
+                elif etype == 'expression':
+                    score *= 1.0
+                elif etype == 'context':
+                    score *= 0.5  # curriculum deprioritized for conversation
+            # Domain queries could boost context events, but default is fine
+
+            # Recency: exponential decay with ~5 minute half-life, floor at 0.3
+            recency = math.exp(-age / 300.0)
+            score *= (0.3 + 0.7 * recency)
+
+            scores.append(score)
+        return scores
+
+    def _compute_combined_relevance(self, query: str,
+                                     w_text: float = 0.5,
+                                     w_structural: float = 0.3,
+                                     w_geometric: float = 0.2) -> List[Dict]:
+        """Three-layer relevance scoring for hybrid interface Channel 1.
+
+        Combines:
+          Layer 1: Text similarity (cosine in embedding space)
+          Layer 2: Structural (event type + recency)
+          Layer 3: Geometric (StateReadout scores, trained via feedback)
+
+        Returns events sorted by combined score (descending).
+        """
+        N = min(len(self.events), self.max_events)
+        if N == 0:
+            return []
+
+        recent = self.events[-N:]
+
+        # Layer 1: Text similarity
+        text_scores = self._compute_text_relevance(query, N)
+
+        # Layer 2: Structural
+        struct_scores = self._compute_structural_relevance(recent)
+
+        # Layer 3: Geometric (existing readout)
+        geo_scores = [0.0] * N
+        ctx = self.get_context(query=query)
+        if ctx.get('status') == 'active':
+            for item in ctx.get('context', []):
+                idx = item.get('index', -1)
+                if 0 <= idx < N:
+                    geo_scores[idx] = item.get('relevance', 0)
+
+        # Normalize each layer to [0, 1]
+        def normalize(scores):
+            if not scores:
+                return scores
+            mn, mx = min(scores), max(scores)
+            rng = mx - mn if mx > mn else 1.0
+            return [(s - mn) / rng for s in scores]
+
+        text_norm = normalize(text_scores)
+        struct_norm = normalize(struct_scores)
+        geo_norm = normalize(geo_scores)
+
+        # Build scored event list
+        type_names = ['user_msg', 'assistant_msg', 'tool_result',
+                      'goal', 'context', 'temporal', 'reflection',
+                      'expression', 'voice_response']
+        result = []
+        for i, ev in enumerate(recent):
+            combined = (w_text * text_norm[i] +
+                        w_structural * struct_norm[i] +
+                        w_geometric * geo_norm[i])
+            type_id = ev.get('type', 0)
+            result.append({
+                'index': i,
+                'type': type_names[type_id] if type_id < len(type_names) else 'unknown',
+                'preview': ev.get('content_preview', ''),
+                'relevance': round(combined, 3),
+                'text_sim': round(text_norm[i], 3),
+                'structural': round(struct_norm[i], 3),
+                'geometric': round(geo_norm[i], 3),
+                'age_seconds': round(time.time() - ev.get('timestamp', time.time()), 1),
+            })
+
+        result.sort(key=lambda x: x['relevance'], reverse=True)
+        return result
+
+    def get_relevant_events(self, query: Optional[str] = None, top_k: int = 5) -> List[Dict]:
+        """Get top-K relevance-scored events using three-layer combined scoring.
+
+        Channel 1 of hybrid interface: selects the most relevant events
+        for inclusion as text context in Qwen3 generation.
+        """
+        if not query or len(self.events) == 0:
+            # No query — fall back to recency
+            N = min(len(self.events), self.max_events)
+            type_names = ['user_msg', 'assistant_msg', 'tool_result',
+                          'goal', 'context', 'temporal', 'reflection',
+                          'expression', 'voice_response']
+            recent = self.events[-min(top_k, N):]
+            return [{
+                'index': i,
+                'type': type_names[ev.get('type', 0)] if ev.get('type', 0) < len(type_names) else 'unknown',
+                'preview': ev.get('content_preview', ''),
+                'relevance': 1.0,
+                'age_seconds': round(time.time() - ev.get('timestamp', time.time()), 1),
+            } for i, ev in enumerate(recent)]
+
+        scored = self._compute_combined_relevance(query)
+        return scored[:top_k]
+
+    def get_recent_reflections(self, n: int = 5) -> List[Dict]:
+        """Get last N reflection/expression events for stagnation detection."""
+        reflections = []
+        for ev in reversed(self.events):
+            if ev.get('type') in (6, 7):  # reflection, expression
+                reflections.append({
+                    'text': ev.get('content_preview', ''),
+                    'timestamp': ev.get('timestamp', 0),
+                })
+                if len(reflections) >= n:
+                    break
+        reflections.reverse()
+        return reflections
+
+    def get_all_events(self) -> List[Dict]:
+        """Return all events in the buffer with metadata and text."""
+        N = min(len(self.events), self.max_events)
+        type_names = ['user_msg', 'assistant_msg', 'tool_result',
+                      'goal', 'context', 'temporal', 'reflection',
+                      'expression', 'voice_response']
+        result = []
+        for i, ev in enumerate(self.events[-N:]):
+            type_id = ev.get('type', 0)
+            result.append({
+                'index': i,
+                'type': type_names[type_id] if type_id < len(type_names) else 'unknown',
+                'preview': ev.get('content_preview', ''),
+                'age_seconds': round(time.time() - ev.get('timestamp', time.time()), 1),
+                'salience': self._salience[i].item() if i < self._salience.shape[0] else 0,
+            })
+        return result
+
+    def get_curriculum_stats_dict(self) -> Dict:
+        """Get curriculum statistics for metadata formatting."""
+        stats = getattr(self, '_curriculum_stats', None)
+        if not stats or not stats.get('domain_avg_pe'):
+            return {'most_familiar_domain': 'unknown', 'most_novel_domain': 'unknown'}
+
+        avg_pe = stats['domain_avg_pe']
+        if not avg_pe:
+            return {'most_familiar_domain': 'unknown', 'most_novel_domain': 'unknown'}
+
+        familiar = min(avg_pe, key=avg_pe.get)
+        novel = max(avg_pe, key=avg_pe.get)
+        return {
+            'most_familiar_domain': self.DOMAIN_NAMES.get(familiar, familiar),
+            'most_novel_domain': self.DOMAIN_NAMES.get(novel, novel),
         }
 
     # ──────────────────── QWEN3 KNOWLEDGE INTERFACE ────────────────────
 
     def _get_pooled_state(self) -> Optional[torch.Tensor]:
-        """Get mean-pooled ODE state [d_arc] for Qwen3 coupling."""
+        """Get mean-pooled ODE state [d] for coupling path (legacy)."""
         if self._h is None:
             return None
         N = min(len(self.events), self.max_events)
         if N == 0:
             return None
         with torch.no_grad():
-            return self._h[:, :N, :].mean(dim=1).squeeze(0).to(torch.bfloat16)  # [d_arc]
+            return self._h[:, :N, :].mean(dim=1).squeeze(0).to(torch.bfloat16)  # [d]
+
+    def _get_prefix_embeds(self) -> Optional[torch.Tensor]:
+        """Get full ODE state as prefix tokens for direct architecture.
+
+        Returns h(t) [1, N, d] — each event position becomes a prefix token.
+        The ODE state lives in the LLM's embedding space, no projection needed.
+        """
+        if self._h is None:
+            return None
+        N = min(len(self.events), self.max_events)
+        if N == 0:
+            return None
+        with torch.no_grad():
+            return self._h[:, :N, :].detach().to(torch.bfloat16)  # [1, N, d]
 
     def _encode_through_qwen(self, text: str) -> Optional[torch.Tensor]:
         """Encode text through Qwen3 → W_read → geometric signal for LiquidARC.
@@ -965,13 +1815,13 @@ class LiquidARCMind:
         Returns:
             arc_signal: [d_arc] geometric representation, or None if unavailable
         """
-        if not self._qwen_available:
+        if not self._qwen_available or self._coupling is None:
             return None
 
         h_state = self._get_pooled_state()
         if h_state is None:
-            # No prior state — use zero state for initial encoding
-            h_state = torch.zeros(self._coupling.d_arc, device=self.device,
+            d = self.dynamics.norm_geo.normalized_shape[0]
+            h_state = torch.zeros(d, device=self.device,
                                   dtype=torch.bfloat16)
 
         with self._gpu_lock, torch.no_grad():
@@ -985,7 +1835,7 @@ class LiquidARCMind:
             input_ids = tokens['input_ids']
 
             # Forward through Qwen3 with prefix (no generation, just encoding)
-            input_embeds = self._qwen_model.model.embed_tokens(input_ids)
+            input_embeds = self._qwen_model.get_input_embeddings()(input_ids)
             combined = torch.cat([prefix_embeds, input_embeds], dim=1)
             attn_mask = torch.ones(1, combined.shape[1],
                                    dtype=torch.long, device=self.device)
@@ -1035,14 +1885,19 @@ class LiquidARCMind:
         if len(self.events) > self.max_events:
             self.events = self.events[-self.max_events:]
 
+        # Update event embedding cache
+        self._rebuild_event_embed_cache()
+
         # Inject signal directly into ODE state — no re-embedding
         with self._gpu_lock:
             N = min(len(self.events), self.max_events)
             if self._h is not None and N <= self._h.shape[1]:
-                # Compute geometric PE: distance between new signal and current state
+                # Compute geometric PE: cosine distance (magnitude-independent)
                 with torch.no_grad():
-                    h_prev = self._h[:, N - 1, :].squeeze(0)  # what ODE expected
-                    self._last_geometric_pe = (signal.detach().float() - h_prev).norm().item()
+                    h_prev = self._h[:, N - 1, :].squeeze(0).float()
+                    sig = signal.detach().float()
+                    cos_sim = F.cosine_similarity(sig.unsqueeze(0), h_prev.unsqueeze(0)).item()
+                    self._last_geometric_pe = (1.0 - cos_sim) * 500.0
 
                 # Place geometric signal at the latest event position
                 with torch.no_grad():
@@ -1068,6 +1923,147 @@ class LiquidARCMind:
                         scale = (0.5 * h_norm_before) / h_norm_after
                         self._h[:, :N, :] *= scale
 
+    def hybrid_generate(self, prompt: str, max_new_tokens: int = 200,
+                        temperature: float = 0.7,
+                        include_text_context: bool = True,
+                        include_geometric_prefix: bool = True,
+                        include_metadata: bool = True,
+                        max_context_events: int = 5) -> Dict:
+        """Generate response using three channels.
+
+        Channel 1: Text context — relevance-scored events as text in prompt
+        Channel 2: Geometric prefix — W_inject virtual tokens (HF path only)
+        Channel 3: Structured metadata — PE, CV, tau, domain awareness
+
+        Falls back gracefully: without coupling, Channels 1+3 still work.
+        """
+        if not self._qwen_available:
+            return {'error': 'LLM not connected'}
+
+        # ═══ Channel 1: Text Context ═══
+        text_context = ""
+        if include_text_context:
+            events = self.get_relevant_events(query=prompt, top_k=max_context_events)
+            if events:
+                text_context = "Recent context:\n"
+                for event in events:
+                    age = event.get('age_seconds', 0)
+                    age_str = f"{age:.0f}s ago" if age < 60 else f"{age/60:.0f}m ago"
+                    text_context += f"- [{age_str}] {event['preview'][:200]}\n"
+                text_context += "\n"
+
+        # ═══ Channel 3: Structured Metadata ═══
+        metadata_context = ""
+        if include_metadata:
+            diag = self.get_diagnostics()
+            pe = self._pe_history[-1] if hasattr(self, '_pe_history') and self._pe_history else 0
+
+            novelty = ("very high" if pe > 500 else "high" if pe > 300
+                       else "moderate" if pe > 100 else "low")
+
+            curriculum = self.get_curriculum_stats_dict()
+            familiar = curriculum.get('most_familiar_domain', 'unknown')
+            novel = curriculum.get('most_novel_domain', 'unknown')
+
+            tau_mean = diag.get('tau_mean', 1.0)
+            depth = ('deep' if tau_mean < 0.8 else
+                     'moderate' if tau_mean < 1.0 else 'surface')
+
+            metadata_context = (
+                f"[System: Query novelty is {novelty}. "
+                f"Familiar domains: {familiar}. Novel domains: {novel}. "
+                f"Processing depth: {depth}. "
+                f"Geometric complexity: {diag.get('metric_cv', 0):.1f}]\n\n"
+            )
+
+        # ═══ Build composed prompt ═══
+        full_prompt = metadata_context + text_context + prompt
+
+        # ═══ Get geometric state for prefix ═══
+        if self._direct_prefix:
+            # Direct: full ODE state as prefix tokens (no coupling)
+            prefix_embeds = self._get_prefix_embeds()
+        elif self._coupling is not None:
+            # Legacy coupling: pooled state → W_inject → virtual tokens
+            h_state = self._get_pooled_state()
+            if h_state is None:
+                return {'error': 'No ODE state — observe events first'}
+            with self._gpu_lock, torch.no_grad():
+                prefix_embeds = self._coupling.inject(h_state)
+        else:
+            prefix_embeds = None
+
+        if prefix_embeds is None and include_geometric_prefix:
+            return {'error': 'No ODE state — observe events first'}
+
+        if self._qwen_is_vllm:
+            # ═══ vLLM path ═══
+            response = self._qwen_model.generate(
+                prefix_embeds if include_geometric_prefix else None,
+                full_prompt,
+                max_tokens=max_new_tokens,
+                temperature=temperature,
+                use_prefix=include_geometric_prefix,
+            )
+        else:
+            # ═══ HF path: All three channels ═══
+            with self._gpu_lock, torch.no_grad():
+                tokenizer = self._qwen_tokenizer
+                messages = [
+                    {"role": "system",
+                     "content": "You are a scientific assistant. Always respond in English."},
+                    {"role": "user", "content": full_prompt},
+                ]
+                if hasattr(tokenizer, 'apply_chat_template'):
+                    chat_text = tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True,
+                        enable_thinking=False)
+                else:
+                    chat_text = full_prompt
+
+                tokens = tokenizer(chat_text, return_tensors='pt', truncation=True,
+                                   max_length=512).to(self.device)
+                input_embeds = self._qwen_model.get_input_embeddings()(tokens['input_ids'])
+
+                if include_geometric_prefix:
+                    combined = torch.cat([input_embeds, prefix_embeds], dim=1)
+                else:
+                    combined = input_embeds
+
+                attn_mask = torch.ones(1, combined.shape[1],
+                                       dtype=torch.long, device=self.device)
+
+                outputs = self._qwen_model.generate(
+                    inputs_embeds=combined,
+                    attention_mask=attn_mask,
+                    max_new_tokens=max_new_tokens,
+                    temperature=temperature,
+                    do_sample=temperature > 0,
+                    top_p=0.9,
+                    repetition_penalty=1.3,
+                    pad_token_id=tokenizer.pad_token_id,
+                )
+                input_len = combined.shape[1]
+                generated_ids = outputs[0][input_len:]
+                response = tokenizer.decode(generated_ids, skip_special_tokens=True)
+
+        diag = self.get_diagnostics()
+        return {
+            'response': response,
+            'prompt': prompt,
+            'channels_used': {
+                'text_context': include_text_context and bool(text_context),
+                'geometric_prefix': include_geometric_prefix and prefix_embeds is not None,
+                'direct_prefix': self._direct_prefix,
+                'n_prefix_tokens': prefix_embeds.shape[1] if prefix_embeds is not None and prefix_embeds.dim() >= 2 else 0,
+                'metadata': include_metadata,
+            },
+            'h_norm': self._h.norm().item() if self._h is not None else 0,
+            'metric_cv': diag.get('metric_cv', 0),
+            'tau_mean': diag.get('tau_mean', 0),
+            'events_in_context': diag.get('events_in_context', 0),
+        }
+
     def query_knowledge(self, prompt: str, max_new_tokens: int = 200,
                         temperature: float = 0.7,
                         use_prefix: bool = False,
@@ -1090,24 +2086,26 @@ class LiquidARCMind:
             dict with: response, diagnostics (CV, tau), coupling_info
         """
         if not self._qwen_available:
-            return {'error': 'Qwen3 coupling not loaded'}
+            return {'error': 'LLM not connected'}
 
-        h_state = h_override if h_override is not None else self._get_pooled_state()
-        if h_state is None:
-            return {'error': 'No ODE state — observe events first'}
-
-        with self._gpu_lock, torch.no_grad():
-            # Project LiquidARC state → virtual prefix tokens
-            prefix_embeds = self._coupling.inject(h_state)  # [1, n_vt, d_qwen]
-            n_vt = self._coupling.n_virtual_tokens
+        # Get prefix embeddings
+        if self._direct_prefix:
+            prefix_embeds = self._get_prefix_embeds() if use_prefix else None
+        elif self._coupling is not None:
+            h_state = h_override if h_override is not None else self._get_pooled_state()
+            if h_state is None:
+                return {'error': 'No ODE state — observe events first'}
+            with self._gpu_lock, torch.no_grad():
+                prefix_embeds = self._coupling.inject(h_state)
+        else:
+            prefix_embeds = None
 
         if self._qwen_is_vllm:
-            # ═══ vLLM API path — fast, out-of-process ═══
             response = self._qwen_model.generate(
                 prefix_embeds, prompt,
                 max_tokens=max_new_tokens,
                 temperature=temperature,
-                use_prefix=use_prefix,
+                use_prefix=use_prefix and prefix_embeds is not None,
             )
         else:
             # ═══ In-process HuggingFace path — fallback ═══
@@ -1127,7 +2125,7 @@ class LiquidARCMind:
                                    max_length=512).to(self.device)
                 input_ids = tokens['input_ids']
 
-                input_embeds = self._qwen_model.model.embed_tokens(input_ids)
+                input_embeds = self._qwen_model.get_input_embeddings()(input_ids)
                 combined = torch.cat([input_embeds, prefix_embeds], dim=1)
                 attn_mask = torch.ones(1, combined.shape[1],
                                        dtype=torch.long, device=self.device)
@@ -1151,12 +2149,171 @@ class LiquidARCMind:
         return {
             'response': response,
             'prompt': prompt,
-            'n_virtual_tokens': n_vt,
-            'h_norm': h_state.norm().item(),
+            'n_prefix_tokens': prefix_embeds.shape[1] if prefix_embeds is not None and prefix_embeds.dim() >= 2 else 0,
+            'h_norm': self._h.norm().item() if self._h is not None else 0,
             'metric_cv': diag.get('metric_cv', 0),
             'tau_mean': diag.get('tau_mean', 0),
             'events_in_context': diag.get('events_in_context', 0),
         }
+
+    def _build_context_prompt(self, n_events: int = 5) -> str:
+        """Assemble recent events into a text prompt fragment for QwenBridge.
+
+        Returns a string with the last n_events content previews, one per line,
+        oldest first. Used as prefix context when generating with attention bias.
+        """
+        N = min(len(self.events), self.max_events)
+        recent = self.events[-N:]
+        selected = recent[-n_events:] if len(recent) > n_events else recent
+
+        type_labels = {
+            0: 'User', 1: 'Assistant', 2: 'Tool', 3: 'Goal',
+            4: 'Context', 5: 'Temporal', 6: 'Reflection', 7: 'Expression',
+        }
+        # Only include conversational events (user + assistant), not system/internal
+        conversational_types = {0, 1}  # user_message, assistant_message
+        lines = []
+        for ev in selected:
+            ev_type = ev.get('type', 0)
+            if ev_type not in conversational_types:
+                continue
+            label = type_labels.get(ev_type, 'Event')
+            preview = ev.get('content_preview', '')[:200]
+            if preview:
+                lines.append(f"{label}: {preview}")
+
+        return '\n'.join(lines)
+
+    def generate_with_bias(self, prompt: str, max_tokens: int = 128) -> Dict:
+        """Generate text using ODE geometric bias on Qwen3 attention.
+
+        Computes attention bias B_ij from current ODE state and injects
+        into Qwen3's attention layers during generation.
+
+        Args:
+            prompt: Input prompt for Qwen3
+            max_tokens: Maximum new tokens to generate
+
+        Returns:
+            dict with: response, cv, D_sq_4tau, tau_mean, criticality_flag,
+                       bias_applied, error (on failure)
+        """
+        if self._qwen_bridge is None:
+            return {'response': '', 'error': 'no qwen_bridge configured'}
+
+        from .attention_bias import compute_attention_bias
+
+        with self._gpu_lock:
+            if self._h is None or self._h.shape[1] == 0:
+                return {'response': '', 'error': 'no ODE state — call observe_event first'}
+
+            N = self._h.shape[1]
+
+            event_ids = [t.get('event_id', 0) for t in self._token_buffer] if self._token_buffer else None
+
+            # State cosine bias with recency compensation.
+            # The ODE state cosine captures routing alignment but has recency bias —
+            # older events drift from the current trajectory.
+            # Compensation: boost cosine for token pairs involving older tokens.
+            # This counters the drift and gives distal causes more attention.
+
+            with torch.no_grad():
+                h_norm_vec = self._h / self._h.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                cos_sim = torch.bmm(h_norm_vec, h_norm_vec.transpose(1, 2))[0]  # [N, N]
+
+                # Recency compensation: tokens at index 0 are oldest, index N-1 newest.
+                # Boost pairs involving old tokens by a factor of up to 1.5×.
+                # This counteracts the ODE convergence that weakens old alignments.
+                positions = torch.arange(N, device=self.device, dtype=torch.float)
+                age = 1.0 - positions / max(N - 1, 1)  # 1.0 for oldest, 0.0 for newest
+                # Pairwise age boost: max(age_i, age_j) — boost if EITHER token is old
+                age_boost = age.unsqueeze(1).expand(N, N).max(
+                    age.unsqueeze(0).expand(N, N))
+                # Scale: 1.0 at newest pair, up to 2.0 at oldest pair.
+                # 2× compensates for ~50% cosine decay over 5 conversation turns.
+                recency_weight = 1.0 + 1.0 * age_boost
+
+                bias = cos_sim * recency_weight
+
+                # Add displacement if available
+                disp_bias = getattr(self, '_displacement_bias', None)
+                if disp_bias is not None and disp_bias.shape[0] == N:
+                    bias = 0.7 * bias + 0.3 * disp_bias
+                    bias_source = 'state_compensated+disp'
+                else:
+                    bias_source = 'state_compensated'
+
+            # Get diagnostics
+            _, diag = compute_attention_bias(self.dynamics, self._h, token_sources=event_ids)
+            diag['bias_source'] = bias_source
+
+            # Update adaptive D² EMA
+            if diag.get('D_sq_median', 0) > 0:
+                if self._D_sq_ema == 0:
+                    self._D_sq_ema = diag['D_sq_median']
+                else:
+                    self._D_sq_ema = ((1 - self._D_sq_ema_alpha) * self._D_sq_ema
+                                     + self._D_sq_ema_alpha * diag['D_sq_median'])
+
+            # Compute entropy on the ACTUAL bias being injected (after per-row normalization)
+            import math as _math
+            sample_n = min(64, N)
+            step = max(1, N // sample_n)
+            sample_idx = list(range(0, N, step))[:sample_n]
+            B_sample = bias[sample_idx, :]
+            target_range = 2.0 * _math.log(max(N, 2))
+            row_mean = B_sample.mean(dim=-1, keepdim=True)
+            row_centered = B_sample - row_mean
+            row_range = (row_centered.max(dim=-1, keepdim=True).values
+                         - row_centered.min(dim=-1, keepdim=True).values).clamp(min=1e-8)
+            B_scaled = row_centered / row_range * target_range
+            K_sample = torch.softmax(B_scaled, dim=-1)
+            actual_entropy = -(K_sample * (K_sample + 1e-10).log()).sum(dim=-1).mean().item()
+            max_ent = _math.log(N) if N > 1 else 1.0
+            actual_entropy_ratio = actual_entropy / max_ent
+            diag['entropy_ratio'] = actual_entropy_ratio
+            diag['attn_entropy'] = actual_entropy
+
+            # B statistics on the actual bias
+            if event_ids and len(event_ids) == N:
+                import random as _rng
+                bw, bx = [], []
+                for _ in range(min(500, N*N)):
+                    i, j = _rng.randint(0, N-1), _rng.randint(0, N-1)
+                    if i == j: continue
+                    v = bias[i, j].item()
+                    if event_ids[i] == event_ids[j]:
+                        bw.append(v)
+                    else:
+                        bx.append(v)
+                diag['B_within_mean'] = sum(bw) / max(len(bw), 1)
+                diag['B_across_mean'] = sum(bx) / max(len(bx), 1)
+                diag['B_across_max'] = max(bx) if bx else 0.0
+
+            n_unique_eids = len(set(event_ids)) if event_ids else 0
+            n_cross = len(bx) if 'bx' in dir() else 0
+            print(f"  [generate] bias [{N}x{N}] src={diag.get('bias_source', '?')} "
+                  f"H={actual_entropy_ratio:.2f} "
+                  f"Bw={diag.get('B_within_mean', 0):.3f} Bx={diag.get('B_across_mean', 0):.3f} "
+                  f"eids={n_unique_eids} xpairs={n_cross} "
+                  f"tau={diag['tau_mean']:.2f}")
+
+            # Generate with iterative ODE feedback
+            # Generate without post-hoc feedback to preserve buffer space.
+            # The response enters the ODE via observe_event in converse(),
+            # which adds it as a proper event with its own event_id.
+            # Post-hoc feedback floods the buffer with generated tokens,
+            # crowding out user content and reducing cross-event pairs.
+            response = self._qwen_bridge.generate(
+                prompt, bias=bias, max_new_tokens=max_tokens)
+
+        # Pass through all diagnostics from bias computation
+        result = {
+            'response': response,
+            'bias_applied': True,
+        }
+        result.update(diag)
+        return result
 
     def converse(self, user_message: str, max_new_tokens: int = 300,
                  temperature: float = 0.7) -> Dict:
@@ -1184,9 +2341,10 @@ class LiquidARCMind:
         Returns:
             dict with: response, diagnostics, geometric signal norms
         """
-        if not self._qwen_available:
-            return {'error': 'Qwen3 coupling not loaded'}
+        if not self._qwen_available and self._qwen_bridge is None and self._layer_wise_bridge is None:
+            return {'error': 'LLM not connected'}
 
+        print(f"\n  [converse] \"{user_message[:80]}\"")
         pre_diag = self.get_diagnostics()
 
         # ═══ INBOUND: User message → observe into ODE state ═══
@@ -1196,25 +2354,88 @@ class LiquidARCMind:
             metadata={'source': 'conversation'},
         )
 
-        # ═══ OUTBOUND: Build context-enriched prompt from ODE state ═══
-        # Extract recent context from event buffer to give Qwen3 temporal context
-        context_lines = []
-        n_context = min(len(self.events), 5)
-        for ev in self.events[-n_context - 1:-1]:  # exclude the just-added message
-            preview = ev.get('content_preview', '')[:100]
-            if preview and ev.get('type') not in [6, 7]:  # skip reflections/expressions
-                context_lines.append(preview)
+        # ═══ OUTBOUND: Layer-Wise ODE co-processing (preferred) ═══
+        if self._layer_wise_bridge is not None:
+            context_text = self._build_context_prompt(n_events=5)
+            prompt = f"{context_text}\nUser: {user_message}\nAssistant:" if context_text else user_message
 
-        if context_lines:
-            context_str = "\n".join(f"- {line}" for line in context_lines)
-            enriched_prompt = (f"Recent context:\n{context_str}\n\n"
-                               f"User question: {user_message}")
-        else:
-            enriched_prompt = user_message
+            result = self._layer_wise_bridge.generate(
+                prompt, max_new_tokens=max_new_tokens, temperature=temperature)
 
-        qwen_result = self.query_knowledge(
-            enriched_prompt, max_new_tokens=max_new_tokens,
-            temperature=temperature)
+            response = result.get('response', '')
+            if response and len(response) > 5:
+                self.observe_event(
+                    event_type='assistant_message',
+                    content=response[:1000],
+                    metadata={'source': 'layerwise_response'},
+                )
+
+            post_diag = self.get_diagnostics()
+            summary = result.get('diagnostics', {})
+            return {
+                'response': response,
+                'prediction_error': obs_result.get('prediction_error', 0),
+                'cv_before': pre_diag.get('metric_cv', 0),
+                'cv_after': post_diag.get('metric_cv', 0),
+                'cv_early': summary.get('cv_early', 0),
+                'cv_mid': summary.get('cv_mid', 0),
+                'cv_late': summary.get('cv_late', 0),
+                'tau_mean': summary.get('tau_mean', 0),
+                'events_in_context': post_diag.get('events_in_context', 0),
+                'h_norm': post_diag.get('h_norm', 0),
+                'n_layers_processed': summary.get('n_layers_processed', 0),
+                'B_range_early': summary.get('B_range_early', 0),
+                'B_range_late': summary.get('B_range_late', 0),
+                'architecture': 'layer_wise_ode',
+            }
+
+        # ═══ OUTBOUND: QwenBridge path (attention bias injection) ═══
+        if self._qwen_bridge is not None:
+            context_text = self._build_context_prompt(n_events=5)
+            prompt = f"{context_text}\nUser: {user_message}\nAssistant:" if context_text else f"User: {user_message}\nAssistant:"
+            bias_result = self.generate_with_bias(prompt, max_tokens=max_new_tokens)
+
+            response = bias_result.get('response', '')
+            if response and len(response) > 5:
+                self.observe_event(
+                    event_type='assistant_message',
+                    content=response[:1000],
+                    metadata={'source': 'qwen_bridge_response'},
+                )
+
+            post_diag = self.get_diagnostics()
+            return {
+                'response': response,
+                'prediction_error': obs_result.get('prediction_error', 0),
+                'cv_before': pre_diag.get('metric_cv', 0),
+                'cv_after': post_diag.get('metric_cv', 0),
+                'tau_mean': bias_result.get('tau_mean', 0),
+                'tau_std': bias_result.get('tau_std', 0),
+                'events_in_context': post_diag.get('events_in_context', 0),
+                'token_buffer_size': post_diag.get('token_buffer_size', 0),
+                'h_norm': self._h.norm().item() if self._h is not None else 0,
+                'bias_applied': bias_result.get('bias_applied', False),
+                'criticality_flag': bias_result.get('criticality_flag', False),
+                'attn_entropy': bias_result.get('attn_entropy', 0),
+                'entropy_ratio': bias_result.get('entropy_ratio', 0),
+                'D_sq_across': bias_result.get('D_sq_across', 0),
+                'B_within_mean': bias_result.get('B_within_mean', 0),
+                'B_across_mean': bias_result.get('B_across_mean', 0),
+                'B_across_max': bias_result.get('B_across_max', 0),
+                'B_range': bias_result.get('B_range', 0),
+                'bias_source': bias_result.get('bias_source', 'unknown'),
+            }
+
+        # ═══ OUTBOUND: Hybrid generation with all three channels ═══
+        qwen_result = self.hybrid_generate(
+            user_message,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            include_text_context=True,
+            include_geometric_prefix=True,
+            include_metadata=True,
+            max_context_events=5,
+        )
 
         if 'error' in qwen_result:
             return qwen_result
@@ -1228,6 +2449,22 @@ class LiquidARCMind:
                 content=response[:1000],
                 metadata={'source': 'qwen3_response'},
             )
+
+        # ═══ AUTO-FEEDBACK: Train geometric readout heads ═══
+        # Conversation events get positive signal, curriculum in top-K gets negative
+        try:
+            N = min(len(self.events), self.max_events)
+            scored = self._compute_combined_relevance(user_message)
+            for item in scored[:5]:
+                idx = item.get('index', -1)
+                if 0 <= idx < N:
+                    etype = item.get('type', '')
+                    if etype in ('user_msg', 'assistant_msg'):
+                        self.provide_feedback(idx, 'correct', signal=0.3)
+                    elif etype == 'context':
+                        self.provide_feedback(idx, 'irrelevant', signal=0.2)
+        except Exception:
+            pass  # auto-feedback is best-effort
 
         post_diag = self.get_diagnostics()
 
@@ -1244,34 +2481,75 @@ class LiquidARCMind:
     def express_through_qwen(self, focus_query: Optional[str] = None) -> Dict:
         """Express the Mind's state through Qwen3's language.
 
-        Instead of scalar diagnostics, projects h(t) into Qwen3 and lets it
-        generate a description of the Mind's current state. Different geometric
-        states produce different linguistic expressions.
+        Uses hybrid generation with all three channels — text context provides
+        factual grounding, geometric prefix provides implicit bias, metadata
+        provides processing signals. More context events (8) for richer self-reflection.
 
         Args:
             focus_query: Optional focus to direct the expression
 
         Returns:
-            dict with: expression text, diagnostics, event summary
+            dict with: expression text, diagnostics, channels used
         """
-        if not self._qwen_available:
-            return {'error': 'Qwen3 coupling not loaded'}
+        if not self._qwen_available and self._qwen_bridge is None and self._layer_wise_bridge is None:
+            return {'error': 'LLM not connected'}
 
-        # Build expression prompt from current state context
-        n_events = min(len(self.events), 5)
-        recent_topics = []
-        for ev in self.events[-n_events:]:
-            preview = ev.get('content_preview', '')[:80]
-            if preview:
-                recent_topics.append(preview)
+        prompt = focus_query or "What themes and patterns dominate your current processing?"
+        print(f"\n  [express] \"{prompt[:80]}\"")
 
-        if focus_query:
-            prompt = f"Given the following context: {'; '.join(recent_topics)}. {focus_query}"
-        else:
-            prompt = (f"Based on recent context about: {'; '.join(recent_topics)}. "
-                      "Describe the key themes and connections you observe.")
+        # ═══ Layer-Wise ODE path (preferred) ═══
+        if self._layer_wise_bridge is not None:
+            context_text = self._build_context_prompt(n_events=8)
+            full_prompt = (f"{context_text}\n{prompt}" if context_text else prompt)
+            result = self._layer_wise_bridge.generate(
+                full_prompt, max_new_tokens=300, temperature=0.7)
 
-        result = self.query_knowledge(prompt, max_new_tokens=300, temperature=0.7)
+            expression = result.get('response', '')
+            if expression and len(expression) > 10:
+                self.observe_event(
+                    event_type='expression',
+                    content=expression[:500],
+                    metadata={'source': 'layerwise_expression', 'focus': focus_query},
+                )
+
+            summary = result.get('diagnostics', {})
+            return {
+                'response': expression,
+                'source': 'layer_wise_ode',
+                'cv_mean': summary.get('cv_mean', 0),
+                'tau_mean': summary.get('tau_mean', 0),
+                'n_layers_processed': summary.get('n_layers_processed', 0),
+            }
+
+        # ═══ QwenBridge path (attention bias injection) ═══
+        if self._qwen_bridge is not None:
+            context_text = self._build_context_prompt(n_events=8)
+            full_prompt = (f"{context_text}\n{prompt}" if context_text else prompt)
+            bias_result = self.generate_with_bias(full_prompt, max_tokens=300)
+
+            if 'error' in bias_result:
+                return bias_result
+
+            expression = bias_result.get('response', '')
+            if expression and len(expression) > 10:
+                self.observe_event(
+                    event_type='expression',
+                    content=expression[:500],
+                    metadata={'source': 'qwen_bridge_expression', 'focus': focus_query},
+                )
+
+            bias_result['source'] = 'qwen_bridge'
+            return bias_result
+
+        result = self.hybrid_generate(
+            prompt,
+            max_new_tokens=300,
+            temperature=0.7,
+            include_text_context=True,
+            include_geometric_prefix=True,
+            include_metadata=True,
+            max_context_events=8,
+        )
 
         if 'error' in result:
             return result
@@ -1579,16 +2857,124 @@ class LiquidARCMind:
 
     # ──────────────────── AUTONOMOUS PROCESSING ────────────────────
 
-    # ──── Curriculum domains (built-in, no external LLM needed) ────
-    CURRICULUM_PROMPTS = {
-        'topology': "Explain a concept from algebraic topology in clear English. Respond only in English.",
-        'mathematics': "Explain a mathematical concept in clear English. Respond only in English.",
-        'physics': "Explain a concept from physics in clear English. Respond only in English.",
-        'biology': "Explain a concept from developmental biology in clear English. Respond only in English.",
-        'ecology': "Explain an ecological concept in clear English. Respond only in English.",
-        'music_theory': "Explain a concept from music theory in clear English. Respond only in English.",
-        'philosophy': "Explain a philosophical concept in clear English. Respond only in English.",
-        'poetry': "Explain a concept from poetry or poetics in clear English. Respond only in English.",
+    # ──── Curriculum system ────
+
+    DOMAIN_NAMES = {
+        'topology': 'algebraic topology',
+        'mathematics': 'pure mathematics',
+        'physics': 'theoretical physics',
+        'biology': 'developmental biology',
+        'ecology': 'ecology',
+        'music_theory': 'music theory',
+        'philosophy': 'philosophy',
+        'poetry': 'poetry and poetics',
+    }
+
+    COMPLEXITY_TIERS = [
+        "basic concept explained simply",
+        "intermediate concept with connections to other ideas",
+        "advanced concept requiring prior knowledge",
+        "cutting-edge research question or open problem",
+        "cross-domain connection between this field and another",
+    ]
+
+    CURATED_TOPICS = {
+        'topology': [
+            "Explain the Euler characteristic and how it classifies surfaces",
+            "What is a fiber bundle and why does it matter in physics?",
+            "How does persistent homology extract shape from data?",
+            "What makes the Poincare conjecture so important?",
+            "Explain covering spaces and their relationship to fundamental groups",
+            "What is a CW complex and how does it simplify topology?",
+            "How does Morse theory connect topology to calculus?",
+            "What are knot invariants and why are knots hard to classify?",
+            "Explain the hairy ball theorem and its consequences",
+            "What is homological algebra and how does it generalize topology?",
+        ],
+        'mathematics': [
+            "Explain Galois theory and why quintics have no general formula",
+            "What is a sheaf and why does algebraic geometry need them?",
+            "How does the Langlands program connect number theory to geometry?",
+            "What is a modular form and why did they help prove Fermat's Last Theorem?",
+            "Explain the Yoneda lemma and why category theorists love it",
+            "What is p-adic analysis and how does it differ from real analysis?",
+            "How does spectral theory connect linear algebra to quantum mechanics?",
+            "What is an ergodic system and why does ergodicity matter?",
+            "Explain the Riemann hypothesis in terms of prime distribution",
+            "What is a Lie group and how does it encode symmetry?",
+        ],
+        'physics': [
+            "Explain spontaneous symmetry breaking in the Higgs mechanism",
+            "What is the renormalization group and why does it matter?",
+            "How does the Aharonov-Bohm effect challenge classical intuition?",
+            "What is topological order in condensed matter?",
+            "Explain the connection between entropy and information",
+            "What are anyons and why do they matter for quantum computing?",
+            "How does AdS/CFT connect gravity to quantum field theory?",
+            "What is Berry phase and how does geometry enter quantum mechanics?",
+            "Explain decoherence and why Schrodinger's cat doesn't work at large scales",
+            "What is a quasicrystal and how does it challenge crystallography?",
+        ],
+        'biology': [
+            "How do Hox genes control body plan organization?",
+            "What is epigenetic inheritance and how does it work without DNA changes?",
+            "Explain the Waddington landscape model of cell differentiation",
+            "How do reaction-diffusion systems create biological patterns?",
+            "What is horizontal gene transfer and why does it complicate phylogenetics?",
+            "How do prions propagate without nucleic acid?",
+            "What is the RNA world hypothesis?",
+            "Explain quorum sensing in bacterial communities",
+            "How does the immune system distinguish self from non-self?",
+            "What are transposable elements and how do they shape genomes?",
+        ],
+        'ecology': [
+            "What is the intermediate disturbance hypothesis?",
+            "How do keystone species maintain ecosystem diversity?",
+            "Explain metacommunity theory and landscape-scale ecology",
+            "What is the paradox of the plankton?",
+            "How do mycorrhizal networks create forest communication?",
+            "What is ecological niche construction?",
+            "Explain island biogeography and species-area relationships",
+            "How do tipping points work in ecosystem collapse?",
+            "What is the competitive exclusion principle and its exceptions?",
+            "How does nutrient spiraling work in stream ecosystems?",
+        ],
+        'music_theory': [
+            "Explain the circle of fifths and why it organizes tonality",
+            "What is serialism and how did Schoenberg use tone rows?",
+            "How does counterpoint create independent melodic lines?",
+            "What is a Schenkerian analysis and what does it reveal?",
+            "Explain microtonal music and alternative tuning systems",
+            "What are modes and how do they differ from major/minor scales?",
+            "How does polyrhythm create complex temporal patterns?",
+            "What is spectral music and how does it use overtones?",
+            "Explain the difference between diatonic and chromatic harmony",
+            "How does gamelan music organize pitch and rhythm differently?",
+        ],
+        'philosophy': [
+            "What is the hard problem of consciousness?",
+            "Explain Wittgenstein's private language argument",
+            "What is emergence and how does it relate to reductionism?",
+            "How does Heidegger's concept of Dasein differ from Cartesian subjectivity?",
+            "What is the Chinese Room argument and what does it prove?",
+            "Explain pragmatism and how it defines truth differently",
+            "What is the frame problem in AI and philosophy of mind?",
+            "How does Merleau-Ponty's phenomenology of perception work?",
+            "What is the is-ought problem and why can't we derive values from facts?",
+            "Explain panpsychism and why some philosophers take it seriously",
+        ],
+        'poetry': [
+            "How does enjambment create tension between line and sentence?",
+            "What is the objective correlative and how did Eliot use it?",
+            "Explain sprung rhythm and how Hopkins broke metrical convention",
+            "How does the villanelle's repetitive structure create meaning?",
+            "What is language poetry and how does it challenge representation?",
+            "Explain the ghazal form and its tradition of autonomous couplets",
+            "How does concrete poetry merge visual and linguistic meaning?",
+            "What is negative capability and how does Keats relate to poetry?",
+            "Explain the difference between lyric, narrative, and dramatic poetry",
+            "How does haiku's constraint force precision of image?",
+        ],
     }
 
     def start_autonomous(self, voice=None):
@@ -1604,32 +2990,139 @@ class LiquidARCMind:
         B. Maintenance: periodic pathway exercise (~100 ODE cycles)
         C. External: triggered by incoming conversation events
         """
+        import re as _re
+        import collections as _collections
+
         self._running = True
-        self.voice = voice  # kept for backward compat but not used in geometric path
-        self.trigger = ReflectionTrigger(cv_shift_threshold=0.3)
-        self._curriculum_domains = list(self.CURRICULUM_PROMPTS.keys())
+        self.voice = voice
+        # Disable h_norm_drift trigger entirely — h_norm grows naturally with events
+        # and is not indicative of problems. CV shift is the meaningful geometric signal.
+        self.trigger = ReflectionTrigger(cv_shift_threshold=3.0, h_norm_ceiling=1e9)
+        self._reflection_limiter = ReflectionLimiter(max_ratio=0.33)
+        self._curiosity = CuriosityController()
+        self._curriculum_domains = list(self.DOMAIN_NAMES.keys())
         self._curriculum_idx = 0
         self._curriculum_count = 0
 
+        # Topic tracking — anti-repetition
+        if not hasattr(self, '_curriculum_history'):
+            self._curriculum_history = {d: [] for d in self._curriculum_domains}
+        if not hasattr(self, '_curriculum_tier'):
+            self._curriculum_tier = {d: 0 for d in self._curriculum_domains}
+
+        # PE-based reflection trigger
+        self._pe_history = _collections.deque(maxlen=50)
+
+        # Feed/digest scheduler
+        if not hasattr(self, '_scheduler_phase'):
+            self._scheduler_phase = 'feed'
+            self._scheduler_stimuli_this_phase = 0
+            self._scheduler_cycles_this_phase = 0
+        self._scheduler_feed_count = 20
+        self._scheduler_digest_cycles = 200
+
         # Curriculum instrumentation
-        self._curriculum_stats = {
-            'domain_counts': {d: 0 for d in self._curriculum_domains},
-            'domain_pe_history': {d: [] for d in self._curriculum_domains},
-            'domain_cv_history': {d: [] for d in self._curriculum_domains},
-            'domain_tau_history': {d: [] for d in self._curriculum_domains},
-            'domain_avg_pe': {},
-            'domain_avg_cv': {},
-            'domain_avg_tau': {},
-            'domain_effectiveness': {},
-            'growth_zone_domains': [],
-        }
+        if not hasattr(self, '_curriculum_stats') or self._curriculum_stats is None:
+            self._curriculum_stats = {
+                'domain_counts': {d: 0 for d in self._curriculum_domains},
+                'domain_pe_history': {d: [] for d in self._curriculum_domains},
+                'domain_cv_history': {d: [] for d in self._curriculum_domains},
+                'domain_tau_history': {d: [] for d in self._curriculum_domains},
+                'domain_avg_pe': {},
+                'domain_avg_cv': {},
+                'domain_avg_tau': {},
+                'domain_effectiveness': {},
+                'growth_zone_domains': [],
+            }
+
+        def _extract_topic(text):
+            """Extract topic from curriculum text for anti-repetition."""
+            bold = _re.search(r'\*\*(.+?)\*\*', text)
+            if bold:
+                return bold.group(1).lower().strip()[:50]
+            first_line = text.strip().split('\n')[0]
+            return first_line[:50].lower().strip()
+
+        def _generate_curriculum_prompt(domain):
+            """Build diverse prompt with anti-repetition + tiered complexity."""
+            already = self._curriculum_history.get(domain, [])
+            already_str = ', '.join(already[-20:]) if already else 'none'
+            tier_idx = self._curriculum_tier.get(domain, 0) % len(self.COMPLEXITY_TIERS)
+            tier = self.COMPLEXITY_TIERS[tier_idx]
+            self._curriculum_tier[domain] = self._curriculum_tier.get(domain, 0) + 1
+            domain_name = self.DOMAIN_NAMES.get(domain, domain)
+
+            return (
+                f"Explain a concept from {domain_name}. "
+                f"Difficulty level: {tier}. "
+                f"AVOID these already-covered topics: {already_str}. "
+                f"Choose something genuinely different. "
+                f"Respond only in English. Keep it under 200 words."
+            )
+
+        # Load external curriculum bank if available (from Nemotron batch generation)
+        self._curriculum_bank = {}
+        import os as _os
+        for bank_path in [
+            '/workspace/liquid-arc/curriculum_bank.json',
+            _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), 'curriculum_bank.json'),
+        ]:
+            if _os.path.exists(bank_path):
+                try:
+                    import json as _json
+                    with open(bank_path) as f:
+                        self._curriculum_bank = _json.load(f)
+                    n_total = sum(len(v) for v in self._curriculum_bank.values())
+                    print(f"  Curriculum bank loaded: {n_total} topics from {bank_path}")
+                except Exception as e:
+                    print(f"  Curriculum bank load failed: {e}")
+                break
+
+        def _get_curriculum_prompt(domain):
+            """Get stimulus — prefer bank, then curated fallback, then generated."""
+            history = self._curriculum_history.get(domain, [])
+
+            # Priority 1: External bank (Nemotron-generated, diverse)
+            bank_topics = self._curriculum_bank.get(domain, [])
+            if bank_topics:
+                idx = len(history) % len(bank_topics)
+                return bank_topics[idx]  # Full text, not a prompt — use directly
+
+            # Priority 2: Curated fallback if generating repeats
+            recent = history[-10:] if len(history) >= 10 else history
+            if len(recent) >= 5 and len(set(recent)) < len(recent) // 2:
+                curated = self.CURATED_TOPICS.get(domain, [])
+                if curated:
+                    idx = len(history) % len(curated)
+                    return curated[idx]
+
+            # Priority 3: Generated prompt
+            return _generate_curriculum_prompt(domain)
+
+        self._pe_trigger_cooldown = 0
+
+        def _check_pe_trigger(current_pe):
+            """Trigger reflection when PE is unusual relative to running average."""
+            if self._pe_trigger_cooldown > 0:
+                self._pe_trigger_cooldown -= 1
+                return False
+            if len(self._pe_history) < 10:
+                self._pe_history.append(current_pe)
+                return False
+            pe_mean = sum(self._pe_history) / len(self._pe_history)
+            pe_std = (sum((p - pe_mean)**2 for p in self._pe_history) / len(self._pe_history)) ** 0.5
+            self._pe_history.append(current_pe)
+            if abs(current_pe - pe_mean) > 1.5 * max(pe_std, 10.0):
+                self._pe_trigger_cooldown = 20  # 20 cycles cooldown
+                return True
+            return False
 
         def _loop():
             while self._running:
-                if self._h is not None and len(self.events) > 0:
-                    N = min(len(self.events), self.max_events)
+                if self._h is not None and self._h.shape[1] > 0:
 
                     # ═══ PHASE 1: Pure ODE processing + write mechanisms ═══
+                    N = self._h.shape[1]
                     with self._gpu_lock:
                         try:
                             self._compute_tau_bias()
@@ -1645,8 +3138,11 @@ class LiquidARCMind:
                                 h_auto = self._run_ode_segment(
                                     h_slice, 16, forcing=None)
 
-                            self._h = self._h.detach()
-                            self._h[:, :N, :] = h_auto
+                            self._h = h_auto.detach()
+                            # Sync token buffer with ODE-updated positions
+                            if self._token_buffer and self._h.shape[1] == len(self._token_buffer):
+                                for i in range(len(self._token_buffer)):
+                                    self._token_buffer[i]['delta_h'] = self._h[0, i].detach().float()
                             self._update_salience(self._h)
                         except Exception as e:
                             print(f"Autonomous ODE error: {e}")
@@ -1655,22 +3151,57 @@ class LiquidARCMind:
                     self._cycles_since_reflection += 1
                     self._cycles_since_stimulus += 1
 
+                    # Curiosity logging suppressed — only log on phase transitions (handled in curiosity controller)
+
                     # ═══ PHASE 2: Decide whether to reflect/stimulate ═══
+                    # Suppress during active conversation — curriculum and reflections
+                    # dilute the ODE state and context with unrelated content
+                    in_conversation = (time.time() - self._last_user_event_time
+                                       < self._conversation_quiet_period)
+
+                    # Shrink buffer back to idle size after conversation ends
+                    if not in_conversation and self._max_tokens > self._max_tokens_idle:
+                        self._max_tokens = self._max_tokens_idle
+
                     should_reflect = False
                     should_stimulate = False
+                    curiosity_domain = None
+                    curiosity_reason = None
                     reflection_mode = None
                     trigger_reason = None
 
-                    if self._qwen_available:
-                        # Check A: External event pending
-                        if self._external_event_pending:
+                    # Ask curiosity controller if we should inject
+                    last_pe = self._pe_history[-1] if self._pe_history else 0
+                    c_stats = getattr(self, '_curriculum_stats', None) or {}
+                    c_stats['domains'] = self._curriculum_domains
+                    recent_refs = self.get_recent_reflections(n=5)
+                    should_stimulate_c, curiosity_domain, curiosity_reason = \
+                        self._curiosity.should_inject(last_pe, c_stats, recent_refs)
+
+                    # Consolidation mode: curiosity is digesting OR manual pause
+                    is_consolidating = (self._curiosity.current_phase in ('calibrating', 'digesting')
+                                        or curiosity_reason in ('digesting', 'forced_digest', 'satiated')
+                                        or self._stimulus_interval >= 999)
+
+                    # Minimum cooldown + ratio limiter (max 1 reflection per 2 curriculum)
+                    # During consolidation, only maintenance reflections (diagnostic-only)
+                    # During active conversation, suppress ALL curriculum and non-essential reflections
+                    reflection_allowed = (self._cycles_since_reflection >= 10
+                                          and not is_consolidating
+                                          and not in_conversation
+                                          and self._reflection_limiter.can_reflect())
+
+                    if self._qwen_available or self._qwen_bridge is not None:
+                        # Check A: External event pending (only if cooldown passed)
+                        if reflection_allowed and self._external_event_pending:
                             should_reflect = True
                             reflection_mode = 'external'
                             trigger_reason = 'External event — geometric integration'
                             self._external_event_pending = False
 
                         # Check B: Triggered conditions (every 10 cycles)
-                        if not should_reflect and self._cycles_since_reflection % 10 == 0:
+                        if (not should_reflect and reflection_allowed
+                                and self._cycles_since_reflection % 10 == 0):
                             diag = self.get_diagnostics()
                             trigger_reason = self.trigger.check(
                                 diag, self._last_reflection_pe)
@@ -1678,22 +3209,30 @@ class LiquidARCMind:
                                 should_reflect = True
                                 reflection_mode = 'triggered'
 
-                        # Check C: Curriculum stimulus
-                        if not should_reflect:
-                            if self._cycles_since_stimulus >= self._stimulus_interval:
-                                should_stimulate = True
+                        # Check B2: PE-based trigger (with cooldown)
+                        if (not should_reflect and reflection_allowed
+                                and len(self._pe_history) >= 10):
+                            last_pe = self._pe_history[-1] if self._pe_history else 0
+                            if _check_pe_trigger(last_pe):
+                                should_reflect = True
+                                reflection_mode = 'triggered'
+                                trigger_reason = f'PE anomaly: {last_pe:.0f}'
 
-                        # Check D: Maintenance
-                        if not should_reflect and not should_stimulate:
+                        # Check C: Curiosity-driven curriculum stimulus
+                        # SUPPRESSED during active conversation to protect ODE state alignment
+                        if not should_reflect and should_stimulate_c and not in_conversation:
+                            should_stimulate = True
+
+                        # Check D: Maintenance (only during idle)
+                        if not should_reflect and not should_stimulate and not in_conversation:
                             if self._cycles_since_reflection >= self.maintenance_interval:
                                 should_reflect = True
                                 reflection_mode = 'maintenance'
                                 trigger_reason = f'Maintenance ({self._cycles_since_reflection} cycles)'
 
-                    # ═══ PHASE 3a: Geometric reflection through Qwen3 ═══
+                    # ═══ PHASE 3a: Hybrid reflection through Qwen3 ═══
                     if should_reflect:
                         try:
-                            # Reflect: project h(t) → Qwen3 → read back as geometry
                             if reflection_mode == 'maintenance':
                                 prompt = ("Briefly reflect on the current state of your processing. "
                                           "Respond in English only. One paragraph.")
@@ -1702,54 +3241,107 @@ class LiquidARCMind:
                                           "in your current state? Respond in English only. "
                                           "Keep your response concise — one paragraph.")
 
-                            result = self.express_through_qwen(focus_query=prompt)
+                            # Generate reflection via QwenBridge (bias-guided) or legacy hybrid
+                            # Use generate() directly — NOT generate_with_bias which does
+                            # post-hoc feedback (double Qwen3 forward → OOM on autonomous loop).
+                            # The reflection text feeds back via observe_event instead.
+                            if self._qwen_bridge is not None:
+                                context_text = self._build_context_prompt(n_events=3)
+                                full_prompt = f"{context_text}\n{prompt}" if context_text else prompt
+                                from .attention_bias import compute_attention_bias
+                                with self._gpu_lock:
+                                    if self._h is not None and self._h.shape[1] > 0:
+                                        sources = [t.get('event_id', 0) for t in self._token_buffer] if self._token_buffer else None
+                                        bias, _ = compute_attention_bias(self.dynamics, self._h, token_sources=sources)
+                                    else:
+                                        bias = None
+                                reflection_text = self._qwen_bridge.generate(
+                                    full_prompt, bias=bias, max_new_tokens=100)
+                                result = {'response': reflection_text}
+                            else:
+                                result = self.hybrid_generate(
+                                    prompt,
+                                    max_new_tokens=200,
+                                    temperature=0.7,
+                                    include_text_context=True,
+                                    include_geometric_prefix=False,
+                                    include_metadata=False,
+                                    max_context_events=5,
+                                )
                             reflection_text = result.get('response', '')
 
                             if reflection_text and len(reflection_text) > 5:
-                                # The expression already observed itself as an event
-                                # via express_through_qwen. Just update tracking.
-                                self._last_reflection_pe = 0  # geometric — no PE
-                                self._last_reflection_text = reflection_text
-                                self._reflection_count += 1
-                                self._cycles_since_reflection = 0
+                                # During consolidation: diagnostic-only (EEG mode)
+                                # Read the reflection like an EEG — observe without disturbing
+                                if is_consolidating:
+                                    # DO NOT feed back as event — ODE processes in silence
+                                    self._last_reflection_text = reflection_text
+                                    self._reflection_count += 1
+                                    self._cycles_since_reflection = 0
+                                    diag = self.get_diagnostics()
+                                    print(f"  [diagnostic] #{self._reflection_count}: "
+                                          f"CV={diag.get('metric_cv', 0):.2f} "
+                                          f"tau={diag.get('tau_mean', 0):.2f} "
+                                          f"h={diag.get('h_norm', 0):.0f} "
+                                          f"\"{reflection_text[:60]}\"")
+                                else:
+                                    # Active mode: feed reflection back as event
+                                    self.observe_event(
+                                        event_type='expression',
+                                        content=reflection_text[:500],
+                                        metadata={'source': 'qwen3_expression',
+                                                  'focus': prompt},
+                                    )
 
-                                # Hebbian nudge on non-maintenance reflections
-                                if reflection_mode != 'maintenance':
-                                    try:
-                                        ctx = self.get_context()
-                                        if ctx.get('focus_indices'):
-                                            with self._gpu_lock:
-                                                self._hebbian_nudge(
-                                                    self._h, ctx['focus_indices'])
-                                    except Exception:
-                                        pass
+                                    self._last_reflection_pe = 0
+                                    self._last_reflection_text = reflection_text
+                                    self._reflection_count += 1
+                                    self._reflection_limiter.on_reflection()
+                                    self._cycles_since_reflection = 0
 
-                                self._trigger_stats[f'{reflection_mode}_reflections'] = \
-                                    self._trigger_stats.get(f'{reflection_mode}_reflections', 0) + 1
+                                    # Hebbian nudge on non-maintenance reflections
+                                    if reflection_mode != 'maintenance':
+                                        try:
+                                            ctx = self.get_context()
+                                            if ctx.get('focus_indices'):
+                                                with self._gpu_lock:
+                                                    self._hebbian_nudge(
+                                                        self._h, ctx['focus_indices'])
+                                        except Exception:
+                                            pass
 
-                                print(f"  [{reflection_mode}] #{self._reflection_count}: "
-                                      f"\"{reflection_text[:60]}\" "
-                                      f"(reason: {trigger_reason[:40] if trigger_reason else 'n/a'})")
+                                    self._trigger_stats[f'{reflection_mode}_reflections'] = \
+                                        self._trigger_stats.get(f'{reflection_mode}_reflections', 0) + 1
+
+                                    print(f"  [{reflection_mode}] #{self._reflection_count}: "
+                                          f"\"{reflection_text[:60]}\" "
+                                          f"(reason: {trigger_reason[:40] if trigger_reason else 'n/a'})")
 
                         except Exception as e:
                             print(f"Reflection error: {e}")
                             self._cycles_since_reflection = 0
 
-                    # ═══ PHASE 3b: Geometric curriculum through Qwen3 ═══
+                    # ═══ PHASE 3b: Curiosity-driven curriculum ═══
                     elif should_stimulate:
                         try:
-                            # Cycle through domains
-                            domain = self._curriculum_domains[
+                            # Domain selected by curiosity controller (novelty-weighted)
+                            domain = curiosity_domain or self._curriculum_domains[
                                 self._curriculum_idx % len(self._curriculum_domains)]
                             self._curriculum_idx += 1
                             self._curriculum_count += 1
 
-                            # Query Qwen3 for stimulus — conditioned on current state
-                            prompt = self.CURRICULUM_PROMPTS[domain]
-                            result = self.query_knowledge(
-                                prompt, max_new_tokens=150, temperature=0.7)
+                            # Get stimulus — bank text or generated prompt
+                            prompt_or_text = _get_curriculum_prompt(domain)
+                            bank_topics = self._curriculum_bank.get(domain, [])
 
-                            stimulus_text = result.get('response', '')
+                            if bank_topics:
+                                # Bank provides full text — use directly, no Qwen3 call
+                                stimulus_text = prompt_or_text
+                            else:
+                                # Generated prompt — query Qwen3
+                                result = self.query_knowledge(
+                                    prompt_or_text, max_new_tokens=150, temperature=0.7)
+                                stimulus_text = result.get('response', '')
 
                             if stimulus_text and len(stimulus_text) > 10:
                                 # Use observe_event for curriculum — stimulus already
@@ -1764,12 +3356,20 @@ class LiquidARCMind:
                                     })
 
                                 self._cycles_since_stimulus = 0
+                                self._reflection_limiter.on_curriculum()
+
+                                # Topic tracking for anti-repetition
+                                topic = _extract_topic(stimulus_text)
+                                self._curriculum_history.setdefault(domain, []).append(topic)
+
+                                # PE tracking for trigger (curiosity controller uses this too)
+                                pe = obs_result.get('prediction_error', 0)
+                                self._pe_history.append(pe)
 
                                 # ── Curriculum stats tracking ──
                                 diag = self.get_diagnostics()
                                 current_cv = diag.get('metric_cv', 0)
                                 current_tau = diag.get('tau_mean', 0)
-                                pe = obs_result.get('prediction_error', 0)
 
                                 stats = self._curriculum_stats
                                 stats['domain_counts'][domain] = stats['domain_counts'].get(domain, 0) + 1
@@ -1822,8 +3422,9 @@ class LiquidARCMind:
                                             print(f"  [curriculum] growth zones: "
                                                   f"{stats['growth_zone_domains']}")
 
-                                print(f"  [curriculum] #{self._curriculum_count} "
+                                print(f"  [curiosity] #{self._curriculum_count} "
                                       f"domain={domain} PE={pe:.1f} CV={current_cv:.2f} "
+                                      f"reason={curiosity_reason} "
                                       f"\"{stimulus_text[:60]}\"")
 
                         except Exception as e:
@@ -1873,13 +3474,29 @@ class LiquidARCMind:
                 'salience': self._salience.cpu(),
                 'consolidation_emb': self._consolidation_emb.cpu(),
                 'high_tau_streak': self._high_tau_streak.cpu(),
-                # Curriculum stats
+                'event_embed_cache': self._event_embed_cache.cpu(),
+                'h_norm_ceiling': self._h_norm_ceiling,
+                'h_norm_ema': self._h_norm_ema,
+                # Curriculum state (full)
                 'curriculum_stats': getattr(self, '_curriculum_stats', None),
                 'curriculum_count': getattr(self, '_curriculum_count', 0),
                 'curriculum_idx': getattr(self, '_curriculum_idx', 0),
+                'curriculum_history': getattr(self, '_curriculum_history', {}),
+                'curriculum_tier': getattr(self, '_curriculum_tier', {}),
+                'scheduler_phase': getattr(self, '_scheduler_phase', 'feed'),
+                'scheduler_stimuli_this_phase': getattr(self, '_scheduler_stimuli_this_phase', 0),
+                'scheduler_cycles_this_phase': getattr(self, '_scheduler_cycles_this_phase', 0),
                 # Reflection state
                 'reflection_count': self._reflection_count,
                 'last_reflection_text': self._last_reflection_text,
+                # Reflection limiter
+                'reflection_limiter_curriculum': getattr(self, '_reflection_limiter', None) and self._reflection_limiter.curriculum_count,
+                'reflection_limiter_reflection': getattr(self, '_reflection_limiter', None) and self._reflection_limiter.reflection_count,
+                # Curiosity controller
+                'curiosity_pe_baseline': getattr(self, '_curiosity', None) and self._curiosity.pe_baseline,
+                'curiosity_phase': getattr(self, '_curiosity', None) and self._curiosity.current_phase,
+                'curiosity_total_injections': getattr(self, '_curiosity', None) and self._curiosity.total_injections,
+                'curiosity_consecutive': getattr(self, '_curiosity', None) and self._curiosity.consecutive_stimuli,
             }
         torch.save(state, path)
         print(f"Mind state saved: {path} ({len(self.events)} events, "
@@ -1928,18 +3545,53 @@ class LiquidARCMind:
             if 'high_tau_streak' in state:
                 n = min(state['high_tau_streak'].shape[0], self._high_tau_streak.shape[0])
                 self._high_tau_streak[:n] = state['high_tau_streak'][:n].to(self.device)
+            if 'event_embed_cache' in state:
+                n = min(state['event_embed_cache'].shape[0], self._event_embed_cache.shape[0])
+                self._event_embed_cache[:n] = state['event_embed_cache'][:n].to(self.device)
+            else:
+                # Rebuild from loaded events if no cache in state
+                self._rebuild_event_embed_cache()
+            if 'h_norm_ceiling' in state:
+                self._h_norm_ceiling = state['h_norm_ceiling']
+                self._h_norm_ema = state.get('h_norm_ema', 0.0)
 
-            # Curriculum stats
+            # Curriculum state (full)
             if state.get('curriculum_stats') is not None:
                 self._curriculum_stats = state['curriculum_stats']
                 self._curriculum_count = state.get('curriculum_count', 0)
                 self._curriculum_idx = state.get('curriculum_idx', 0)
-                print(f"  Restored curriculum stats ({self._curriculum_count} stimuli)")
+                self._curriculum_history = state.get('curriculum_history', {})
+                self._curriculum_tier = state.get('curriculum_tier', {})
+                self._scheduler_phase = state.get('scheduler_phase', 'feed')
+                self._scheduler_stimuli_this_phase = state.get('scheduler_stimuli_this_phase', 0)
+                self._scheduler_cycles_this_phase = state.get('scheduler_cycles_this_phase', 0)
+                n_topics = sum(len(v) for v in self._curriculum_history.values())
+                print(f"  Restored curriculum ({self._curriculum_count} stimuli, "
+                      f"{n_topics} topics, phase={self._scheduler_phase})")
 
             # Reflection state
             if 'reflection_count' in state:
                 self._reflection_count = state['reflection_count']
                 self._last_reflection_text = state.get('last_reflection_text')
+
+            # Reflection limiter
+            if hasattr(self, '_reflection_limiter') and state.get('reflection_limiter_curriculum') is not None:
+                self._reflection_limiter.curriculum_count = state['reflection_limiter_curriculum']
+                self._reflection_limiter.reflection_count = state.get('reflection_limiter_reflection', 0)
+
+            # Curiosity controller
+            if hasattr(self, '_curiosity') and state.get('curiosity_pe_baseline') is not None:
+                baseline = state['curiosity_pe_baseline']
+                self._curiosity.total_injections = state.get('curiosity_total_injections', 0)
+                self._curiosity.consecutive_stimuli = state.get('curiosity_consecutive', 0)
+                if baseline and baseline > 0:
+                    self._curiosity.pe_baseline = baseline
+                    self._curiosity.current_phase = state.get('curiosity_phase', 'exploring')
+                else:
+                    # Force recalibration if baseline was 0
+                    self._curiosity.current_phase = 'calibrating'
+                print(f"  Restored curiosity (baseline={self._curiosity.pe_baseline}, "
+                      f"phase={self._curiosity.current_phase})")
 
         print(f"Mind state loaded: {path} ({len(self.events)} events, "
               f"event_count={self.event_count})")

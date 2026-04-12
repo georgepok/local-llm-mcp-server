@@ -1,0 +1,53 @@
+# LiquidARC Mind — Qwen3-30B-A3B with delta extraction
+# d=2048 matches Qwen3-30B-A3B hidden_size natively (no projection needed)
+# 48 layers, all standard GQA attention — fully hookable
+# Text enters as hidden state deltas (trajectory signal)
+
+d_model: 2048
+d_metric: 512
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 4096
+n_ode_steps: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 0
+dropout: 0.1
+
+use_torch_compile: false
+
+# Sustained criticality (active in Mind)
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.005
+criticality_target_ratio: 60.0
+criticality_D_sq_target: 0.0
+
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.1
+tau_mean_target: 0.0       # auto: 2.0
+tau_log_spread_target: 0.6
+
+# CV homeostasis
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Norm homeostasis
+norm_ref: 45.0    # sqrt(2048) ≈ 45
+norm_lambda: 0.3
+
+# Conversation
+max_context_events: 64
+content_embed_dim: 384
+n_metadata_features: 8
+n_event_types: 8
+
+# Online learning
+online_lr: 0.00001
+feedback_grad_clip: 0.1
+lambda_eff: 0.001
+
+# MCP server
+port: 8420
+host: "0.0.0.0"

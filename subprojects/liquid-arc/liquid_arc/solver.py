@@ -28,11 +28,19 @@ def euler_solve(fn, y0: torch.Tensor, t_span: tuple, n_steps: int,
     If return_efficiency=True, also returns mean(||dh/dt||²) as efficiency
     cost for the adaptive autonomy regularizer. This PENALIZES unnecessary
     dynamics (opposite of curiosity which REWARDED them → NaN).
+
+    Norm homeostasis: if fn has _norm_ref > 0, per-position norms are soft-clipped
+    after each step. This prevents unbounded h growth that the dynamics alone
+    cannot contain (target = h + update moves with h).
     """
     t_start, t_end = t_span
     dt = (t_end - t_start) / n_steps
     t = t_start
     y = y0
+
+    # Norm homeostasis parameters from dynamics
+    norm_ref = getattr(fn, '_norm_ref', 0.0)
+    norm_lambda = getattr(fn, '_norm_lambda', 0.0)
 
     if return_efficiency:
         efficiency_accum = torch.tensor(0.0, device=y0.device)
@@ -48,6 +56,19 @@ def euler_solve(fn, y0: torch.Tensor, t_span: tuple, n_steps: int,
             efficiency_accum = efficiency_accum + (dy ** 2).mean()
 
         y = y + dt * dy
+
+        # Per-position norm homeostasis: smoothly shrink toward norm_ref.
+        # scale = norm_ref / ||y_i|| when ||y_i|| > norm_ref, blended by norm_lambda.
+        # At norm_lambda=1.0: hard clip. At 0.1: gentle pull (90% current + 10% clipped).
+        if norm_ref > 0 and norm_lambda > 0:
+            pos_norm = y.detach().norm(dim=-1, keepdim=True).clamp(min=1e-8)  # [B, N, 1]
+            scale = torch.where(
+                pos_norm > norm_ref,
+                1.0 - norm_lambda * (1.0 - norm_ref / pos_norm),  # shrink
+                torch.ones_like(pos_norm),  # no change below ref
+            )
+            y = y * scale
+
         t = t + dt
 
     if return_efficiency:

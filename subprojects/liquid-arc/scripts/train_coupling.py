@@ -56,11 +56,12 @@ def load_arc_model(config: LiquidARCConfig, checkpoint_path: str,
 
 
 def load_qwen_model(model_path: str, device: torch.device, gradient_checkpointing: bool = True):
-    """Load frozen Qwen3-4B from local path."""
+    """Load frozen LLM from local path (Qwen3-4B, Nemotron-30B, etc.)."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    print(f"  Loading Qwen3-4B from {model_path}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model_name = os.path.basename(model_path)
+    print(f"  Loading LLM from {model_path}...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -68,16 +69,24 @@ def load_qwen_model(model_path: str, device: torch.device, gradient_checkpointin
         model_path,
         torch_dtype=torch.bfloat16,
         device_map={'': device},
+        trust_remote_code=True,
     )
     model.eval()
     for p in model.parameters():
         p.requires_grad_(False)
 
     if gradient_checkpointing:
-        model.gradient_checkpointing_enable()
+        try:
+            model.gradient_checkpointing_enable()
+        except Exception as e:
+            print(f"  WARNING: gradient_checkpointing not supported ({e})")
 
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"  Qwen3-4B loaded: {n_params/1e9:.2f}B params, d_model={model.config.hidden_size}")
+    d_model = getattr(model.config, 'hidden_size', None)
+    # Nemotron nests hidden_size in text_config
+    if d_model is None and hasattr(model.config, 'text_config'):
+        d_model = model.config.text_config.hidden_size
+    print(f"  {model_name} loaded: {n_params/1e9:.2f}B params, d_model={d_model}")
     return model, tokenizer
 
 

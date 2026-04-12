@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -131,8 +132,14 @@ def print_status(model, result, step, tok_per_sec):
         tau_max = result.get("tau_max", torch.tensor(0.0))
         if isinstance(tau_max, torch.Tensor):
             tau_max = tau_max.item()
+        cvtau = result.get("cv_tau_product", 0.0)
+        crit_extra = ""
+        if "crit_ratio" in result:
+            crit_extra = f", D²/4τ={result['crit_ratio']:.1f}"
+        log_tau_std_val = result.get("log_tau_std", 0.0)
         extra = (f", cv={cv_val:.4f}, |k|={kappa_val:.4f}, "
-                 f"tau={tau_val:.2f}[{tau_min:.2f}-{tau_max:.2f}]σ={tau_std:.3f}")
+                 f"tau={tau_val:.2f}[{tau_min:.2f}-{tau_max:.2f}]σ={tau_std:.3f}, "
+                 f"cv·τ={cvtau:.2f}, log_τ_std={log_tau_std_val:.3f}{crit_extra}")
 
     cell_acc = result.get("cell_accuracy", torch.tensor(0.0))
     if isinstance(cell_acc, torch.Tensor):
@@ -155,10 +162,14 @@ def print_status(model, result, step, tok_per_sec):
             geo_kl = geo_kl.item()
         geo_extra = f", geo={geo_l:.4f}"
 
+    mix_extra = ""
+    if "arc_mix" in result:
+        mix_extra = f", mix={result['arc_mix']:.0%}"
+
     print(f"  [step={step}] loss={result['loss'].item():.4f}, "
           f"ce={result['ce_loss'].item():.4f}, xf_loss={xform_loss:.4f}, "
           f"cell_acc={cell_acc:.4f}, xform_acc={xform_acc:.4f}, "
-          f"tok/s={tok_per_sec:.0f}{extra}{geo_extra}")
+          f"tok/s={tok_per_sec:.0f}{extra}{geo_extra}{mix_extra}")
 
 
 def save_checkpoint(model, optimizer, config, step, path, extra=None):
@@ -484,14 +495,15 @@ def train(args, config, device):
         print(f"  Resuming from {args.resume}")
         ckpt = torch.load(args.resume, map_location=device, weights_only=False)
         # Strip _orig_mod. prefix from torch.compile'd checkpoints
-        state = ckpt["model"]
+        state = ckpt.get("model") or ckpt.get("model_state_dict")
         cleaned = {}
         for k, v in state.items():
             cleaned[k.replace("._orig_mod.", ".")] = v
         model.load_state_dict(cleaned, strict=False)
-        if ckpt.get("optimizer") is not None:
+        opt_state = ckpt.get("optimizer") or ckpt.get("optimizer_state_dict")
+        if opt_state is not None:
             try:
-                optimizer.load_state_dict(ckpt["optimizer"])
+                optimizer.load_state_dict(opt_state)
             except (ValueError, RuntimeError) as e:
                 print(f"  Skipping optimizer restore ({e})")
         start_step = ckpt["step"]
@@ -557,6 +569,12 @@ def train(args, config, device):
                 raw_model.dynamics.freeze_tau = should_freeze
                 if not should_freeze:
                     print(f"\n  >> TAU UNFROZEN at step {step}\n")
+
+        # Environmental perturbation: randomize real_arc_mix_ratio each step
+        # Simulates ongoing environmental variation the geometry must adapt to
+        if args.perturb_at_step and step >= args.perturb_at_step:
+            mix_lo, mix_hi = args.perturb_mix_range
+            config.real_arc_mix_ratio = random.uniform(mix_lo, mix_hi)
 
         # Temporal invariance: randomize ODE step count per batch
         if isinstance(model, LiquidARCModel) or (
@@ -637,12 +655,23 @@ def train(args, config, device):
                     + result["curv_loss"]
                     + result["tau_var_loss"]
                     + result.get("cv_floor_loss", torch.tensor(0.0, device=device))
+                    + result.get("criticality_loss", torch.tensor(0.0, device=device))
+                    + result.get("curvature_diversity_loss", torch.tensor(0.0, device=device))
+                    + result.get("tau_quality_loss", torch.tensor(0.0, device=device))
                 )
                 # Store assembled loss for logging
                 result["loss"] = final_loss
-            # else: result["loss"] already = ce + curv + tau_var + cv_floor from model
+            # else: result["loss"] already includes all losses from model._compute_loss
 
-            (result["loss"] / grad_accum).backward()
+            loss_val = result["loss"] / grad_accum
+            # Clamp loss to prevent NaN from perturbation-induced explosions
+            if torch.isnan(loss_val) or torch.isinf(loss_val) or loss_val.item() > 1000:
+                loss_val = loss_val.clamp(max=100.0)
+                if torch.isnan(loss_val):
+                    optimizer.zero_grad()
+                    continue
+            loss_val.backward()
+            result["arc_mix"] = config.real_arc_mix_ratio
             micro_results.append((src_name, result))
 
         # Phase 1 (Pure Geometry): only MetricNet trains.
@@ -795,6 +824,39 @@ def train(args, config, device):
                         se_norm = se_norm.item()
                     writer.add_scalar("metric/step_embed_norm", se_norm, step)
 
+                # Sustained criticality logging
+                if "crit_ratio" in result:
+                    writer.add_scalar("criticality/D_sq_4tau_ratio", result["crit_ratio"], step)
+                    writer.add_scalar("criticality/D_sq_median", result["crit_D_sq_median"], step)
+                    writer.add_scalar("criticality/attn_entropy", result["crit_attn_entropy"], step)
+                    writer.add_scalar("criticality/entropy_ratio", result["crit_entropy_ratio"], step)
+                if "curvature_diversity_loss" in result:
+                    cdl = result["curvature_diversity_loss"]
+                    if isinstance(cdl, torch.Tensor):
+                        cdl = cdl.item()
+                    writer.add_scalar("loss/curvature_diversity", cdl, step)
+                if "cv_tau_product" in result:
+                    writer.add_scalar("geometry/cv_tau_product", result["cv_tau_product"], step)
+                if "criticality_loss" in result:
+                    cl_val = result["criticality_loss"]
+                    if isinstance(cl_val, torch.Tensor):
+                        cl_val = cl_val.item()
+                    writer.add_scalar("loss/criticality", cl_val, step)
+
+                # Tau quality loss
+                if "tau_quality_loss" in result:
+                    tql = result["tau_quality_loss"]
+                    if isinstance(tql, torch.Tensor):
+                        tql = tql.item()
+                    writer.add_scalar("loss/tau_quality", tql, step)
+                if "log_tau_std" in result:
+                    writer.add_scalar("geometry/log_tau_std", result["log_tau_std"], step)
+                if "convergence_residual_mean" in result:
+                    writer.add_scalar("dynamics/convergence_residual_mean",
+                                      result["convergence_residual_mean"], step)
+                    writer.add_scalar("dynamics/convergence_residual_std",
+                                      result["convergence_residual_std"], step)
+
                 # Geo loss logging
                 if geo_phase > 0:
                     geo_l = result.get("geo_loss", torch.tensor(0.0))
@@ -903,6 +965,10 @@ def main():
                         help="Single-domain mode for universality probe experiments")
     parser.add_argument("--integration_time", type=float, default=None,
                         help="ODE integration time T (overrides config)")
+    parser.add_argument("--perturb_at_step", type=int, default=None,
+                        help="Inject noise into MetricNet weights at this step")
+    parser.add_argument("--perturb_mix_range", type=float, nargs=2, default=[0.1, 0.9],
+                        help="Random real_arc_mix range after perturb_at_step (default: 0.1 0.9)")
     args = parser.parse_args()
 
     config = LiquidARCConfig.from_yaml(args.config)

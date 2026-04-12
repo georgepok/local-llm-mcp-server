@@ -1,0 +1,51 @@
+# Sustained Criticality — Phase 1b: Criticality loss only
+# Standard ARC training + D²/4τ ratio targeting (target=18.0)
+#
+# Tests whether direct supervision of the D²/4τ ratio affects phase transition
+# timing, reliability, or the post-transition geometry quality.
+# τ-CV coupling and curvature diversity loss remain disabled.
+
+d_model: 768
+d_metric: 192
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 1536
+n_ode_steps: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 5000
+dropout: 0.1
+
+use_torch_compile: true
+
+# Standard training
+base_lr: 3e-4
+warmup_steps: 500
+weight_decay: 0.01
+batch_size: 4
+
+# ARC data
+real_arc_mix_ratio: 0.3
+max_seq_len: 512
+
+# Existing regularization
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Sustained criticality — Phase 1b: criticality loss ENABLED
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 18.0
+
+curvature_diversity_loss_enabled: false
+curvature_diversity_lambda: 0.01
+curvature_cv_floor: 2.0
+curvature_cv_ceiling: 10.0
+
+tau_cv_coupling_enabled: false
+cv_coupling_target: 3.5
+cv_coupling_strength: 0.5

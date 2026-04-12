@@ -1,0 +1,51 @@
+# Sustained Criticality — Phase 2b: tau_quality_loss replaces tau_var_loss
+# Tests whether anchoring tau mean at 1.0 with log-spread target 0.6
+# produces better tau behavior than variance maximization.
+
+d_model: 768
+d_metric: 192
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 1536
+n_ode_steps: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 5000
+dropout: 0.1
+use_torch_compile: true
+
+base_lr: 3e-4
+warmup_steps: 500
+weight_decay: 0.01
+batch_size: 4
+
+real_arc_mix_ratio: 0.3
+max_seq_len: 512
+
+curvature_lambda: 0.05
+tau_var_lambda: 0.0          # DISABLED — replaced by tau_quality_loss
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Criticality loss with D² anchoring
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 18.0
+criticality_D_sq_target: 60.0
+
+# Tau quality (replaces tau_var_loss)
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 1.0
+tau_log_spread_target: 0.6
+
+# No couplings yet
+tau_convergence_coupling_enabled: false
+tau_convergence_beta: 1.0
+tau_cv_coupling_enabled: false
+cv_coupling_target: 3.5
+cv_coupling_strength: 0.5
+
+curvature_diversity_loss_enabled: false

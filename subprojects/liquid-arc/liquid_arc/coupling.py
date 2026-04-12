@@ -1,12 +1,16 @@
-"""GeometricCoupling — projects between LiquidARC's ODE space and Qwen3's representation space.
+"""GeometricCoupling — projects between LiquidARC's ODE space and an LLM's representation space.
 
 LiquidARC provides persistent curved-space dynamics (d=768).
-Qwen3-4B provides stateless flat-space knowledge lookup (d=2560).
+The LLM provides stateless knowledge lookup (d varies by model).
 The coupling is geometric — learned projections, no tokenization, no vocabulary.
 
-LiquidARC's h(t) → n virtual prefix tokens in Qwen3's embedding space.
-Qwen3 processes input with these prefix tokens as additional context.
-Qwen3's hidden states at prefix positions → projected back to LiquidARC.
+Supported LLMs (d_qwen parameter):
+  - Qwen3-4B: d=2560
+  - Nemotron-3-Nano-30B-A3B: d=2688
+  - Qwen3.5-9B: d=4096
+
+LiquidARC's h(t) → n virtual prefix tokens in the LLM's embedding space.
+The LLM processes input with these prefix tokens as additional context.
 """
 
 import torch

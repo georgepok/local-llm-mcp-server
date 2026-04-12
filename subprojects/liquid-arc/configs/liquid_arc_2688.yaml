@@ -1,0 +1,42 @@
+# LiquidARC-2688: d_model matches Nemotron's hidden_size
+# ODE state lives directly in LLM embedding space — no coupling layer needed
+#
+# Geometry distilled from teacher (d=768, post-transition, CV~6)
+# via attention pattern matching (N×N heat kernel, dimension-independent)
+
+# === Model dimensions ===
+d_model: 2688          # matches Nemotron-3-Nano-30B-A3B hidden_size
+d_metric: 192          # same bottleneck as 768 teacher — geometry lives here
+d_metric_bottleneck: 256
+metric_rank: 8
+d_ffn: 2688            # 1:1 ratio with d_model (teacher used 768:768)
+max_seq_len: 64        # Mind's event buffer size (not token seq len)
+
+# === ODE integration ===
+n_ode_steps: 16
+ode_steps_min: 16      # fixed for torch.compile stability at d=2688
+ode_steps_max: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+alpha_logit_init: 2.2
+
+# === Geometry regularization ===
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# === Compilation ===
+# d=2688 exceeds Triton shared memory limit (101KB) for fused kernels
+# Must run with enforce_eager or chunked compilation
+use_torch_compile: false
+
+# === Distillation (set in training script) ===
+# teacher_checkpoint: output_30m/checkpoints/step_10000.pt (d=768)
+# distill_attention_weight: 1.0
+# distill_tau_weight: 0.1
+# geo_lr_mult: 0.01  (100x slower than content)
+
+dropout: 0.1

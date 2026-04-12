@@ -40,3 +40,11 @@ config.json
 
 # OS
 Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Claude Code local settings
+.claude/

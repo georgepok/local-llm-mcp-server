@@ -1,0 +1,51 @@
+# d=2688 — Gentle criticality: lower lambda, no D² anchor, stronger tau quality
+# The D² anchor adds instability at high dimensions. The ratio loss alone
+# should be sufficient — let MetricNet find its own D² scale.
+
+d_model: 2688
+d_metric: 672
+d_metric_bottleneck: 0
+metric_rank: 0
+d_ffn: 5376
+max_seq_len: 512
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+integration_time: 2.0
+tau_min: 0.1
+tau_max: 3.0
+tau_freeze_steps: 0
+t_diffusion_init: 1.0
+alpha_logit_init: 2.2
+dropout: 0.1
+
+use_torch_compile: false
+
+base_lr: 3e-4
+warmup_steps: 100
+weight_decay: 0.01
+batch_size: 4
+
+real_arc_mix_ratio: 0.3
+
+curvature_lambda: 0.05
+tau_var_lambda: 0.0
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Gentle criticality: lower lambda, scaled target, no D² anchor
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.001       # 10x gentler than d=768's 0.01
+criticality_target_ratio: 63.0      # scaled from d=768's 18 by d_ratio
+criticality_D_sq_target: 0.0        # 0 = disable D² anchor
+
+# Stronger tau quality to prevent collapse
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.1
+tau_mean_target: 1.0
+tau_log_spread_target: 0.6
+
+tau_convergence_coupling_enabled: false
+tau_cv_coupling_enabled: false
+curvature_diversity_loss_enabled: false

@@ -127,9 +127,10 @@ class CoupledSystem(nn.Module):
                                 max_length=512, padding=False).to(device)
         input_ids = tokens['input_ids']  # [1, seq_len]
 
-        # Get Qwen3's input embeddings (frozen)
+        # Get LLM's input embeddings (frozen)
         with torch.no_grad():
-            input_embeds = self.qwen.model.embed_tokens(input_ids)  # [1, seq_len, d_qwen]
+            embed_fn = self.qwen.get_input_embeddings()
+            input_embeds = embed_fn(input_ids)  # [1, seq_len, d_model]
 
         # Prepend virtual prefix tokens (these carry gradients through coupling)
         combined_embeds = torch.cat([prefix_embeds, input_embeds], dim=1)
@@ -222,7 +223,8 @@ class CoupledSystem(nn.Module):
         random_prefix = torch.randn(1, n_vt, d_qwen, device=device,
                                     dtype=torch.bfloat16) * 0.01
 
-        input_embeds = self.qwen.model.embed_tokens(input_ids)
+        embed_fn = self.qwen.get_input_embeddings()
+        input_embeds = embed_fn(input_ids)
         combined = torch.cat([random_prefix, input_embeds], dim=1)
 
         outputs = self.qwen(inputs_embeds=combined, use_cache=False)
