@@ -22,7 +22,7 @@ const ConfigSchema = z.object({
     capabilities: z.array(z.string()),
     defaultParams: z.object({
       temperature: z.number().min(0).max(2).default(0.7),
-      max_tokens: z.number().min(1).max(8192).default(1000),
+      max_tokens: z.number().min(1).default(1000),
       top_p: z.number().min(0).max(1).default(0.9),
       frequency_penalty: z.number().min(-2).max(2).default(0),
       presence_penalty: z.number().min(-2).max(2).default(0),
