@@ -456,6 +456,18 @@ def train(args):
                     if tb:
                         tb.add_scalar('metric/structural_tau_std', s_vals.std().item(), step)
                         tb.add_histogram('metric/structural_tau_dist', s_vals, step)
+                # Gradient-reachability check: if structural_tau receives 0
+                # gradient across training, the loss is not wired to it.
+                # Must be read BEFORE optimizer.zero_grad() in the training
+                # loop, but at eval boundary we still have post-backward grads.
+                if s_raw.grad is not None:
+                    grad_norm = s_raw.grad.norm().item()
+                    print(f"  structural_tau.grad.norm={grad_norm:.3e}")
+                    if tb:
+                        tb.add_scalar('metric/structural_tau_grad_norm',
+                                       grad_norm, step)
+                else:
+                    print("  structural_tau.grad: None (not yet populated or detached)")
 
             model.train()
 

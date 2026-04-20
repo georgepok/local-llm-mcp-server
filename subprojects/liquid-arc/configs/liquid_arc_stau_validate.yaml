@@ -1,0 +1,82 @@
+# Structural τ gradient-reachability validation.
+#
+# Purpose: prove that after the `compute_tau` fix (dynamics.py),
+# `structural_tau` receives non-trivial gradient during real training
+# and actually evolves across steps. This was the open research
+# problem: "structural τ architecturally present but receives zero
+# effective gradient."
+#
+# Base: the canonical zero-scaffold config (`liquid_arc.yaml`) that is
+# known to produce normal training dynamics (CV growth, phase
+# transition) on current code. No D² scaffold — the regressed regime
+# we diagnosed earlier is avoided.
+#
+# Additions on top of zero-scaffold:
+#   structural_tau_enabled: true        # the parameter under test
+#   tau_quality_loss_enabled: true      # provides the gradient signal
+#                                         through compute_tau(h0)
+#   tau_quality_lambda: 0.05            # standard SOC weight
+#   criticality_loss_enabled: true      # SOC maintains metric equilibrium
+#   criticality_loss_lambda: 0.01
+#
+# Validation signal:
+#   every eval boundary, train.py now logs:
+#     structural_tau.grad.norm  → must be > 0 (fix works)
+#     structural_tau_std        → should grow from init over training
+#                                   (parameter is actually evolving)
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 1024
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.1
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.0
+tau_var_lambda: 0.0           # deprecated when tau_quality_loss active
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_freeze_steps: 0            # unfrozen from start — we want gradient now
+
+# Structural tau — the parameter under test
+structural_tau_enabled: true
+structural_tau_min: 0.3
+structural_tau_max: 3.0
+
+# Tau quality loss — provides the gradient path through compute_tau(h0)
+# that my dynamics.py fix makes reach structural_tau.
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 0.0           # 0 = auto: T/n_ode_steps*16 scales with ODE
+tau_log_spread_target: 0.6
+
+# SOC to maintain metric equilibrium while structural_tau evolves.
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 18.0
+criticality_D_sq_target: 0.0
+
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1

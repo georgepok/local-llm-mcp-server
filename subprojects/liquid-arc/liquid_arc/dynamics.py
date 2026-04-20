@@ -611,9 +611,16 @@ class ContinuousDynamics(nn.Module):
         return D
 
     def compute_tau(self, h: torch.Tensor) -> torch.Tensor:
-        """Compute tau field from h (for diagnostics).
+        """Compute tau field from h (for diagnostics AND loss supervision).
 
         When channel_gate_enabled, returns gate mean across dims as [B, N, 1] proxy.
+
+        This path mirrors the τ composition used inside forward()/ODE,
+        including the structural_tau multiplicative branch. Mirroring is
+        load-bearing: `tau_init = compute_tau(h0)` is consumed by
+        `compute_tau_quality_loss` (sustained_criticality.py), so the
+        backward graph from that loss must reach `structural_tau` for the
+        parameter to receive gradient. Before this alignment it did not.
 
         Args:
             h: [B, N, d]
@@ -625,11 +632,26 @@ class ContinuousDynamics(nn.Module):
             # Return gate mean as tau proxy for backward-compat diagnostics
             gate = self.compute_gate(h)
             return gate.mean(dim=-1, keepdim=True)
+        N = h.shape[1]
         h_normed = self.norm_geo(h)
         tau_logits = self.tau_net_linear2(
             F.gelu(self.tau_net_linear1(h_normed))
         )
         tau = torch.sigmoid(tau_logits) * (self.tau_max - self.tau_min) + self.tau_min
+
+        # Structural tau: input-independent per-position multiplier.
+        # Same branch as forward() (dynamics.py:457-466); placed here so
+        # tau_quality_loss gradients reach the structural_tau parameter.
+        if self.structural_tau_enabled:
+            s_raw = self.structural_tau[:N]
+            s_tau = self.structural_tau_min + (
+                self.structural_tau_max - self.structural_tau_min
+            ) * torch.sigmoid(s_raw)
+            s_tau = s_tau.unsqueeze(0).unsqueeze(-1)  # [1, N, 1]
+            tau = (tau * s_tau).clamp(
+                min=self.tau_min,
+                max=self.tau_max * self.structural_tau_max,
+            )
 
         # Apply same rescaling as forward() for consistent diagnostics
         tau_anchor_target = getattr(self, '_tau_anchor_target', 0.0)

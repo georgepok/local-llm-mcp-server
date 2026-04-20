@@ -55,13 +55,30 @@ def compute_geo_phase(step: int, config) -> int:
 
 
 def compute_geo_lambda(step: int, config) -> float:
-    """Compute geo loss weight."""
+    """Compute geo loss weight with optional linear decay from init to final.
+
+    When `geo_lambda_final == geo_lambda_init` (default) the scaffold is
+    permanent and this reduces to `geo_lambda_init`. When they differ,
+    weight interpolates linearly between `geo_lambda_decay_start` and
+    `geo_lambda_decay_end`.
+    """
     if not getattr(config, 'geo_loss_enabled', False):
         return 0.0
     cutoff = getattr(config, 'geo_cutoff_step', 0)
     if cutoff > 0 and step >= cutoff:
         return 0.0
-    return config.geo_lambda_init
+    init = config.geo_lambda_init
+    final = getattr(config, 'geo_lambda_final', init)
+    if final == init:
+        return init
+    decay_start = getattr(config, 'geo_lambda_decay_start', 0)
+    decay_end = getattr(config, 'geo_lambda_decay_end', 0)
+    if decay_end <= decay_start or step < decay_start:
+        return init
+    if step >= decay_end:
+        return final
+    progress = (step - decay_start) / max(1, decay_end - decay_start)
+    return init + (final - init) * progress
 
 
 def compute_boundary_alpha(step: int, config) -> float:
@@ -904,6 +921,27 @@ def train(args, config, device):
                 print(f"  >> EVAL [step={step}] cell_acc={eval_acc:.4f}, "
                       f"xform_acc={eval_xform:.4f}, copy_bl={eval_copy_bl:.4f}, "
                       f"ce={eval_loss:.4f}, xf_loss={eval_xf_loss:.4f}")
+
+            # Structural τ diagnostic — verifies the compute_tau fix wires
+            # tau_quality_loss gradient back to the structural_tau parameter.
+            raw_m = model._orig_mod if hasattr(model, "_orig_mod") else model
+            if hasattr(raw_m, "dynamics") and hasattr(raw_m.dynamics,
+                                                         "structural_tau"):
+                s_raw = raw_m.dynamics.structural_tau
+                with torch.no_grad():
+                    s_vals = torch.sigmoid(s_raw)
+                    print(f"  structural_tau: mean={s_vals.mean():.3f} "
+                          f"std={s_vals.std():.3f} "
+                          f"min={s_vals.min():.3f} max={s_vals.max():.3f}")
+                    writer.add_scalar("metric/structural_tau_std",
+                                       s_vals.std().item(), step)
+                if s_raw.grad is not None:
+                    gn = s_raw.grad.norm().item()
+                    print(f"  structural_tau.grad.norm={gn:.3e}")
+                    writer.add_scalar("metric/structural_tau_grad_norm",
+                                       gn, step)
+                else:
+                    print("  structural_tau.grad: None")
 
             if eval_acc > best_eval_acc:
                 best_eval_acc = eval_acc

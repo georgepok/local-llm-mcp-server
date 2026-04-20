@@ -63,11 +63,11 @@ class LiquidARCConfig:
     geo_cutoff_step: int = 0  # hard cutoff: geo dies at this step (0 = never cut off)
     geo_wall_distance: float = 50.0    # cross-object D² target (Phase 2). e^{-50/4}≈0
     geo_lambda_init: float = 1.0       # initial geo loss weight
-    geo_lambda_final: float = 1.0      # PERMANENT scaffold — never decay
+    geo_lambda_final: float = 1.0      # final geo loss weight (== init → permanent scaffold)
     geo_ce_ramp_start: int = 5000      # CE starts ramping from 0
     geo_ce_ramp_end: int = 15000       # CE reaches 1.0
-    geo_lambda_decay_start: int = 15000  # (unused — scaffold is permanent)
-    geo_lambda_decay_end: int = 20000    # (unused — scaffold is permanent)
+    geo_lambda_decay_start: int = 15000  # decay begins (active only when final != init)
+    geo_lambda_decay_end: int = 20000    # decay ends at geo_lambda_final
     geo_phase2_start: int = 5000       # object boundary supervision starts
     geo_phase2_interp_steps: int = 3000  # steps to interpolate manhattan→boundary targets
     geo_use_h0: bool = True            # supervise at h0 (pre-ODE), not h_final

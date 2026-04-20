@@ -1,0 +1,73 @@
+# LiquidARC with Geometric Auxiliary Loss (L_geo) + late-training decay.
+#
+# Sister config to `liquid_arc_geo.yaml`. Identical architecture, identical
+# Phase-1/Phase-2 schedule. The only difference: after CE has fully ramped
+# to 1.0 at step 15K, the D² scaffold weight linearly decays from 1.0 → 0.0
+# over steps 15K→20K. From step 20K onward the model trains on CE alone,
+# with SOC (criticality loss / CV floor-ceiling) maintaining the metric
+# equilibrium instead of explicit spatial supervision.
+#
+# Hypothesis under test:
+#   Explicit D² supervision against Manhattan/boundary distance early in
+#   training bootstraps useful geometry (FGN-v3 Phase 1a.2 ablations show
+#   task-driven geometry is ~12x more structurally efficient than reward-
+#   driven). But keeping the scaffold on indefinitely may over-constrain
+#   the metric into grid-shaped patterns that do not transfer to eval —
+#   possibly a contributor to the observed train/eval gap (~40 pts at 5M,
+#   and the 572K→5M ceiling of ~50% eval xform despite 8.5x capacity).
+#
+# A/B:
+#   liquid_arc_geo.yaml        → geo_lambda_final = 1.0 (permanent, baseline)
+#   liquid_arc_geo_decay.yaml  → geo_lambda_final = 0.0 (decay to off, this)
+#
+# Everything downstream of 20K steps is identical between the two configs,
+# so eval xform difference at ≥25K steps isolates the effect of the
+# scaffold phase-out.
+
+d_model: 256
+d_metric: 64
+d_ffn: 512
+max_seq_len: 1024
+n_ode_steps: 16
+ode_steps_min: 12
+ode_steps_max: 20
+tau_min: 0.5
+tau_max: 1.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+curvature_lambda: 0.05
+tau_var_lambda: 0.001
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+use_procedural: true
+curriculum_stage1_end: 20000
+curriculum_stage2_end: 100000
+model_type: liquid
+transform_weight: 5.0
+copy_weight: 0.05
+alpha_logit_init: 2.2
+tau_freeze_steps: 5000
+
+# Geometric auxiliary loss — MSE on D² (WITH late-training decay)
+geo_loss_enabled: true
+geo_wall_distance: 50.0
+geo_lambda_init: 1.0           # full strength during Phase 1 + early Phase 2
+geo_lambda_final: 0.0          # fully off after decay window
+geo_ce_ramp_start: 5000
+geo_ce_ramp_end: 15000
+geo_lambda_decay_start: 15000  # begin decay at CE-fully-ramped
+geo_lambda_decay_end: 20000    # 5K linear ramp, scaffold off by 20K
+geo_phase2_start: 5000
+geo_phase2_interp_steps: 3000
+geo_use_h0: true
+geo_detach_h: false
