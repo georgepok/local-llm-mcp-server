@@ -196,25 +196,40 @@ export class LMStudioClient {
     input: Array<{ role: 'system' | 'user'; content: string }>,
     params: Partial<ModelParams>,
   ): Promise<string | null> {
-    const response = await client.responses.create({
+    // Stream so bytes flow continuously and undici's headersTimeout / bodyTimeout
+    // (300s default) cannot abort a long generation. The OpenAI SDK's `timeout`
+    // option only drives an AbortController; it does not extend undici's per-chunk
+    // timers, which fire whenever the connection is idle waiting on a non-streaming
+    // response. We accumulate deltas and return a single string to keep the
+    // generateResponse contract unchanged.
+    const stream = await client.responses.create({
       model,
       input,
       temperature: params.temperature,
       max_output_tokens: params.max_tokens,
       top_p: params.top_p,
+      stream: true,
     });
 
-    // Primary: use output_text if available (visible content from message output)
-    if (response.output_text) {
-      return response.output_text;
+    let visibleText = '';
+    let sawReasoning = false;
+
+    for await (const chunk of stream as any) {
+      if (chunk.type === 'response.output_text.delta' && typeof chunk.delta === 'string') {
+        visibleText += chunk.delta;
+      } else if (
+        chunk.type === 'response.reasoning_summary_text.delta' ||
+        chunk.type === 'response.reasoning_text.delta'
+      ) {
+        sawReasoning = true;
+      }
     }
 
-    // Check if only reasoning was produced (thinking model exhausted tokens)
-    const output = (response as any).output;
-    const hasReasoning = output && Array.isArray(output) &&
-      output.some((item: any) => item.type === 'reasoning');
+    if (visibleText) {
+      return visibleText;
+    }
 
-    if (hasReasoning) {
+    if (sawReasoning) {
       console.error(
         `[thinking-retry] Responses API: model produced only reasoning ` +
         `(max_tokens=${params.max_tokens}), will retry via Chat Completions with thinking disabled`
@@ -244,7 +259,11 @@ export class LMStudioClient {
     try {
       const messages: Array<{ role: 'system' | 'user'; content: string }> = input;
 
-      // Build request body — optionally disable thinking on retry
+      // Build request body — optionally disable thinking on retry.
+      // Always stream: a non-streaming completion holds the connection idle
+      // until generation finishes, which lets undici's headersTimeout (~300s)
+      // abort before our configured timeout even though tokens are still being
+      // produced. Streaming keeps the socket active per chunk.
       const requestBody: Record<string, any> = {
         model,
         messages,
@@ -254,6 +273,7 @@ export class LMStudioClient {
         frequency_penalty: params.frequency_penalty,
         presence_penalty: params.presence_penalty,
         stop: params.stop,
+        stream: true,
       };
 
       if (disableThinking) {
@@ -261,21 +281,36 @@ export class LMStudioClient {
         requestBody.chat_template_kwargs = { enable_thinking: false };
       }
 
-      const completion = await (client.chat.completions.create as any)(requestBody);
+      const stream = await (client.chat.completions.create as any)(requestBody);
 
-      const message = completion.choices[0]?.message;
+      let visibleText = '';
+      let sawReasoning = false;
+      let finishReason: string | null | undefined;
 
-      // Primary: return visible content if available
-      if (message?.content) {
-        return message.content;
+      for await (const chunk of stream as any) {
+        const choice = chunk.choices?.[0];
+        if (!choice) continue;
+        const delta = choice.delta || {};
+        if (typeof delta.content === 'string' && delta.content.length > 0) {
+          visibleText += delta.content;
+        }
+        if (delta.reasoning_content) {
+          sawReasoning = true;
+        }
+        if (choice.finish_reason) {
+          finishReason = choice.finish_reason;
+        }
       }
 
-      // Check if model produced only reasoning (thinking leak scenario)
-      const reasoningContent = (message as any)?.reasoning_content;
-      if (reasoningContent && !disableThinking) {
-        // Model spent all tokens on thinking — retry with thinking disabled.
-        // Doubling tokens doesn't help: thinking models expand reasoning to
-        // fill any budget. Disabling thinking forces direct response.
+      // Primary: return visible content if available
+      if (visibleText) {
+        return visibleText;
+      }
+
+      // Model produced only reasoning — retry with thinking disabled.
+      // Doubling tokens doesn't help: thinking models expand reasoning to
+      // fill any budget. Disabling thinking forces direct response.
+      if (sawReasoning && !disableThinking) {
         console.error(
           `[thinking-retry] Chat Completions: model produced only reasoning ` +
           `(max_tokens=${params.max_tokens}), retrying with thinking disabled`
@@ -287,11 +322,10 @@ export class LMStudioClient {
       }
 
       // No content produced — caller will raise a descriptive error
-      const finishReason = completion.choices[0]?.finish_reason;
       console.error(
         `[empty-response] Chat Completions: no visible content ` +
         `(finish_reason=${finishReason}, thinking_disabled=${disableThinking}, ` +
-        `has_reasoning=${!!reasoningContent})`
+        `has_reasoning=${sawReasoning})`
       );
       return '';
     } catch (chatError) {
