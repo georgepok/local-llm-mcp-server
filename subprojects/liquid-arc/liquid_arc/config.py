@@ -26,6 +26,25 @@ class LiquidARCConfig:
     d_metric_bottleneck: int = 0  # 0 = use d_metric (backward compat), >0 = override MetricNet bottleneck
     metric_rank: int = 0          # 0 = diagonal only, >0 = diagonal + low-rank L·L^T
 
+    # Routing mode: how pairwise scores are computed inside the ODE.
+    #   "metric"    — symmetric heat kernel from learned Riemannian g
+    #   "attention" — asymmetric Q·K attention inside the weight-tied ODE
+    #   "coupled"   — both paths run in parallel; learned per-position sigmoid
+    #                  gate decides the mix. Probes "do both mechanisms
+    #                  coexist productively, or does one dominate?"
+    routing_mode: str = "metric"
+
+    # Sparse activation (Probe 4): only a fraction of positions update per
+    # ODE step. Probes whether biological-style sparse dynamics (cortical
+    # neurons fire 1-10 Hz, not continuously) can replace dense ODE updates.
+    #   sparse_fraction = 0.0 → full dense (default, current behavior)
+    #   sparse_fraction = 0.85 → only 15% of positions update per step
+    sparse_fraction: float = 0.0
+    # Probe 7: selection mechanism for which positions update.
+    #   False (default) → learned per-position activity score (top-k by score)
+    #   True            → random per-step selection (ablation: is learned choice needed?)
+    sparse_random: bool = False
+
     # Geometry
     chunk_size: int = 256    # for chunked distance computation
 
@@ -41,6 +60,8 @@ class LiquidARCConfig:
     # Solver
     use_torch_compile: bool = True
     ode_chunk_size: int = 4  # steps per checkpointed block (memory = n_steps/chunk_size)
+    chunked_solver: bool = False  # use euler_solve_chunked (gradient checkpointing,
+                                  # ~3× compute, O(n_steps/chunk_size) memory)
     invertible_solver: bool = False  # O(1) memory invertible Euler (incompatible with compile)
     n_fp_iters: int = 5  # fixed-point iterations for invertible solver reconstruction
     deq_solver: bool = False  # DEQ: no_grad forward + IFT backward (fastest)
@@ -120,6 +141,50 @@ class LiquidARCConfig:
     step_embed_enabled: bool = False   # step-evolving metric (ODE heterogeneity)
     n_step_embeds: int = 20            # number of learnable step embeddings
     channel_gate_enabled: bool = False # channel-wise gate (working memory, replaces scalar tau)
+
+    # Step-conditional operator (flexible geometric reasoning Tier 1):
+    # FiLM modulation (γ,β per step) on MetricNet & TauNet bottlenecks
+    # plus per-step t_diffusion. All new params init as no-op (γ=1, β=0,
+    # t_diff[s]=global init) — loading old checkpoints reproduces baseline.
+    step_conditional_operator: bool = False
+    step_conditional_n_max: int = 32   # max supported ODE step count
+    # Tier 2: step-conditional FiLM on Q/K attention projections (attention/coupled routing)
+    step_conditional_qk: bool = False
+
+    # Tier 3: per-position ACT-style halting. Model decides how many ODE steps
+    # each position uses (up to n_ode_steps as MAX). Expected: easy positions
+    # halt early, hard ones use full budget. Set n_ode_steps > 16 to enable
+    # "go beyond baseline". All positions run at least halting_min_steps before
+    # halting engages.
+    halting_enabled: bool = False
+    halting_min_steps: int = 4
+    halting_ponder_lambda: float = 0.01
+
+    # Bootstrap: ReZero gate on dh/dt (starts near identity, learns to wake),
+    # PonderNet-style deep supervision, and geometric KL prior on halt dist.
+    rezero_enabled: bool = False
+    rezero_gate_init: float = -5.0          # sigmoid(-5) ~ 0.0067
+    metric_bias_init_std: float = 0.0       # adds Normal(0, std) to MetricNet bias
+    deep_supervision_enabled: bool = False  # per-step CE weighted by halt dist
+    ponder_kl_lambda: float = 0.0           # KL(halt_dist || Geom(rate)) weight
+    ponder_kl_prior_rate: float = 0.0625    # 1/16 — mean depth 16
+
+    # Multi-timescale local learning (Hebbian fast weights overlay on W_o).
+    # Per-batch low-rank correction F = U·V^T accumulated WITHOUT gradient
+    # at each ODE step. Decays slightly per step. Resets each forward pass.
+    fast_weights_enabled: bool = False
+    fast_weights_rank: int = 4
+    fast_weights_eta: float = 0.01
+    fast_weights_decay: float = 0.05
+
+    # Self-organizing identity routing (validated on toy substrate, Apr 2026).
+    # Adds an identity-metric SDPA branch that uses pure Euclidean h-similarity
+    # (no learned g scaling) and an EMA accumulator that lets per-step routing
+    # decisions persist across the 32-step ODE — the "G_ij accumulates" toy
+    # mechanism, ported as a routed-value EMA.
+    identity_routing_enabled: bool = False
+    identity_routing_alpha_init: float = 0.0    # sigmoid(0)=0.5 — equal weight initially
+    identity_routing_decay: float = 0.1         # EMA mix per ODE step
 
     # Oracle distillation (representation similarity)
     oracle_distill_enabled: bool = False

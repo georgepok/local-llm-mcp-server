@@ -1,0 +1,93 @@
+# LiquidARC 5M — masked-LM pretraining with text-tuned CV band + raised
+# criticality target.
+#
+# Baseline established by first MLM run (output_text_5m_mlm, 15K steps,
+# ppl~830, mlm_acc 13%, CV free-floating 11-15).
+#
+# Changes here vs the baseline:
+#   (1) CV hinge now active with text-tuned band [10, 15]:
+#         cv_floor_target: 10   (was 3 — ARC-inherited, too low)
+#         cv_ceiling_target: 15  (was 8 — ARC-inherited, squeezes text)
+#       This actively holds CV in the productive MLM zone and prevents
+#       transient CV=16+ spikes that corresponded to loss spikes.
+#   (2) criticality_target_ratio: 12 (was 8)
+#       The D²/4τ ratio target raised to match where CV=12-15 naturally
+#       sits. Expect D²/4τ to land ~12 instead of ~8.
+#
+# Loss assembly (now closer to LiquidARCModel.forward's behavior):
+#   ntp_loss (MLM CE on 15% masked positions)
+# + criticality_loss (D²/4τ → 12)
+# + tau_quality_loss (mean τ → auto, log_τσ → 0.6)
+# + cv_floor/ceiling hinge (CV in [10, 15])
+#
+# All other dynamics unchanged from liquid_arc_text_5m.yaml.
+
+d_model: 768
+d_metric: 192
+d_ffn: 1536
+d_metric_bottleneck: 384
+metric_rank: 8
+max_seq_len: 512
+
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+
+curvature_lambda: 0.0
+tau_var_lambda: 0.0
+alpha_logit_init: 2.2
+tau_freeze_steps: 0
+
+# (C) Criticality target raised to align with productive CV zone
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 12.0
+criticality_D_sq_target: 0.0
+
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 0.0
+tau_log_spread_target: 0.6
+
+structural_tau_enabled: true
+structural_tau_min: 0.3
+structural_tau_max: 3.0
+
+geo_loss_enabled: false
+
+# (B) CV hinge — text-tuned band
+cv_floor_target: 10.0
+cv_ceiling_target: 15.0
+cv_floor_lambda: 0.1
+
+use_procedural: false
+use_cellular_automata: false
+use_conditional_transforms: false
+real_arc_mix_ratio: 0.0
+
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+
+model_type: liquid
+use_torch_compile: false
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+base_lr: 3e-4
+batch_size: 1
+grad_accum_steps: 1
+warmup_steps: 500
+weight_decay: 0.01
+transform_weight: 5.0
+copy_weight: 0.05

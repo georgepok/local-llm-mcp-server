@@ -1,0 +1,105 @@
+# Phase 2/3/4 config: frozen encoder from pretrained LeWM checkpoint;
+# only the predictor trains. Switch predictor_kind=ar|liquid to run each arm.
+defaults:
+  - _self_
+  - data: pusht
+
+output_model_name: ${predictor_kind}_frozen
+subdir: ${hydra:job.id}
+
+num_workers: 6
+train_split: 0.9
+seed: 3072
+img_size: 224
+patch_size: 14
+encoder_scale: tiny
+dump_object: True
+
+# Path to pretrained LeWM PushT encoder weights (quentinll/lewm-pusht on HF)
+pretrained_ckpt: /workspace/models/stable-wm/checkpoints/lewm-pusht/weights.pt
+
+# ar | liquid
+predictor_kind: ar
+
+trainer:
+  max_epochs: 10
+  devices: auto
+  accelerator: gpu
+  precision: bf16-mixed
+  gradient_clip_val: 1.0
+
+loader:
+  batch_size: 128
+  num_workers: ${num_workers}
+  persistent_workers: True
+  prefetch_factor: 3
+  pin_memory: True
+
+optimizer:
+  type: AdamW
+  lr: 5e-5
+  weight_decay: 1e-3
+
+wandb:
+  enabled: False
+  config:
+    entity: lewm
+    project: lewm-liquid
+    name: ${output_model_name}
+    id: ${subdir}
+    resume: allow
+    log_model: False
+
+wm:
+  type: lewm_frozen
+  history_size: 3
+  num_preds: 1
+  embed_dim: 192
+
+# ARPredictor hyperparameters (matches released LeWM checkpoint config)
+ar:
+  depth: 6
+  heads: 16
+  mlp_dim: 2048
+  dim_head: 64
+  dropout: 0.1
+  emb_dropout: 0.0
+  hidden_dim: 192
+  output_dim: 192
+
+# LiquidARCPredictor hyperparameters
+ode:
+  d_model: 192
+  d_metric: 48
+  d_metric_bottleneck: 96   # wider bottleneck feeds both diagonal and low-rank heads
+  metric_rank: 32           # g = D + L·L^T with L ∈ ℝ^{d × 32}  — genuine curvature
+  d_ffn: 512
+  n_ode_steps: 16
+  ode_steps_min: 16
+  ode_steps_max: 16
+  integration_time: 2.0
+  tau_min: 0.5
+  tau_max: 1.0
+  dropout: 0.1
+  use_torch_compile: False
+  step_embed_enabled: False
+  channel_gate_enabled: False
+
+loss:
+  sigreg:
+    weight: 0.09
+    kwargs:
+      knots: 17
+      num_proj: 1024
+  # Phase 3 geometric scaffolding — enable via CLI:
+  #   loss.criticality.enabled=True loss.tau_quality.enabled=True
+  criticality:
+    enabled: False
+    lambda: 0.01
+    target_ratio: 18.0
+    D_sq_target: 60.0
+  tau_quality:
+    enabled: False
+    lambda: 0.05
+    mean_target: 1.0
+    log_spread_target: 0.6

@@ -1,0 +1,107 @@
+# LiquidARC — semantic-first pretraining on WikiText-2.
+#
+# Hypothesis: training LiquidARC on language from step 0 — with no ARC
+# scaffold, no spatial Manhattan assumption, and no prior grid-geometry
+# commitment — produces a MetricNet whose distances are shaped by
+# semantic/syntactic structure rather than retrofitted onto it.
+#
+# Context: Mind v2 (ARC-then-text) exhibits text dormancy (CV≈0.6,
+# τ_std≈2.5e-7) because the ARC-trained metric doesn't know how to
+# route text deltas. This config tests whether starting from text
+# produces a metric that does.
+#
+# Recipe combines three orthogonal geometry drivers:
+#   1. SOC (criticality_loss): edge-of-chaos attractor, task-agnostic
+#   2. tau_quality_loss: anchors τ distribution, drives position diversity
+#   3. structural_tau (now with gradient): per-position parametric
+#      timescale — primary source of position differentiation when
+#      content-driven differentiation is weak
+#
+# Off-diagonal metric (metric_rank=8) enables semantic co-occurrence
+# capture — from the Stage B text experiments, this dropped
+# text_ppl 1025→265.
+#
+# Task: event-level NTP on WikiText-2 (8 events × 64 tokens mean-pooled,
+# LiquidARC ODE over events, predict next event's tokens).
+# Launch via scripts/train_phase2_ntp.py --config configs/liquid_arc_text_first.yaml --arc_mix 0.0
+
+d_model: 512                       # larger than ARC's 256 — text needs capacity
+d_metric: 128                      # d/4, same ratio as ARC config
+d_ffn: 1024                        # 2d
+d_metric_bottleneck: 256           # wider bottleneck than default for semantic richness
+metric_rank: 8                     # off-diagonal metric for non-diagonal text correlations
+max_seq_len: 512                   # 8 events × 64 tokens = 512 + buffer
+
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+
+# No ARC-specific regularization
+curvature_lambda: 0.0              # no κ penalty; SOC maintains metric stability instead
+tau_var_lambda: 0.0                # deprecated — replaced by tau_quality_loss
+alpha_logit_init: 2.2
+tau_freeze_steps: 0                # unfrozen from step 0
+
+# SOC — edge-of-chaos on text. Critical ratio scales with d:
+#   d=768 → 18,  d=2560 → 60
+#   d=512 → 18 * (512/768) = 12.0
+criticality_loss_enabled: true
+criticality_loss_lambda: 0.01
+criticality_target_ratio: 12.0
+criticality_D_sq_target: 0.0
+
+# Tau quality drives position diversity via tau_quality_loss.
+# With the compute_tau fix, this gradient now reaches structural_tau.
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 0.0               # 0 = auto: T/n_ode_steps*16
+tau_log_spread_target: 0.6
+
+# Structural τ — parametric per-position, primary diversification mechanism
+# for event positions 0..7 (pre-semantic rhythm).
+structural_tau_enabled: true
+structural_tau_min: 0.3
+structural_tau_max: 3.0
+
+# No D² spatial scaffold (text has no grid)
+geo_loss_enabled: false
+
+# CV band maintained by SOC
+cv_floor_target: 3.0
+cv_ceiling_target: 8.0
+cv_floor_lambda: 0.1
+
+# Curriculum / ARC specifics — all off
+use_procedural: false
+use_cellular_automata: false
+use_conditional_transforms: false
+real_arc_mix_ratio: 0.0
+
+# ARC-specific dims (ignored in text path but required by dataclass)
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+
+model_type: liquid
+use_torch_compile: true
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+# Training knobs (CLI --geo_lr / --content_lr override these)
+base_lr: 3e-4
+batch_size: 1                      # script processes one sequence at a time
+grad_accum_steps: 1
+warmup_steps: 500
+weight_decay: 0.01
+transform_weight: 5.0              # unused when use_procedural=false
+copy_weight: 0.05                  # unused

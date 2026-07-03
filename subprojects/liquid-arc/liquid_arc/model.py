@@ -343,6 +343,15 @@ class LiquidARCModel(nn.Module):
                 n_steps=actual_steps,
                 n_fp_iters=self.config.n_fp_iters,
             )
+        elif self.config.chunked_solver:
+            # Chunked-checkpointed Euler: ~3× compute, O(n_steps/chunk_size)
+            # memory. Required when criticality / metric growth pushes
+            # plain Euler past memory budget at large n_ode_steps.
+            h = euler_solve_chunked(
+                self.dynamics, h0, t_span=(0.0, T),
+                n_steps=actual_steps,
+                chunk_size=self.config.ode_chunk_size,
+            )
         else:
             # Unrolled Euler: SDPA heat kernel enables FlashAttention,
             # so N*N is never materialized to HBM — no checkpointing needed

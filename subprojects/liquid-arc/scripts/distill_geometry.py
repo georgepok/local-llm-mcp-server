@@ -32,6 +32,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# Enable TF32 matmul cores on Ampere+ GPUs (GB10/sm_121a). The default mode
+# uses full fp32 which leaves ~30% perf on the table; "high" uses TF32 for
+# matmul (10-bit mantissa) with negligible accuracy impact for distillation.
+torch.set_float32_matmul_precision('high')
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from liquid_arc.config import LiquidARCConfig
@@ -113,7 +118,8 @@ def get_teacher_attention(teacher: LiquidARCModel, h: torch.Tensor) -> dict:
 
     cv = (g_diag.std() / (g_diag.mean() + 1e-8)).item()
 
-    return {'attention': attention, 'tau': tau, 'metric_cv': cv}
+    return {'attention': attention, 'tau': tau, 'metric_cv': cv,
+            'g_diag': g_diag}
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -134,6 +140,29 @@ def tau_distill_loss(student_tau, teacher_tau):
         mx = tau.max(dim=1, keepdim=True).values
         return (tau - mn) / (mx - mn + 1e-8)
     return F.mse_loss(normalize(student_tau), normalize(teacher_tau))
+
+
+def metric_distill_loss(student_g, teacher_g):
+    """Match per-position metric statistics (mean and std of g_diag) between
+    student and teacher. Works across different d_model — the inner dim of
+    g_diag may differ. We compare reductions, not element-wise.
+
+    Forces student's per-position metric structure (mean magnitude AND
+    coefficient of variation, indirectly) to match teacher's geometry.
+    Bypasses the criticality_loss compile bug by computing entirely in the
+    distillation script.
+
+    student_g: [B, N, d_student] — student g(h) values per position
+    teacher_g: [B, N, d_teacher] — teacher g(h) values (no_grad context)
+    """
+    s_mean = student_g.mean(dim=-1)            # [B, N]
+    s_std = student_g.std(dim=-1)              # [B, N]
+    s_cv = s_std / (s_mean.abs() + 1e-8)       # [B, N] per-position CV
+    with torch.no_grad():
+        t_mean = teacher_g.mean(dim=-1)        # [B, N]
+        t_std = teacher_g.std(dim=-1)          # [B, N]
+        t_cv = t_std / (t_mean.abs() + 1e-8)   # [B, N]
+    return F.mse_loss(s_mean, t_mean) + F.mse_loss(s_cv, t_cv)
 
 
 def get_student_attention(student: LiquidARCModel, h: torch.Tensor) -> dict:
@@ -164,7 +193,8 @@ def get_student_attention(student: LiquidARCModel, h: torch.Tensor) -> dict:
 
     cv = (g_diag.std() / (g_diag.mean() + 1e-8))
 
-    return {'attention': attention, 'tau': tau, 'metric_cv': cv}
+    return {'attention': attention, 'tau': tau, 'metric_cv': cv,
+            'g_diag': g_diag}
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -225,6 +255,46 @@ def main():
                         help="Enable tau_quality_loss (replaces tau_var_loss)")
     parser.add_argument("--tau_quality_lambda", type=float, default=0.1,
                         help="Tau quality loss weight")
+    # Solver-faithfulness extensions: distil into a finer-dt + norm-bounded
+    # ODE regime so the resulting student is a real continuous-time integrator
+    # at its trained discretisation, not a 16-step recurrent shortcut.
+    parser.add_argument("--student_n_ode_steps", type=int, default=0,
+                        help="Override student n_ode_steps (0 = same as teacher)")
+    parser.add_argument("--student_norm_ref", type=float, default=0.0,
+                        help="Per-position norm target for soft-clip homeostasis "
+                             "(0 = disabled)")
+    parser.add_argument("--student_norm_lambda", type=float, default=0.0,
+                        help="Strength of norm soft-clip (0 = off, 1 = hard clip)")
+    parser.add_argument("--student_use_compile", action='store_true', default=False,
+                        help="Apply torch.compile(model.dynamics, dynamic=True) — "
+                             "matches production train.py pattern")
+    # Anti-catastrophic-forgetting: keep distillation loss alive at lower
+    # weight during task phase. Without this, removing distillation pressure
+    # destroys the geometry that produced the high distill-peak xform.
+    parser.add_argument("--task_phase_attn_weight", type=float, default=0.0,
+                        help="Attention KL weight DURING task phase (0 = current "
+                             "behaviour: distill loss off in task phase). Try 0.5 "
+                             "to keep half-strength distillation alive throughout.")
+    parser.add_argument("--task_phase_tau_weight", type=float, default=0.0,
+                        help="Tau MSE weight during task phase (0 = off)")
+    parser.add_argument("--student_chunked_solver", action='store_true', default=False,
+                        help="Use euler_solve_chunked for the student. Trades ~3× "
+                             "compute for O(n_steps/chunk_size) memory — required when "
+                             "criticality + large n_ode_steps would OOM plain Euler.")
+    parser.add_argument("--student_chunk_size", type=int, default=8,
+                        help="Steps per chunked-Euler block (only used with "
+                             "--student_chunked_solver)")
+    # Direct metric distillation: bypasses the (currently broken) criticality
+    # loss path by directly comparing per-position metric statistics between
+    # student and teacher. Works across differing d_model.
+    parser.add_argument("--metric_weight", type=float, default=0.0,
+                        help="Direct metric distillation weight (compares "
+                             "per-position mean+CV of g_diag between student "
+                             "and teacher). 0 = off; try 0.5-2.0 to pull "
+                             "student CV toward teacher's level")
+    parser.add_argument("--task_phase_metric_weight", type=float, default=0.0,
+                        help="Metric distillation weight DURING task phase "
+                             "(0 = off, like task_phase_attn_weight)")
     args = parser.parse_args()
 
     device = args.device
@@ -253,6 +323,11 @@ def main():
     d_ratio = args.student_d / args.teacher_d
     crit_target = 18.0 * d_ratio  # d=768→18, d=2688→63
 
+    # Determine student n_ode_steps — finer dt makes the student an actual
+    # ODE integrator at its trained discretisation. 0 = inherit from teacher.
+    student_n_ode = (args.student_n_ode_steps
+                     if args.student_n_ode_steps > 0
+                     else teacher_config.n_ode_steps)
     student_config = LiquidARCConfig(
         d_model=args.student_d,
         d_metric=student_d_metric,
@@ -260,9 +335,9 @@ def main():
         metric_rank=teacher_config.metric_rank,
         d_ffn=args.student_d * 2,
         max_seq_len=args.max_seq_len,
-        n_ode_steps=teacher_config.n_ode_steps,
-        ode_steps_min=16,
-        ode_steps_max=16,
+        n_ode_steps=student_n_ode,
+        ode_steps_min=student_n_ode,
+        ode_steps_max=student_n_ode,
         tau_min=0.1,
         tau_max=3.0,
         tau_freeze_steps=0,  # TauNet active from step 0 — must learn during distillation
@@ -273,6 +348,8 @@ def main():
         cv_floor_target=teacher_config.cv_floor_target,
         cv_ceiling_target=teacher_config.cv_ceiling_target,
         cv_floor_lambda=teacher_config.cv_floor_lambda,
+        chunked_solver=args.student_chunked_solver,
+        ode_chunk_size=args.student_chunk_size,
         use_torch_compile=False,  # d=2688 may exceed Triton limits
         dropout=teacher_config.dropout,
         # Sustained criticality — active from step 0
@@ -290,6 +367,24 @@ def main():
     print(f"  Tau quality: enabled={args.tau_quality}, λ={args.tau_quality_lambda}")
     student = LiquidARCModel(student_config).to(device)
     student.dynamics.freeze_tau = False  # TauNet must be active during distillation
+    # Norm homeostasis: bound the trajectory so the time-T endpoint is
+    # well-defined. Required for ODE-faithful integration at fine dt.
+    if args.student_norm_ref > 0 and args.student_norm_lambda > 0:
+        student.dynamics._norm_ref = float(args.student_norm_ref)
+        student.dynamics._norm_lambda = float(args.student_norm_lambda)
+        print(f"  Norm homeostasis ON: norm_ref={args.student_norm_ref}, "
+              f"norm_lambda={args.student_norm_lambda}")
+    print(f"  Student n_ode_steps={student_n_ode} "
+          f"(dt={getattr(teacher_config, 'integration_time', 1.0) / student_n_ode:.5f})")
+    # torch.compile — match production train.py: compile only the dynamics
+    # module (the hot path), with dynamic=True so it can handle varying batch
+    # sizes / seq lengths from the procedural+ARC mix.
+    if args.student_use_compile and str(device).startswith("cuda"):
+        print(f"  Applying torch.compile(student.dynamics, mode='default', "
+              f"dynamic=True) — initial step may take 1-5 min for compilation…")
+        student.dynamics = torch.compile(student.dynamics, mode="default",
+                                         dynamic=True)
+        print(f"  torch.compile: dynamics compiled.")
 
     # Resume from pre-trained student checkpoint (e.g. criticality-prepared)
     if args.resume_student:
@@ -377,10 +472,21 @@ def main():
 
         # ── Distillation or pure task training ──
         distilling = step <= args.distill_steps
+        # Task-phase distillation: keep KL signal alive at lower weight to
+        # prevent catastrophic forgetting of teacher geometry once the
+        # primary distillation phase ends.
+        keep_distillation = (
+            (not distilling)
+            and (args.task_phase_attn_weight > 0
+                 or args.task_phase_tau_weight > 0
+                 or args.task_phase_metric_weight > 0)
+        )
+        do_distill = distilling or keep_distillation
         loss_attn = torch.tensor(0.0, device=device)
         loss_tau = torch.tensor(0.0, device=device)
+        loss_metric = torch.tensor(0.0, device=device)
 
-        if distilling:
+        if do_distill:
             with torch.no_grad():
                 t_result = teacher(
                     colors=meta['colors'], xs=meta['xs'], ys=meta['ys'],
@@ -395,13 +501,34 @@ def main():
             loss_attn = attention_distill_loss(
                 student_attn['attention'], teacher_attn['attention'])
             loss_tau = tau_distill_loss(student_attn['tau'], teacher_attn['tau'])
+            # Direct metric distillation (only if either weight is nonzero
+            # to avoid wasted compute when not requested)
+            metric_active = (
+                (distilling and args.metric_weight > 0)
+                or (keep_distillation and args.task_phase_metric_weight > 0)
+            )
+            if metric_active:
+                loss_metric = metric_distill_loss(
+                    student_attn['g_diag'], teacher_attn['g_diag'])
 
+        # Phase-appropriate weights
         if distilling:
-            loss = (args.task_weight * ce_loss +
-                    args.attn_weight * loss_attn +
-                    args.tau_weight * loss_tau)
+            eff_attn_w = args.attn_weight
+            eff_tau_w = args.tau_weight
+            eff_metric_w = args.metric_weight
+        elif keep_distillation:
+            eff_attn_w = args.task_phase_attn_weight
+            eff_tau_w = args.task_phase_tau_weight
+            eff_metric_w = args.task_phase_metric_weight
         else:
-            loss = ce_loss
+            eff_attn_w = 0.0
+            eff_tau_w = 0.0
+            eff_metric_w = 0.0
+
+        loss = (args.task_weight * ce_loss
+                + eff_attn_w * loss_attn
+                + eff_tau_w * loss_tau
+                + eff_metric_w * loss_metric)
 
         # Regularization always active
         curv_loss = result.get('curv_loss', torch.tensor(0.0))
@@ -441,7 +568,17 @@ def main():
             metrics['ce'] = metrics.get('ce', 0) + ce_loss.item()
             metrics['attn_kl'] = metrics.get('attn_kl', 0) + loss_attn.item()
             metrics['xform'] = metrics.get('xform', 0) + result.get('transform_accuracy', 0)
-            metrics['cv'] = metrics.get('cv', 0) + result.get('metric_cv', 0)
+            student_cv = result.get('metric_cv', 0)
+            if isinstance(student_cv, torch.Tensor): student_cv = student_cv.item()
+            metrics['cv'] = metrics.get('cv', 0) + student_cv
+            # Track teacher CV when distillation is active so we can see how
+            # close the student is to the teacher's metric structure each step
+            if do_distill:
+                teacher_cv_val = teacher_attn.get('metric_cv', 0)
+                if isinstance(teacher_cv_val, torch.Tensor):
+                    teacher_cv_val = teacher_cv_val.item()
+                metrics['cv_t'] = metrics.get('cv_t', 0) + teacher_cv_val
+                metrics['n_t'] = metrics.get('n_t', 0) + 1
             tau_avg = result.get('tau_avg', 0)
             if isinstance(tau_avg, torch.Tensor): tau_avg = tau_avg.item()
             metrics['tau'] = metrics.get('tau', 0) + tau_avg
@@ -457,10 +594,13 @@ def main():
             phase = "distill" if distilling else "task"
             crit_str = f" D²/4τ={metrics['crit_ratio']/n:.1f}" if metrics.get('crit_ratio') else ""
             lts_str = f" lτσ={metrics['log_tau_std']/n:.2f}" if metrics.get('log_tau_std') else ""
+            n_t = max(metrics.get('n_t', 0), 1)
+            cv_t_str = (f" CV_t={metrics['cv_t']/n_t:.2f}"
+                        if metrics.get('n_t', 0) > 0 else "")
             print(f"{step:>6} [{phase:>7s}] | loss={metrics['loss']/n:>7.3f} "
                   f"ce={metrics['ce']/n:.3f} kl={metrics['attn_kl']/n:.3f} | "
                   f"xform={metrics['xform']/n*100:.1f}% "
-                  f"CV={metrics['cv']/n:.2f} "
+                  f"CV_s={metrics['cv']/n:.2f}{cv_t_str} "
                   f"tau={metrics['tau']/n:.3f}{lts_str}{crit_str} | "
                   f"{tps:.0f} tok/s")
             metrics = {}

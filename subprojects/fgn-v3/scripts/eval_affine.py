@@ -28,6 +28,9 @@ def load_model(config, checkpoint_path, device):
     """Load model from checkpoint."""
     if config.model_type == "flat":
         model = FlatTransformerModel(config).to(device)
+    elif config.model_type == "liquid":
+        from fgn.liquid_model import LiquidSequenceModel
+        model = LiquidSequenceModel(config).to(device)
     elif config.architecture_version == "v4":
         model = FGNv4Model(config).to(device)
     else:

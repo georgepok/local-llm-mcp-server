@@ -42,6 +42,13 @@ def euler_solve(fn, y0: torch.Tensor, t_span: tuple, n_steps: int,
     norm_ref = getattr(fn, '_norm_ref', 0.0)
     norm_lambda = getattr(fn, '_norm_lambda', 0.0)
 
+    # Multi-timescale local learning: reset Hebbian fast weights for this batch
+    inner = fn._orig_mod if hasattr(fn, '_orig_mod') else fn
+    if hasattr(inner, 'reset_fast_weights'):
+        inner.reset_fast_weights(y0.shape[0], y0.device, y0.dtype)
+    if hasattr(inner, 'reset_id_history'):
+        inner.reset_id_history(y0.shape[0], y0.shape[1], y0.device, y0.dtype)
+
     if return_efficiency:
         efficiency_accum = torch.tensor(0.0, device=y0.device)
 
@@ -74,6 +81,109 @@ def euler_solve(fn, y0: torch.Tensor, t_span: tuple, n_steps: int,
     if return_efficiency:
         return y, efficiency_accum / n_steps
     return y
+
+
+def euler_solve_halting(fn, y0: torch.Tensor, t_span: tuple, n_steps: int,
+                         min_steps: int = 4,
+                         label_mask: 'torch.Tensor | None' = None):
+    """Forward Euler with per-position adaptive halting (Tier 3).
+
+    Each step the dynamics returns (dy, p_halt) where p_halt is [B, N, 1] in [0,1].
+    We maintain still_active = product over steps of (1 - p_halt) — fraction of
+    each position still contributing. dy is multiplied by still_active before
+    applying, so halted positions freeze automatically.
+
+    n_steps is the MAXIMUM budget: positions can halt early, hard ones use full.
+    For "go beyond 16", set n_steps > 16 in config (e.g. 32).
+
+    min_steps: clamp still_active to 1 for the first min_steps iterations
+    (force minimum computation for every position before halting engages).
+
+    label_mask: optional [B, N] bool — if given, captures per-step intermediate
+    state at label positions (for PonderNet deep supervision) along with the
+    halt distribution at those positions. Returns an extra dict `sup` with:
+        h_stack:        [K, L, d]   — h at label positions after each step k
+        p_halt_stack:   [K, L, 1]   — sigmoid halt prob at step k
+        p_active_stack: [K, L, 1]   — prob of reaching step k (Π_{j<k}(1-h_j))
+    where K = n_steps and L = label_mask.sum(). The halt distribution
+    p_halt_dist[k] = p_active_stack[k] * p_halt_stack[k]; residual mass
+    1 - Σ_k p_halt_dist[k] must be added back to the final step by the caller.
+
+    When label_mask is None, returns the legacy 3-tuple (y, ponder_cost, steps).
+    """
+    t_start, t_end = t_span
+    dt = (t_end - t_start) / n_steps
+    t = t_start
+    y = y0
+    B, N = y.shape[0], y.shape[1]
+    still_active = torch.ones(B, N, 1, device=y.device, dtype=y.dtype)
+    ponder_cost = torch.zeros((), device=y.device, dtype=y.dtype)
+    steps_used_per_pos = torch.zeros(B, N, 1, device=y.device, dtype=y.dtype)
+
+    collect = label_mask is not None
+    if collect:
+        h_stack_parts = []
+        p_halt_stack_parts = []
+        p_active_stack_parts = []
+
+    # Multi-timescale: reset per-batch Hebbian fast weights & EMA accumulator
+    inner = fn._orig_mod if hasattr(fn, '_orig_mod') else fn
+    if hasattr(inner, 'reset_fast_weights'):
+        inner.reset_fast_weights(y0.shape[0], y0.device, y0.dtype)
+    if hasattr(inner, 'reset_id_history'):
+        inner.reset_id_history(y0.shape[0], y0.shape[1], y0.device, y0.dtype)
+
+    for i in range(n_steps):
+        if hasattr(fn, 'set_step_embed'):
+            fn.set_step_embed(i, n_steps)
+        if hasattr(fn, 'set_step_index'):
+            fn.set_step_index(i, n_steps)
+
+        # still_active BEFORE this step's halt decision = prob of reaching k.
+        # (Within the min_steps window it is identically 1 per position.)
+        if collect:
+            p_active_stack_parts.append(still_active[label_mask])  # [L, 1]
+
+        result = fn(t, y)
+        if isinstance(result, tuple):
+            dy, p_halt = result
+        else:
+            dy = result
+            p_halt = torch.zeros(B, N, 1, device=y.device, dtype=y.dtype)
+
+        # For k < min_steps, effective halt prob is 0 (step is mandatory).
+        if collect:
+            if i < min_steps:
+                eff_p_halt = torch.zeros_like(p_halt)
+            else:
+                eff_p_halt = p_halt
+            p_halt_stack_parts.append(eff_p_halt[label_mask])  # [L, 1]
+
+        dy = dy * still_active
+        y = y + dt * dy
+
+        if collect:
+            h_stack_parts.append(y[label_mask])  # [L, d]
+
+        steps_used_per_pos = steps_used_per_pos + still_active
+
+        if i >= min_steps:
+            still_active = still_active * (1.0 - p_halt)
+
+        ponder_cost = ponder_cost + still_active.mean()
+        t = t + dt
+
+    ponder_cost = ponder_cost / n_steps
+
+    if collect:
+        sup = {
+            'h_stack': torch.stack(h_stack_parts, dim=0),            # [K, L, d]
+            'p_halt_stack': torch.stack(p_halt_stack_parts, dim=0),  # [K, L, 1]
+            'p_active_stack': torch.stack(p_active_stack_parts, dim=0),  # [K, L, 1]
+        }
+        return y, ponder_cost, steps_used_per_pos.squeeze(-1), sup
+
+    return y, ponder_cost, steps_used_per_pos.squeeze(-1)
 
 
 def euler_solve_with_observer(fn, observer, y0: torch.Tensor, t_span: tuple,
@@ -166,10 +276,26 @@ def _euler_chunk_fn(fn, y, t_start, dt, chunk_steps):
 
     This function is the unit of checkpointing: during backward, PyTorch discards
     its intermediates and re-runs it to recompute activations.
+
+    Applies the same per-step norm homeostasis that euler_solve does (reads
+    fn._norm_ref and fn._norm_lambda) so memory growth driven by metric
+    expansion is bounded inside each chunk.
     """
+    norm_ref = getattr(fn, '_norm_ref', 0.0)
+    norm_lambda = getattr(fn, '_norm_lambda', 0.0)
+    apply_clip = norm_ref > 0 and norm_lambda > 0
+
     t = t_start
     for _ in range(chunk_steps):
         y = y + dt * fn(t, y)
+        if apply_clip:
+            pos_norm = y.detach().norm(dim=-1, keepdim=True).clamp(min=1e-8)
+            scale = torch.where(
+                pos_norm > norm_ref,
+                1.0 - norm_lambda * (1.0 - norm_ref / pos_norm),
+                torch.ones_like(pos_norm),
+            )
+            y = y * scale
         t = t + dt
     return y
 

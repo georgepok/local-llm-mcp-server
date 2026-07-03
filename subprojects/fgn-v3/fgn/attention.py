@@ -103,20 +103,54 @@ class HeatKernelAttention(nn.Module):
         return self.W_o(self.attn_drop(attn_out)), scale_entropy
 
     def _direct_attention(self, Q, K, V, g_shared, scale_weights, t, mask):
-        """Direct (non-chunked) attention — for short sequences."""
-        # Geodesic distance
-        diff = Q.unsqueeze(3) - K.unsqueeze(2)
-        g_avg = (g_shared.unsqueeze(3) + g_shared.unsqueeze(2)) / 2.0
-        d_sq = (diff * diff * g_avg).sum(-1)  # [B, H, N, N]
+        """Direct attention via SDPA factorization (LiquidARC-style).
 
+        Math: using symmetric factorization h̃ = h · √g (instead of the
+        (g_i+g_j)/2 averaged metric), the heat kernel becomes:
+
+            K_s(i,j) = softmax_j(-||h̃_i - h̃_j||² / (4t_s))
+                     = softmax_j(Q̃·K̃^T / (2t_s) - ||K̃_j||² / (4t_s))
+
+        where Q̃ = Q · √g and K̃ = K · √g. The ||Q̃_i||² term cancels by
+        row-invariance of softmax, so we only need Q·K^T and ||K̃_j||².
+        The N×N distance matrix is never materialized — SDPA (FlashAttention
+        on supported hardware) keeps it in SRAM.
+        """
+        # g_shared is [B, 1, N, d_head]; clamp positive (metric) and sqrt
+        sqrt_g = torch.sqrt(g_shared.clamp_min(1e-8))
+        Q_tilde = Q * sqrt_g
+        K_tilde = K * sqrt_g
+        # Per-key squared norm: [B, H, N, 1] → transpose to [B, H, 1, N] for bias broadcast
+        k_norm_sq = (K_tilde * K_tilde).sum(-1, keepdim=True)   # [B, H, N, 1]
+        k_norm_sq_bias = k_norm_sq.transpose(-1, -2)            # [B, H, 1, N]
+
+        # SDPA internally scales QK^T by 1/√d. We want QK^T / (2t_s).
+        # Bake the scale into Q: Q' = Q · √d / (2t_s), then SDPA's internal
+        # /√d recovers QK^T / (2t_s). t remains a learnable tensor since we
+        # scale Q rather than passing `scale=` (which requires a Python float).
+        d_head_sqrt = math.sqrt(self.d_head)
         attn_out = torch.zeros_like(V)
         for s in range(self.n_scales):
-            log_K = -d_sq / (4.0 * t[s])
+            t_s = t[s]
+            inv_scale = d_head_sqrt / (2.0 * t_s)
+            Q_s = Q_tilde * inv_scale
+            attn_bias = -k_norm_sq_bias / (4.0 * t_s)            # [B, H, 1, N]
             if mask is not None:
-                log_K = log_K.masked_fill(mask.unsqueeze(0).unsqueeze(0), float("-inf"))
-            K_s = F.softmax(log_K, dim=-1)
+                full_bias = attn_bias.expand(attn_bias.shape[0],
+                                               attn_bias.shape[1],
+                                               attn_bias.shape[-1],
+                                               attn_bias.shape[-1]).clone()
+                full_bias.masked_fill_(
+                    mask.unsqueeze(0).unsqueeze(0), float("-inf"))
+                bias_s = full_bias
+            else:
+                bias_s = attn_bias
+            K_s_V = F.scaled_dot_product_attention(
+                Q_s, K_tilde, V,
+                attn_mask=bias_s,
+            )
             w_s = scale_weights[:, :, s].unsqueeze(1).unsqueeze(-1)
-            attn_out = attn_out + w_s * (K_s @ V)
+            attn_out = attn_out + w_s * K_s_V
         return attn_out
 
     def _chunked_attention(self, Q, K, V, g_shared, scale_weights, t, mask):

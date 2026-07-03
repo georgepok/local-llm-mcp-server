@@ -1,0 +1,55 @@
+# Bootstrap pack: ReZero + PonderNet deep supervision + geometric KL prior,
+# on Synthetic GraphWalks BFS at d=768.
+# Addresses the "dead geometry at init" problem diagnosed from the
+# tr_liquid_stepcond_halt_sbf_d768 run where CE plateaued at log(7)=1.94 with
+# CV=0 and FiLM γ/β never moved (metric never got gradient).
+
+d_model: 768
+n_heads: 8
+n_layers: 6
+d_ff: 3072
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+liquid_routing: metric    # heat-kernel routing — Tier 1 FiLM activates here
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+# Tier 1 step-conditional operator (FiLM per step)
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: false
+
+# Tier 3 halting: model learns its own compute budget via gradient descent,
+# not via external scheduling. Reward structure comes from PonderNet loss
+# (deep supervision + KL prior), not from an ad-hoc ponder penalty.
+n_ode_steps: 32
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.0       # deep-sup replaces the old gated-ponder term
+
+# Bootstrap pack
+rezero_enabled: true              # dh/dt scaled by sigmoid(gate), init ~0.007
+rezero_gate_init: -5.0            # gate grows iff dynamics lower the loss
+metric_bias_init_std: 0.5         # break flat-metric fixed point at init
+deep_supervision_enabled: true    # per-step CE weighted by halt distribution
+ponder_kl_lambda: 0.01            # KL(halt || Geom) prevents halt-at-1 collapse
+ponder_kl_prior_rate: 0.0625      # 1/16 → mean depth 16 under the prior

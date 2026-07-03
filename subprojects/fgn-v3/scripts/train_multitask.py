@@ -21,6 +21,19 @@ import time
 from pathlib import Path
 
 import torch
+import torch._inductor.config as _inductor_config
+
+# Enable TensorFloat32 for matmul on Ampere+ GPUs (GB10 supports it).
+# ~2-4× speedup with negligible accuracy loss. Suppresses the inductor warning.
+torch.set_float32_matmul_precision("high")
+
+# Kernel fusion control for LiquidARC at d≥768.
+# Inspecting the failing kernel revealed num_load=19 (19 input tensors fused
+# into one kernel: LN params, FiLM gammas/betas, tau paths, step embeddings,
+# LN backward intermediates). R0_BLOCK=1024 × 19 tensors × bf16 easily
+# exceeds 101KB SRAM. Limiting max_fusion_size forces Inductor to emit more,
+# smaller kernels rather than one mega-kernel.
+_inductor_config.max_fusion_size = 4
 from torch.utils.tensorboard import SummaryWriter
 
 # Add parent to path for fgn package
@@ -29,6 +42,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fgn.config import FGNConfig
 from fgn.model import FGNModel
 from fgn.flat_model import FlatTransformerModel
+try:
+    from fgn.liquid_model import LiquidSequenceModel
+except Exception:
+    LiquidSequenceModel = None
 from fgn.tasks import get_task
 
 
@@ -36,6 +53,10 @@ def create_model(config: FGNConfig, device: torch.device):
     """Create model based on config.model_type."""
     if config.model_type == "flat":
         model = FlatTransformerModel(config).to(device)
+    elif config.model_type == "liquid":
+        assert LiquidSequenceModel is not None, (
+            "liquid_model.py requires liquid_arc package on PYTHONPATH")
+        model = LiquidSequenceModel(config).to(device)
     else:
         model = FGNModel(config).to(device)
     return model
@@ -128,7 +149,7 @@ def train_stage1(args, config, device):
         if args.resume and config.model_type == "fgn":
             load_checkpoint(model, args.resume, device, config.max_seq_len)
 
-        if config.use_torch_compile and device.type == "cuda":
+        if config.use_torch_compile and device.type == "cuda" and not getattr(model, "_skip_top_compile", False):
             model = torch.compile(model, mode="default")
 
         n_params = sum(p.numel() for p in model.parameters())
@@ -164,10 +185,22 @@ def train_stage1(args, config, device):
             if step % args.log_every == 0:
                 dt = time.time() - t0
                 tokens_per_sec = args.batch_size * config.max_seq_len * (step + 1) / dt
-                print(f"  task={task_name} step={step}, loss={last_loss:.4f}, "
-                      f"ce={result['ce_loss'].item():.4f}, "
-                      f"cv={result['metric_cv'].item():.4f}, "
-                      f"tok/s={tokens_per_sec:.0f}")
+                msg = (f"  task={task_name} step={step}, loss={last_loss:.4f}, "
+                       f"ce={result['ce_loss'].item():.4f}, "
+                       f"cv={result['metric_cv'].item():.4f}, "
+                       f"tok/s={tokens_per_sec:.0f}")
+                # Tier 3 halting stats if present
+                if 'steps_mean' in result:
+                    gate_str = ""
+                    if 'ponder_gate' in result:
+                        gate_str = f" gate={result['ponder_gate'].item():.2f}"
+                    msg += (f" | steps[mean={result['steps_mean'].item():.1f} "
+                            f"min={result['steps_min'].item():.1f} "
+                            f"max={result['steps_max'].item():.1f}] "
+                            f"halt_frac={result['halt_frac'].item():.2f} "
+                            f"ponder={result['ponder_cost'].item():.3f}"
+                            f"{gate_str}")
+                print(msg)
                 log_metrics(result, writer, step, prefix=f"task_{task_name}")
 
             if step > 0 and step % args.save_every == 0:
@@ -191,13 +224,22 @@ def train_stage2(args, config, device):
     tokenizer = _get_tokenizer()
     task_names = args.tasks.split(",")
     task_kwargs = json.loads(args.task_kwargs)
-    tasks = {name: get_task(name, tokenizer, seq_len=config.max_seq_len, **task_kwargs) for name in task_names}
+    # Support per-task kwargs: if the dict has keys matching task names,
+    # use those per-task; otherwise apply the dict uniformly to all tasks.
+    def _resolve_kwargs(name: str) -> dict:
+        if name in task_kwargs and isinstance(task_kwargs[name], dict):
+            return task_kwargs[name]
+        return task_kwargs if not any(
+            isinstance(v, dict) for v in task_kwargs.values()) else {}
+    tasks = {name: get_task(name, tokenizer, seq_len=config.max_seq_len,
+                             **_resolve_kwargs(name))
+              for name in task_names}
 
     model = create_model(config, device)
     if args.resume and config.model_type == "fgn":
         load_checkpoint(model, args.resume, device, config.max_seq_len)
 
-    if config.use_torch_compile and device.type == "cuda":
+    if config.use_torch_compile and device.type == "cuda" and not getattr(model, "_skip_top_compile", False):
         model = torch.compile(model, mode="default")
 
     n_params = sum(p.numel() for p in model.parameters())
@@ -230,6 +272,17 @@ def train_stage2(args, config, device):
                                  enabled=(device.type == "cuda")):
             result = model(input_ids, labels=labels)
             loss = result["loss"]
+
+        # LiquidSequenceModel: compute aux losses OUTSIDE the compiled
+        # forward (mirrors LiquidARC's canonical training pattern —
+        # fusing aux ops into the forward's backward kernel exceeds
+        # Triton shared-memory limits at coupled routing / rank>0).
+        if hasattr(model, "compute_aux_losses"):
+            aux = model.compute_aux_losses(input_ids)
+            loss = loss + 0.01 * aux["crit_loss"] + 0.05 * aux["tq_loss"]
+            # Surface diagnostics onto result dict for logging
+            result["metric_cv"] = aux["cv"]
+            result["avg_kappa"] = aux["d_over_4t"]
 
         optimizer.zero_grad()
         loss.backward()
@@ -311,7 +364,7 @@ def train_stage3(args, config, device):
         model = create_model(config, device)
         load_checkpoint(model, stage2_ckpt, device, config.max_seq_len)
 
-        if config.use_torch_compile and device.type == "cuda":
+        if config.use_torch_compile and device.type == "cuda" and not getattr(model, "_skip_top_compile", False):
             model = torch.compile(model, mode="default")
 
         # Smaller LR for fine-tuning

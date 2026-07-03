@@ -1,0 +1,39 @@
+# Liquid with Tier 1 + Tier 2 step-conditional operators.
+# Tier 1: FiLM on MetricNet + TauNet bottlenecks + per-step t_diffusion.
+# Tier 2: FiLM on Q/K projection inputs (attention routing).
+# Both init as no-op, so at step 0 this is identical to baseline.
+
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+n_ode_steps: 16
+liquid_routing: attention
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+# Tier 1 + Tier 2 step conditioning
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: true

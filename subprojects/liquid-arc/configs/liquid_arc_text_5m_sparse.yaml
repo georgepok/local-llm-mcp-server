@@ -1,0 +1,82 @@
+# LiquidARC 5M — SPARSE activation (Probe 4).
+#
+# Test: does biological-style sparse dynamics (only a fraction of positions
+# update per ODE step) preserve performance or degrade it?
+#
+# sparse_fraction = 0.5 → only top-50% active positions update per step
+# Each step picks different positions based on learned activity score.
+# Averaged over 16 ODE steps, every position gets ~8 updates (not 16).
+#
+# Inherits routing_mode=attention from the 50K baseline (confirmed winning
+# routing for text). Only sparsity is the new variable under test.
+
+routing_mode: attention
+sparse_fraction: 0.5
+
+d_model: 768
+d_metric: 192
+d_ffn: 1536
+d_metric_bottleneck: 384
+metric_rank: 0
+max_seq_len: 512
+
+n_ode_steps: 16
+ode_steps_min: 16
+ode_steps_max: 16
+tau_min: 0.1
+tau_max: 3.0
+t_diffusion_init: 1.0
+chunk_size: 256
+dropout: 0.1
+
+curvature_lambda: 0.0
+tau_var_lambda: 0.0
+alpha_logit_init: 2.2
+tau_freeze_steps: 0
+
+criticality_loss_enabled: false
+criticality_loss_lambda: 0.0
+criticality_target_ratio: 0.0
+criticality_D_sq_target: 0.0
+cv_floor_lambda: 0.0
+cv_floor_target: 0.0
+cv_ceiling_target: 0.0
+curvature_diversity_loss_enabled: false
+
+tau_quality_loss_enabled: true
+tau_quality_lambda: 0.05
+tau_mean_target: 0.0
+tau_log_spread_target: 0.6
+
+structural_tau_enabled: true
+structural_tau_min: 0.3
+structural_tau_max: 3.0
+
+geo_loss_enabled: false
+
+use_procedural: false
+use_cellular_automata: false
+use_conditional_transforms: false
+real_arc_mix_ratio: 0.0
+
+n_colors: 10
+n_roles: 8
+n_sep_types: 4
+max_grid_size: 30
+max_grids: 16
+
+model_type: liquid
+use_torch_compile: false
+ode_chunk_size: 4
+invertible_solver: false
+n_fp_iters: 5
+deq_solver: false
+deq_ift_iters: 10
+
+base_lr: 3e-4
+batch_size: 1
+grad_accum_steps: 1
+warmup_steps: 500
+weight_decay: 0.01
+transform_weight: 5.0
+copy_weight: 0.05

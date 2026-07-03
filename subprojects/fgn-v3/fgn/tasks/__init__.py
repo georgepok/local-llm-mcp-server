@@ -11,6 +11,10 @@ from .state_tracking import StateTrackingTask
 from .permutation import PermutationTask
 from .affine import AffineGroupTask
 from .random_dfa import RandomDFATask
+from .temporal_reach import TemporalReachabilityTask
+from .temporal_reach_real import TemporalReachabilityRealTask
+from .temporal_shortest_path import TemporalShortestPathTask
+from .synthetic_graph_bfs import SyntheticGraphBFSTask
 from .gridworld import GridWorldTask
 from .continuous_gridworld import ContinuousGridWorldTask
 from .arc import ARCTask
@@ -30,6 +34,11 @@ TASK_REGISTRY = {
     "H": AffineGroupTask,
     # v4 tasks
     "R": RandomDFATask,
+    # Temporal graph tasks
+    "TR": TemporalReachabilityTask,
+    "TRR": TemporalReachabilityRealTask,
+    "TSP": TemporalShortestPathTask,
+    "SBF": SyntheticGraphBFSTask,
     "W": GridWorldTask,
     # FluidNet tasks
     "CW": ContinuousGridWorldTask,

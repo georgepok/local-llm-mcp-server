@@ -1,0 +1,41 @@
+# Liquid Tier 1+3 at d=768 on Synthetic GraphWalks BFS.
+# d=768 is the known Triton-safe upper bound per memory (101KB SRAM limit).
+# d=1024 hit OOM on LTC backward kernel (106KB).
+
+d_model: 768
+n_heads: 8
+n_layers: 6
+d_ff: 3072      # 4× d
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true  # with epilogue_fusion=False in train_multitask.py, compile works at d=768
+metric_rank: 0
+liquid_routing: attention
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: false
+
+n_ode_steps: 32
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.01

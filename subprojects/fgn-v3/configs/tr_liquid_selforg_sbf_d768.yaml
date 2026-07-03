@@ -1,0 +1,60 @@
+# Liquid port of the toy-validated self-organizing rule (research/self_org_sim/).
+# Adds an identity-metric SDPA branch (raw h-similarity routing without the
+# learned g scaling) plus an EMA accumulator across the 32 ODE steps —
+# directly modeling the toy's "G_ij accumulates across iterations" mechanism.
+#
+# Compared to the vanilla pondernet baseline (36.6% Phase-0 accuracy at
+# step 1000): this asks whether the validated similarity-based local
+# self-organization gives the model a routing prior it can exploit beyond
+# what gradient-trained MetricNet alone provides.
+
+d_model: 768
+n_heads: 8
+n_layers: 6
+d_ff: 3072
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+liquid_routing: metric
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: false
+
+n_ode_steps: 32
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.0
+
+# Bootstrap pack
+rezero_enabled: true
+rezero_gate_init: -5.0
+metric_bias_init_std: 0.5
+deep_supervision_enabled: true
+ponder_kl_lambda: 0.01
+ponder_kl_prior_rate: 0.0625
+
+# Self-organizing identity routing (NEW — toy-validated mechanism)
+identity_routing_enabled: true
+identity_routing_alpha_init: 0.0    # sigmoid(0) = 0.5, equal mix at start
+identity_routing_decay: 0.1         # EMA: ~10 steps to half-life

@@ -106,6 +106,55 @@ class FGNConfig:
     tau_min: float = 0.1                # minimum time constant
     t_diffusion_init: float = 1.0       # initial diffusion timescale
 
+    # LiquidSequenceModel-specific fields (separate from FluidLayer's tau_min).
+    # Prior Spark runs used these via getattr() before they were declared here;
+    # adding them to the dataclass so from_yaml can accept them as kwargs.
+    liquid_routing: str = "metric"           # "metric" | "attention" | "coupled"
+    liquid_structural_tau: bool = False
+    d_liquid_metric: int = 0                 # 0 = use LiquidARC default (d*0.75)
+    d_liquid_ffn: int = 0                    # 0 = use LiquidARC default (4d)
+    liquid_tau_min: float = 0.5
+    liquid_tau_max: float = 1.0
+
+    # Tier 1 flexible geometric reasoning: step-conditional FiLM on MetricNet
+    # + TauNet + per-step t_diffusion. No-op at init, so old checkpoints load
+    # unchanged when strict=False.
+    step_conditional_operator: bool = False
+    step_conditional_n_max: int = 32
+    step_conditional_qk: bool = False  # Tier 2: FiLM on attention Q/K projections
+    # Tier 3: per-position ACT-style halting; n_ode_steps becomes MAX budget.
+    halting_enabled: bool = False
+    halting_min_steps: int = 4
+    halting_ponder_lambda: float = 0.01
+
+    # Bootstrap pack: ReZero + PonderNet deep supervision + geometric KL prior.
+    # Together these wake the geometry from a dead-init state by giving every
+    # ODE step a direct gradient path to the loss.
+    rezero_enabled: bool = False           # gate dh/dt by sigmoid(rezero_logit)
+    rezero_gate_init: float = -5.0         # sigmoid(-5) ~ 0.0067 — near-identity at init
+    metric_bias_init_std: float = 0.0      # >0 adds Normal(0,std) noise to MetricNet bias
+                                           # (breaks flat-metric fixed point at init)
+    deep_supervision_enabled: bool = False # per-step CE weighted by halt distribution
+    ponder_kl_lambda: float = 0.0          # KL(p_halt || Geom(prior_rate)) weight
+    ponder_kl_prior_rate: float = 0.0625   # 1/16 — mean depth 16 under geometric prior
+
+    # Multi-timescale local learning: Hebbian fast weights on W_o overlay
+    fast_weights_enabled: bool = False
+    fast_weights_rank: int = 4
+    fast_weights_eta: float = 0.01
+    fast_weights_decay: float = 0.05
+
+    # Self-organizing identity routing (toy-validated, see research/self_org_sim/)
+    identity_routing_enabled: bool = False
+    identity_routing_alpha_init: float = 0.0
+    identity_routing_decay: float = 0.1
+
+    # Multi-substrate self-organizing architecture (toy-validated, see
+    # research/self_org_sim/multi_substrate_toy.py — K=2 coupled gives 71% MSE
+    # reduction on multi-mode task with substrate differentiation).
+    k_substrates: int = 1                # K=1 = standard single-substrate
+    lateral_weight: float = 0.5          # weight of lateral context in dynamics
+
     # GB10 optimizations
     use_fp8_metric: bool = False
     use_torch_compile: bool = True

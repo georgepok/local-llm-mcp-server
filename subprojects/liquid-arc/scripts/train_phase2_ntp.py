@@ -43,8 +43,12 @@ from liquid_arc.tasks.text_task import TextEmbedding, TextHead
 
 def main():
     parser = argparse.ArgumentParser(description="Phase 2: Event-level NTP + ARC")
-    parser.add_argument("--ode_checkpoint", type=str, required=True)
-    parser.add_argument("--llm_path", type=str, required=True)
+    parser.add_argument("--ode_checkpoint", type=str, default=None,
+                        help="Start from existing LiquidARC checkpoint (ARC-pretrained)")
+    parser.add_argument("--config", type=str, default=None,
+                        help="YAML config for from-scratch training (mutually exclusive with --ode_checkpoint)")
+    parser.add_argument("--llm_path", type=str, default="gpt2",
+                        help="Path to LLM for tokenizer (or HF model name, default gpt2)")
     parser.add_argument("--data_dir", type=str, default=None)
     parser.add_argument("--output_dir", type=str, default="output/phase2_events")
     parser.add_argument("--max_steps", type=int, default=10000)
@@ -61,21 +65,38 @@ def main():
     parser.add_argument("--save_every", type=int, default=1000)
     args = parser.parse_args()
 
+    if not args.ode_checkpoint and not args.config:
+        parser.error("Must provide either --ode_checkpoint or --config")
+    if args.ode_checkpoint and args.config:
+        parser.error("--ode_checkpoint and --config are mutually exclusive")
+
     device = args.device
     os.makedirs(args.output_dir, exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, "checkpoints"), exist_ok=True)
 
     # ── Load model ──
     print("═══ Loading LiquidARC ═══")
-    ode_ckpt = torch.load(args.ode_checkpoint, map_location=device, weights_only=False)
-    ode_config = ode_ckpt['config']
+    if args.ode_checkpoint:
+        ode_ckpt = torch.load(args.ode_checkpoint, map_location=device, weights_only=False)
+        ode_config = ode_ckpt['config']
+        print(f"  loaded config from checkpoint: {args.ode_checkpoint}")
+    else:
+        from liquid_arc.config import LiquidARCConfig
+        ode_config = LiquidARCConfig.from_yaml(args.config)
+        ode_ckpt = None
+        print(f"  from-scratch: loaded config from {args.config}")
+
     d = ode_config.d_model
     ode_config.tau_freeze_steps = 0
     ode_config.tau_min = 0.1
     ode_config.tau_max = 3.0
 
     arc_model = LiquidARCModel(ode_config).to(device)
-    arc_model.load_state_dict(ode_ckpt.get('model_state_dict', {}), strict=False)
+    if ode_ckpt is not None:
+        arc_model.load_state_dict(ode_ckpt.get('model_state_dict', {}), strict=False)
+        print("  loaded weights from checkpoint")
+    else:
+        print("  fresh random initialization (no checkpoint)")
     arc_model.dynamics.freeze_tau = False
     print(f"  d={d}, freeze_tau={arc_model.dynamics.freeze_tau}")
     print(f"  t_diffusion={F.softplus(arc_model.dynamics.t_diffusion).item():.2f}")
@@ -191,8 +212,21 @@ def main():
             context = arc_model.context_pool(input_events)
             arc_model.dynamics.set_context(context, mask=None)
             arc_model.dynamics.set_n_steps(n_steps)
+
+            # Pre-ODE diagnostics needed by auxiliary losses (see
+            # LiquidARCModel.forward in model.py:490-530 for the canonical
+            # path). Required here because this script bypasses .forward()
+            # and calls euler_solve() directly.
+            g_init_t = arc_model.dynamics.compute_metric_diag(input_events)
+            tau_init_t = arc_model.dynamics.compute_tau(input_events)
+            # compute_metric_diag may return (D, L) when metric_rank > 0
+            g_init_diag = g_init_t[0] if isinstance(g_init_t, tuple) else g_init_t
+
             h_ode = euler_solve(arc_model.dynamics, input_events,
                                 t_span=(0.0, 2.0), n_steps=n_steps)
+            # euler_solve may return (h, efficiency) — normalize
+            if isinstance(h_ode, tuple):
+                h_ode = h_ode[0]
 
             # Predict next event: use mean-pooled ODE state → TextHead → match target
             # The ODE state at the last position should predict the next event
@@ -211,10 +245,49 @@ def main():
             logits = text_head(combined)  # [1, T, vocab]
 
             # NTP loss on target tokens (skip the ODE summary position)
-            loss = F.cross_entropy(
+            ntp_loss = F.cross_entropy(
                 logits[:, 1:, :].contiguous().view(-1, vocab_size),
                 target_ids[:, 1:].contiguous().view(-1),
             )
+
+            # Auxiliary geometry-shaping losses — mirror LiquidARCModel.forward.
+            # Without these the event-level NTP path is task-loss-only, which
+            # produces flat geometry (confirmed empirically in baseline run).
+            aux_loss = torch.zeros((), device=device)
+            crit_ratio_log = 0.0
+            if getattr(ode_config, 'criticality_loss_enabled', False):
+                from liquid_arc.sustained_criticality import compute_criticality_loss
+                _crit_loss, _crit_diag = compute_criticality_loss(
+                    h_ode, g_init_diag, tau_init_t, arc_model.dynamics.t_diffusion,
+                    target_ratio=ode_config.criticality_target_ratio,
+                    d_sq_target=ode_config.criticality_D_sq_target,
+                )
+                aux_loss = aux_loss + ode_config.criticality_loss_lambda * _crit_loss
+                crit_ratio_log = float(_crit_diag.get('ratio', 0.0))
+            if getattr(ode_config, 'tau_quality_loss_enabled', False):
+                from liquid_arc.sustained_criticality import compute_tau_quality_loss
+                tql_mean_target = ode_config.tau_mean_target
+                if tql_mean_target <= 0:
+                    tql_mean_target = 2.0 / max(1, n_steps) * 16.0  # auto
+                _tq_loss = compute_tau_quality_loss(
+                    tau_init_t,
+                    mean_target=tql_mean_target,
+                    log_spread_target=ode_config.tau_log_spread_target,
+                )
+                aux_loss = aux_loss + ode_config.tau_quality_lambda * _tq_loss
+            if getattr(ode_config, 'curvature_diversity_loss_enabled', False):
+                from liquid_arc.sustained_criticality import compute_curvature_diversity_loss
+                _cd_loss = compute_curvature_diversity_loss(
+                    g_init_diag,
+                    cv_floor=ode_config.curvature_cv_floor,
+                    cv_ceiling=ode_config.curvature_cv_ceiling,
+                )
+                aux_loss = aux_loss + ode_config.curvature_diversity_lambda * _cd_loss
+
+            loss = ntp_loss + aux_loss
+            # Stash a compact diagnostic so the logger can surface it
+            metrics["_last_crit_ratio"] = crit_ratio_log
+            metrics["_last_aux_loss"] = float(aux_loss.detach().item()) if aux_loss.requires_grad else 0.0
             task_type = 'ntp'
 
         optimizer.zero_grad()
@@ -257,9 +330,13 @@ def main():
                     cv = result.get('metric_cv', 0) if task_type == 'arc' else 0
                     tau_str = "tau=arc"
 
+            crit_ratio = metrics.get("_last_crit_ratio", 0.0)
+            aux_extra = metrics.get("_last_aux_loss", 0.0)
+            aux_str = (f" aux={aux_extra:.3f} D²/4τ={crit_ratio:.1f}"
+                        if aux_extra != 0.0 else "")
             print(f"  step {step:>5d} | arc={arc_loss:.3f} xform={avg_xform:.1f}% | "
                   f"ntp={ntp_loss:.3f} ppl={ntp_ppl:.0f} | "
-                  f"CV={cv:.2f} {tau_str} t={t_diff:.1f} α={alpha:.2f} | "
+                  f"CV={cv:.2f} {tau_str} t={t_diff:.1f} α={alpha:.2f}{aux_str} | "
                   f"{step/elapsed:.1f} step/s")
             metrics = {}
 

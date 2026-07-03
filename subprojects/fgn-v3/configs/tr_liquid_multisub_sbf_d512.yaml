@@ -1,0 +1,64 @@
+# Multi-substrate self-organizing LiquidARC on SBF.
+#
+# Toy validation (research/self_org_sim/multi_substrate_toy.py):
+#   K=1 isolated:        MSE 0.32 (baseline)
+#   K=2 coupled, 3-step: MSE 0.09 (71% reduction)
+#   Substrates differentiated (cos_sim=0.38, ablation_spread=1.58)
+#
+# Hypothesis: 2 LiquidARC ContinuousDynamics with lateral coupling at every
+# ODE step develop differentiated functional roles (e.g., one specializes
+# in edge-pattern parsing, the other in multi-hop traversal), gaining
+# capacity beyond what single-substrate weight-tied dynamics can express.
+#
+# d_model=512 per substrate so total compute ≈ 2× d=512 baseline ≈ d=768
+# baseline. Direct A/B vs the 36.6% Phase-0 single-substrate result.
+
+d_model: 512                # PER SUBSTRATE — total state in ODE = 2*512 = 1024
+n_heads: 8
+n_layers: 6
+d_ff: 2048
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+liquid_routing: metric
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: false
+
+n_ode_steps: 32
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.0
+
+# Bootstrap pack (carried over — works with multi-substrate)
+rezero_enabled: true
+rezero_gate_init: -5.0
+metric_bias_init_std: 0.5
+deep_supervision_enabled: true
+ponder_kl_lambda: 0.01
+ponder_kl_prior_rate: 0.0625
+
+# Multi-substrate (NEW — the toy-validated mechanism)
+k_substrates: 2
+lateral_weight: 0.5

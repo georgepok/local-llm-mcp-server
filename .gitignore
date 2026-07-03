@@ -49,3 +49,16 @@ __pycache__/
 # Claude Code local settings (ignore all except shared project skills)
 .claude/*
 !.claude/skills/
+
+# Research data / checkpoints / outputs — commit code and text only
+*.pt
+*.bin
+*.safetensors
+*.ckpt
+*.pth
+*.npy
+*.npz
+*.jsonl
+*.log
+*.gif
+subprojects/*/data/

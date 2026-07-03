@@ -1,0 +1,56 @@
+# Multi-timescale local learning (fast weights overlay) on top of the
+# pondernet+metric+curriculum bootstrap. Tests whether per-batch Hebbian
+# fast weights crack the depth-3 ceiling that the gradient-only architecture
+# hits at 1.9% accuracy.
+
+d_model: 768
+n_heads: 8
+n_layers: 6
+d_ff: 3072
+vocab_size: 50304
+max_seq_len: 2048
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+liquid_routing: metric
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+step_conditional_operator: true
+step_conditional_n_max: 32
+step_conditional_qk: false
+
+n_ode_steps: 32
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.0
+
+# Bootstrap pack
+rezero_enabled: true
+rezero_gate_init: -5.0
+metric_bias_init_std: 0.5
+deep_supervision_enabled: true
+ponder_kl_lambda: 0.01
+ponder_kl_prior_rate: 0.0625
+
+# Multi-timescale local learning (NEW)
+fast_weights_enabled: true
+fast_weights_rank: 8       # rank-8 Hebbian overlay → 8×768 = 6K extra params per direction
+fast_weights_eta: 0.05     # learning rate for Hebbian update per ODE step
+fast_weights_decay: 0.10   # forgetting rate per step (so old correlations fade)

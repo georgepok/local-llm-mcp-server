@@ -1,0 +1,93 @@
+# Phase 2/3 config: LeWM base with ARPredictor replaced by LiquidARCPredictor.
+#
+# Start from the upstream lewm config, then override:
+#   - predictor.* — moot (LiquidARCPredictor ignores these, reads ode.*)
+#   - ode.*       — LiquidARCConfig fields
+#   - loss.*      — add criticality + tau_quality in Phase 3 (disabled here)
+defaults:
+  - _self_
+  - data: pusht
+
+output_model_name: lewm_liquid
+subdir: ${hydra:job.id}
+
+num_workers: 6
+train_split: 0.9
+seed: 3072
+img_size: 224
+patch_size: 14
+encoder_scale: tiny
+dump_object: True
+
+trainer:
+  max_epochs: 100
+  devices: auto
+  accelerator: gpu
+  precision: bf16
+  gradient_clip_val: 1.0
+
+loader:
+  batch_size: 128
+  num_workers: ${num_workers}
+  persistent_workers: True
+  prefetch_factor: 3
+  pin_memory: True
+
+optimizer:
+  type: AdamW
+  lr: 5e-5
+  weight_decay: 1e-3
+
+wandb:
+  enabled: False  # flip to True once WANDB_API_KEY is set
+  config:
+    entity: lewm
+    project: lewm-liquid
+    name: ${output_model_name}
+    id: ${subdir}
+    resume: allow
+    log_model: False
+
+wm:
+  type: lewm_liquid
+  history_size: 3
+  num_preds: 1
+  embed_dim: 192
+
+# --- LiquidARCPredictor (ODE) hyperparameters ---
+ode:
+  d_model: 192              # matches embed_dim; proj_in is Identity
+  d_metric: 48
+  d_ffn: 512
+  n_ode_steps: 16
+  ode_steps_min: 16         # no step randomization during LeWM training
+  ode_steps_max: 16
+  integration_time: 2.0
+  tau_min: 0.5
+  tau_max: 1.0
+  dropout: 0.1
+  use_torch_compile: False  # enable after stability verified
+  step_embed_enabled: False
+  channel_gate_enabled: False
+
+# Identity metric at init (Softplus(1.31)≈1). Curvature emerges from training.
+
+loss:
+  sigreg:
+    weight: 0.09
+    kwargs:
+      knots: 17
+      num_proj: 1024
+  # Phase 3 — disabled by default, enable via --config-name=lewm_liquid_crit.yaml
+  criticality:
+    enabled: False
+    lambda: 0.01
+    target_ratio: 18.0
+    D_sq_target: 60.0
+  tau_quality:
+    enabled: False
+    lambda: 0.05
+    mean_target: 0.5          # integration_time / n_ode_steps * 16 / 16 ≈ 2/16*16/16 tuned later
+    log_spread_target: 0.6
+  metric_weighted_pred:
+    enabled: False            # Phase 4 ablation D

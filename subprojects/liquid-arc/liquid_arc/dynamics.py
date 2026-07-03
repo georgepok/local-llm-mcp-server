@@ -55,8 +55,16 @@ class ContinuousDynamics(nn.Module):
         self.metric_net_linear2_diag = nn.Linear(d_metric_bn, d)
 
         # Init for identity metric: Softplus(1.3133) ~ 1.0
+        # Optional bias noise (metric_bias_init_std) breaks the flat-metric
+        # fixed point — with std>0 the metric has per-dim variance at init,
+        # so gradient can escape from flat-soup equilibrium. No-op when 0.
         with torch.no_grad():
             self.metric_net_linear2_diag.bias.fill_(math.log(math.e - 1))
+            bias_noise_std = getattr(config, 'metric_bias_init_std', 0.0)
+            if bias_noise_std > 0:
+                self.metric_net_linear2_diag.bias.add_(
+                    torch.randn_like(self.metric_net_linear2_diag.bias)
+                    * bias_noise_std)
             nn.init.normal_(self.metric_net_linear2_diag.weight, std=0.05)
 
         # Low-rank factors: g = diag(D) + L·L^T
@@ -96,6 +104,70 @@ class ContinuousDynamics(nn.Module):
         self.tau_step_embed = nn.Embedding(20, d_met)  # 20 max steps
         nn.init.zeros_(self.tau_step_embed.weight)
 
+        # === Step-conditional operator (flexible geometric reasoning Tier 1) ===
+        # FiLM modulation on MetricNet + TauNet bottlenecks, per-step t_diffusion.
+        # Init as no-op: γ=1, β=0, t_diff[s]=softplus⁻¹(t_diffusion_init).
+        # Preserves backward compat with pre-Tier1 checkpoints (strict=False load).
+        self.step_conditional_enabled = getattr(
+            config, 'step_conditional_operator', False)
+        if self.step_conditional_enabled:
+            self._step_cond_n_max = getattr(config, 'step_conditional_n_max', 32)
+            n_max = self._step_cond_n_max
+            # MetricNet FiLM (on bottleneck features, dim d_metric_bn)
+            self.metric_film_gamma = nn.Embedding(n_max, d_metric_bn)
+            self.metric_film_beta  = nn.Embedding(n_max, d_metric_bn)
+            nn.init.ones_(self.metric_film_gamma.weight)
+            nn.init.zeros_(self.metric_film_beta.weight)
+            # TauNet FiLM (on bottleneck features, dim d_met) — skip if channel_gate path
+            if not self.channel_gate_enabled:
+                self.tau_film_gamma = nn.Embedding(n_max, d_met)
+                self.tau_film_beta  = nn.Embedding(n_max, d_met)
+                nn.init.ones_(self.tau_film_gamma.weight)
+                nn.init.zeros_(self.tau_film_beta.weight)
+            # Per-step diffusion radius. Init to softplus⁻¹(t_diffusion_init)
+            # so per-step t_diff equals baseline scalar at every step initially.
+            self.t_diff_per_step = nn.Embedding(n_max, 1)
+            inv_softplus_init = math.log(
+                math.exp(float(config.t_diffusion_init)) - 1.0)
+            with torch.no_grad():
+                self.t_diff_per_step.weight.fill_(inv_softplus_init)
+
+        # === Tier 3: Per-position ACT-style halting ===
+        # Each ODE step computes a halt probability per position. A "still_active"
+        # fraction (product of (1 - p_halt) across steps) multiplies dh — positions
+        # with high cumulative halt stop contributing. Ponder cost (mean of
+        # still_active across steps) rewards earlier halting.
+        # Init: halt_head zeroed + large negative bias → p_halt ≈ 0 → still_active
+        # ≈ 1 → baseline behavior preserved. Training drives halt_head away from
+        # zero where fewer steps suffice.
+        # With halting, n_ode_steps becomes a MAX, not fixed: hard positions get
+        # the full budget, easy ones exit early.
+        self.halting_enabled = getattr(config, 'halting_enabled', False)
+        if self.halting_enabled:
+            self.halt_head = nn.Linear(d, 1, bias=True)
+            with torch.no_grad():
+                nn.init.zeros_(self.halt_head.weight)
+                self.halt_head.bias.fill_(-10.0)  # sigmoid(-10) ≈ 4.5e-5 ≈ 0
+
+        # === Tier 2: FiLM on attention routing (Q/K projections) ===
+        # Only relevant when routing_mode uses attention (attention or coupled).
+        # Each step gets its own γ/β modulation of h_normed before W_q/W_k.
+        # This lets attention ROUTING (not just geometric) specialize per step.
+        # Controlled by separate flag for granular A/B testing.
+        self.step_conditional_qk_enabled = getattr(
+            config, 'step_conditional_qk', False)
+        if (self.step_conditional_qk_enabled
+                and getattr(config, 'routing_mode', 'metric') in
+                ('attention', 'coupled')):
+            n_max_qk = getattr(config, 'step_conditional_n_max', 32)
+            self._step_cond_qk_n_max = n_max_qk
+            self.qk_film_gamma = nn.Embedding(n_max_qk, d)
+            self.qk_film_beta  = nn.Embedding(n_max_qk, d)
+            nn.init.ones_(self.qk_film_gamma.weight)
+            nn.init.zeros_(self.qk_film_beta.weight)
+        else:
+            self.step_conditional_qk_enabled = False
+
         # τ-CV coupling: tau responds to local metric complexity
         self.tau_cv_coupling_enabled = getattr(config, 'tau_cv_coupling_enabled', False)
         self.cv_coupling_target = getattr(config, 'cv_coupling_target', 3.5)
@@ -124,11 +196,87 @@ class ContinuousDynamics(nn.Module):
         self.W_v = nn.Linear(d, d, bias=False)
         self.W_o = nn.Linear(d, d, bias=False)
 
+        # Multi-timescale local learning: per-batch low-rank fast-weight overlay
+        # on W_o. F = U·V^T accumulates outer(post, pre) by Hebbian rule across
+        # ODE steps, reset to 0 at the start of each forward pass. No gradient
+        # flows through the Hebbian update — it is a genuine local rule running
+        # at a faster timescale than gradient learning.
+        self.fast_weights_enabled = getattr(config, 'fast_weights_enabled', False)
+        if self.fast_weights_enabled:
+            self.fast_weights_rank = int(getattr(config, 'fast_weights_rank', 4))
+            self.fast_weights_eta = float(getattr(config, 'fast_weights_eta', 0.01))
+            self.fast_weights_decay = float(
+                getattr(config, 'fast_weights_decay', 0.05))
+            r = self.fast_weights_rank
+            # Per-batch state buffers (resized via reset_fast_weights).
+            self.register_buffer('_fast_U', torch.zeros(1, d, r), persistent=False)
+            self.register_buffer('_fast_V', torch.zeros(1, d, r), persistent=False)
+            # FIXED random projections (sketching) for compile-safe rank-r
+            # Hebbian update. Persistent so every run uses the same projection
+            # (deterministic, reproducible). Initialized once.
+            with torch.no_grad():
+                proj_pre = torch.randn(d, r) / math.sqrt(d)
+                proj_post = torch.randn(d, r) / math.sqrt(d)
+            self.register_buffer('_fw_proj_pre', proj_pre, persistent=True)
+            self.register_buffer('_fw_proj_post', proj_post, persistent=True)
+
+        # Routing mode: metric / attention / coupled.
+        self.routing_mode = getattr(config, 'routing_mode', 'metric')
+        if self.routing_mode in ('attention', 'coupled'):
+            self.W_q = nn.Linear(d, d, bias=False)
+            self.W_k = nn.Linear(d, d, bias=False)
+            with torch.no_grad():
+                nn.init.xavier_uniform_(self.W_q.weight)
+                nn.init.xavier_uniform_(self.W_k.weight)
+        if self.routing_mode == 'coupled':
+            self.W_gate = nn.Linear(d, 1, bias=True)
+            with torch.no_grad():
+                nn.init.normal_(self.W_gate.weight, std=0.01)
+                self.W_gate.bias.fill_(0.0)
+
+        # Sparse activation (Probe 4). When sparse_fraction > 0, only the
+        # top-k positions (by learned activity score) receive dh/dt updates
+        # this step; the rest hold. Tests biological sparsity hypothesis.
+        self.sparse_fraction = getattr(config, 'sparse_fraction', 0.0)
+        self.sparse_random = getattr(config, 'sparse_random', False)
+        if self.sparse_fraction > 0:
+            self.W_activity = nn.Linear(d, 1, bias=True)
+            with torch.no_grad():
+                nn.init.normal_(self.W_activity.weight, std=0.01)
+                self.W_activity.bias.fill_(2.0)  # sigmoid(2)≈0.88 → most active early
+
         # Learned diffusion timescale
         self.t_diffusion = nn.Parameter(torch.tensor(config.t_diffusion_init))
 
         # Identity residual — sigmoid(2.2) ~ 0.90 self-attention at init
         self.alpha_logit = nn.Parameter(torch.tensor(config.alpha_logit_init))
+
+        # ReZero-style gate on dh/dt. When enabled, the entire ODE update is
+        # multiplied by sigmoid(rezero_gate_logit). Init at a large negative
+        # value → near-zero gate → identity at step 0. The gate receives
+        # gradient directly (dL/dγ = ⟨dh_dt, dL/dy⟩), so it grows iff the
+        # dynamics produces loss-reducing updates. Lets the geometry wake
+        # from a dead-init state without scheduling.
+        self.rezero_enabled = getattr(config, 'rezero_enabled', False)
+        if self.rezero_enabled:
+            init_val = float(getattr(config, 'rezero_gate_init', -5.0))
+            self.rezero_gate_logit = nn.Parameter(torch.tensor(init_val))
+
+        # Self-organizing identity routing — adds a parallel SDPA branch using
+        # raw h-similarity (no learned g scaling), plus a per-batch EMA
+        # accumulator across ODE steps. Validated on toy substrate (see
+        # research/self_org_sim/).
+        self.identity_routing_enabled = getattr(
+            config, 'identity_routing_enabled', False)
+        if self.identity_routing_enabled:
+            init_val = float(getattr(
+                config, 'identity_routing_alpha_init', 0.0))
+            self.identity_routing_alpha = nn.Parameter(torch.tensor(init_val))
+            self.identity_routing_decay = float(getattr(
+                config, 'identity_routing_decay', 0.1))
+            # EMA accumulator buffer — sized lazily per-batch.
+            self.register_buffer('_id_history', torch.zeros(1, 1, d),
+                                 persistent=False)
 
         # FFN inside dynamics (applied at every step, amortized)
         self.ffn = nn.Sequential(
@@ -248,6 +396,29 @@ class ContinuousDynamics(nn.Module):
         self._cached_g = None  # reset metric cache for new input
         self._cached_L = None
 
+    def reset_fast_weights(self, batch_size: int, device, dtype):
+        """Zero the per-batch Hebbian fast weights at the start of an ODE pass.
+
+        Called by the solver before iteration. Buffers are resized if batch
+        size changed. No-op when fast_weights_enabled is False.
+        """
+        if not self.fast_weights_enabled:
+            return
+        d = self.W_o.weight.shape[0]
+        r = self.fast_weights_rank
+        self._fast_U = torch.zeros(batch_size, d, r, device=device, dtype=dtype)
+        self._fast_V = torch.zeros(batch_size, d, r, device=device, dtype=dtype)
+
+    def reset_id_history(self, batch_size: int, seq_len: int, device, dtype):
+        """Zero the identity-routing EMA accumulator at the start of an ODE
+        pass.  Called by the solver. No-op when identity_routing disabled.
+        """
+        if not self.identity_routing_enabled:
+            return
+        d = self.W_o.weight.shape[0]
+        self._id_history = torch.zeros(batch_size, seq_len, d,
+                                         device=device, dtype=dtype)
+
     def set_n_steps(self, n_steps: int):
         """Override step count for FFN amortization — no inplace to avoid autograd conflicts."""
         self._n_ode_steps = torch.tensor(float(n_steps), device=self._n_ode_steps.device)
@@ -292,133 +463,228 @@ class ContinuousDynamics(nn.Module):
         context = self._context
         mask = self._mask
 
-        # 1. Metric from current h (with optional step embedding modulation)
-        h_normed = self.norm_geo(h)
-        ctx_exp = context.unsqueeze(1).expand(B, N, d)
+        # Asymmetric-attention branch (either full-attention or half of coupled).
+        routed_v_attn = None
+        gate_val = None
+        if self.routing_mode in ('attention', 'coupled'):
+            h_normed = self.norm_geo(h)
+            # Tier 2: step-conditional FiLM on inputs to Q/K. No-op at init.
+            if self.step_conditional_qk_enabled:
+                _s_qk = self._current_step_index_buf.long().clamp(
+                    0, self._step_cond_qk_n_max - 1)
+                _gqk = self.qk_film_gamma(_s_qk).view(1, 1, -1)
+                _bqk = self.qk_film_beta(_s_qk).view(1, 1, -1)
+                h_qk = _gqk * h_normed + _bqk
+            else:
+                h_qk = h_normed
+            Q = self.W_q(h_qk)
+            K = self.W_k(h_qk)
+            V = self.W_v(self.norm_val(h))
+            scale_factor = 1.0 / math.sqrt(d)
+            attn_mask_sdpa = None
+            if mask is not None:
+                mask_bc = mask if mask.dim() == 3 else mask.unsqueeze(0)
+                attn_mask_sdpa = torch.zeros_like(
+                    mask_bc, dtype=Q.dtype, device=Q.device)
+                attn_mask_sdpa = attn_mask_sdpa.masked_fill(
+                    mask_bc, float('-inf'))
+            routed_v_attn = F.scaled_dot_product_attention(
+                query=Q * scale_factor, key=K, value=V,
+                attn_mask=attn_mask_sdpa,
+            )
+            if self.routing_mode == 'attention':
+                # Pure attention: no metric path, no gate.
+                routed_v = routed_v_attn
+                g = None
+                L = None
+            else:
+                # 'coupled' — gate computed now, metric path runs below
+                gate_val = torch.sigmoid(self.W_gate(h_normed))  # [B, N, 1]
 
-        step_idx = self._current_step_index_buf
+        # 1. Metric-routing path (wraps the whole heat-kernel block).
+        # Runs in 'metric' mode and also in 'coupled' mode (where its output
+        # is blended with the attention path via the sigmoid gate).
+        if self.routing_mode in ('metric', 'coupled'):
+            h_normed = self.norm_geo(h)
+            ctx_exp = context.unsqueeze(1).expand(B, N, d)
 
-        cat_input = torch.cat([h_normed, ctx_exp], dim=-1)  # [B, N, 2d]
-
-        freeze_active = self.metric_freeze_active
-        if (freeze_active
-                and step_idx > self.metric_freeze_step
-                and self._cached_g is not None):
-            # FROZEN: reuse metric from the freeze step (no grad through cache)
-            g = self._cached_g
-            L = self._cached_L if hasattr(self, '_cached_L') else None
-        else:
-            # LIVE: compute metric normally
-            met_hidden = F.gelu(self.metric_net_linear1(cat_input))  # [B, N, d_metric_bn]
-            # Fast metric overlay from working memory (per-input routing bias)
-            if self._metric_overlay is not None:
-                met_hidden = met_hidden + self._metric_overlay  # [B, 1, d_metric_bn] broadcasts
-            if self.step_embed_enabled:
-                met_hidden = met_hidden + self._current_step_embed  # [d_metric_bn] broadcasts
-            g = F.softplus(self.metric_net_linear2_diag(met_hidden))  # [B, N, d]
-
-            # Low-rank factors (zero-init → starts as no-op)
-            L = None
-            if self.metric_rank > 0:
-                L_flat = self.metric_net_linear2_lr(met_hidden)  # [B, N, d*rank]
-                L = L_flat.view(B, N, d, self.metric_rank)  # [B, N, d, rank]
-
-            # Cache at the freeze step
-            if freeze_active and step_idx == self.metric_freeze_step:
-                self._cached_g = g.detach()
-                self._cached_L = L.detach() if self.metric_rank > 0 else None
-
-        # System 2: blend fast metric with slow EMA for multi-timescale stability
-        # (only when metric is computed live, not frozen)
-        if self.system2_enabled and self._ema_w1 is not None and self._cached_g is None:
             step_idx = self._current_step_index_buf
-            n_total = self._current_n_steps_buf
-            alpha = (step_idx / max(n_total - 1, 1)) * self._ema_max_alpha
-            if alpha > 0.01:
+
+            cat_input = torch.cat([h_normed, ctx_exp], dim=-1)  # [B, N, 2d]
+
+            freeze_active = self.metric_freeze_active
+            if (freeze_active
+                    and step_idx > self.metric_freeze_step
+                    and self._cached_g is not None):
+                g = self._cached_g
+                L = self._cached_L if hasattr(self, '_cached_L') else None
+            else:
+                met_hidden = F.gelu(self.metric_net_linear1(cat_input))
+                if self._metric_overlay is not None:
+                    met_hidden = met_hidden + self._metric_overlay
+                if self.step_embed_enabled:
+                    met_hidden = met_hidden + self._current_step_embed
+                # Step-conditional FiLM on MetricNet bottleneck (no-op at init)
+                if self.step_conditional_enabled:
+                    _s = self._current_step_index_buf.long().clamp(
+                        0, self._step_cond_n_max - 1)
+                    _gamma = self.metric_film_gamma(_s).view(1, 1, -1)
+                    _beta = self.metric_film_beta(_s).view(1, 1, -1)
+                    met_hidden = _gamma * met_hidden + _beta
+                g = F.softplus(self.metric_net_linear2_diag(met_hidden))
+                L = None
+                if self.metric_rank > 0:
+                    L_flat = self.metric_net_linear2_lr(met_hidden)
+                    L = L_flat.view(B, N, d, self.metric_rank)
+                if freeze_active and step_idx == self.metric_freeze_step:
+                    self._cached_g = g.detach()
+                    self._cached_L = L.detach() if self.metric_rank > 0 else None
+
+            if self.system2_enabled and self._ema_w1 is not None and self._cached_g is None:
+                step_idx = self._current_step_index_buf
+                n_total = self._current_n_steps_buf
+                alpha = (step_idx / max(n_total - 1, 1)) * self._ema_max_alpha
+                if alpha > 0.01:
+                    with torch.no_grad():
+                        slow_hidden = F.gelu(F.linear(cat_input, self._ema_w1, self._ema_b1))
+                        if self.step_embed_enabled:
+                            slow_hidden = slow_hidden + self._current_step_embed
+                        slow_g = F.softplus(F.linear(slow_hidden, self._ema_w2, self._ema_b2))
+                    g = (1.0 - alpha) * g + alpha * slow_g
+
+            if self.system2_enabled and self._current_step_index_buf == 0 and self.training:
                 with torch.no_grad():
-                    slow_hidden = F.gelu(F.linear(cat_input, self._ema_w1, self._ema_b1))
-                    if self.step_embed_enabled:
-                        slow_hidden = slow_hidden + self._current_step_embed
-                    slow_g = F.softplus(F.linear(slow_hidden, self._ema_w2, self._ema_b2))
-                g = (1.0 - alpha) * g + alpha * slow_g
+                    m = self._ema_momentum
+                    w1 = self.metric_net_linear1.weight.data
+                    b1 = self.metric_net_linear1.bias.data
+                    w2 = self.metric_net_linear2_diag.weight.data
+                    b2 = self.metric_net_linear2_diag.bias.data
+                    if self._ema_w1 is None:
+                        self._ema_w1 = w1.clone()
+                        self._ema_b1 = b1.clone()
+                        self._ema_w2 = w2.clone()
+                        self._ema_b2 = b2.clone()
+                    else:
+                        self._ema_w1 = m * self._ema_w1 + (1.0 - m) * w1
+                        self._ema_b1 = m * self._ema_b1 + (1.0 - m) * b1
+                        self._ema_w2 = m * self._ema_w2 + (1.0 - m) * w2
+                        self._ema_b2 = m * self._ema_b2 + (1.0 - m) * b2
 
-        # Update EMA at step 0 during training
-        if self.system2_enabled and self._current_step_index_buf == 0 and self.training:
-            with torch.no_grad():
-                m = self._ema_momentum
-                w1 = self.metric_net_linear1.weight.data
-                b1 = self.metric_net_linear1.bias.data
-                w2 = self.metric_net_linear2_diag.weight.data
-                b2 = self.metric_net_linear2_diag.bias.data
-                if self._ema_w1 is None:
-                    self._ema_w1 = w1.clone()
-                    self._ema_b1 = b1.clone()
-                    self._ema_w2 = w2.clone()
-                    self._ema_b2 = b2.clone()
-                else:
-                    self._ema_w1 = m * self._ema_w1 + (1.0 - m) * w1
-                    self._ema_b1 = m * self._ema_b1 + (1.0 - m) * b1
-                    self._ema_w2 = m * self._ema_w2 + (1.0 - m) * w2
-                    self._ema_b2 = m * self._ema_b2 + (1.0 - m) * b2
+            # Step-conditional t_diffusion: per-step diffusion radius
+            if self.step_conditional_enabled:
+                _s_td = self._current_step_index_buf.long().clamp(
+                    0, self._step_cond_n_max - 1)
+                t_diff = F.softplus(self.t_diff_per_step(_s_td).squeeze())
+            else:
+                t_diff = F.softplus(self.t_diffusion)
+            sqrt_g = torch.sqrt(g)
+            q_diag = h_normed * sqrt_g
+            k_diag = h_normed * sqrt_g
+            if self.metric_rank > 0:
+                h_proj = torch.einsum('bnd,bndr->bnr', h_normed, L)
+                Q = torch.cat([q_diag, h_proj], dim=-1)
+                K = torch.cat([k_diag, h_proj], dim=-1)
+                d_qk = d + self.metric_rank
+            else:
+                Q = q_diag
+                K = k_diag
+                d_qk = d
 
-        # 2. SDPA-based heat kernel (FlashAttention compatible)
-        # Factor: K = softmax(-D^2/(4t)) = softmax(q.k/(2t) - ||k||^2/(4t))
-        # where q = k = h_normed * sqrt(g)  (geometric mean metric)
-        # With low-rank: D^2 = diag_term + ||L^T(h_i - h_j)||^2
-        # Both factor as SDPA via Q/K concatenation: Q=[q_diag, q_proj], K=[k_diag, k_proj]
-        t_diff = F.softplus(self.t_diffusion)
+            k_norm_sq = (K * K).sum(dim=-1, keepdim=True)
+            attn_bias = -k_norm_sq.transpose(1, 2) / (4.0 * t_diff)
 
-        sqrt_g = torch.sqrt(g)
-        q_diag = h_normed * sqrt_g  # [B, N, d]
-        k_diag = h_normed * sqrt_g  # [B, N, d]
+            V = self.W_v(self.norm_val(h))
 
-        if self.metric_rank > 0:
-            # Low-rank projection: h_proj_i = L_i^T @ h_i
-            h_proj = torch.einsum('bnd,bndr->bnr', h_normed, L)  # [B, N, rank]
-            # Concatenate diagonal and low-rank Q/K
-            Q = torch.cat([q_diag, h_proj], dim=-1)  # [B, N, d+rank]
-            K = torch.cat([k_diag, h_proj], dim=-1)  # [B, N, d+rank]
-            d_qk = d + self.metric_rank
-        else:
-            Q = q_diag
-            K = k_diag
-            d_qk = d
+            if mask is not None:
+                full_bias = attn_bias.expand(B, N, N).clone()
+                mask_bc = mask if mask.dim() == 3 else mask.unsqueeze(0)
+                full_bias.masked_fill_(mask_bc, float('-inf'))
+                attn_bias = full_bias
 
-        # Additive bias: -||K_j||^2 / (4t)  [column-wise, constant across rows]
-        k_norm_sq = (K * K).sum(dim=-1, keepdim=True)  # [B, N, 1]
-        attn_bias = -k_norm_sq.transpose(1, 2) / (4.0 * t_diff)  # [B, 1, N]
+            if self.metric_rank > 0:
+                logits = torch.bmm(Q, K.transpose(1, 2)) / (2.0 * t_diff)
+                logits = logits + attn_bias
+                attn_weights = F.softmax(logits, dim=-1)
+                routed_v_metric = torch.bmm(attn_weights, V)
+            else:
+                scale_factor = math.sqrt(d_qk) / (2.0 * t_diff)
+                Q_scaled = Q * scale_factor
+                routed_v_metric = F.scaled_dot_product_attention(
+                    query=Q_scaled, key=K, value=V,
+                    attn_mask=attn_bias,
+                )
+            # In 'metric' mode this IS the final routed_v; in 'coupled'
+            # we blend it with routed_v_attn via the sigmoid gate below.
+            if self.routing_mode == 'metric':
+                routed_v = routed_v_metric
 
-        # Value projection
-        V = self.W_v(self.norm_val(h))  # [B, N, d]
+            # Self-organizing identity routing — parallel SDPA branch using
+            # raw h-similarity (no g scaling), accumulated across ODE steps
+            # via per-batch EMA. Toy substrate validation: this kind of
+            # similarity-based update self-organizes connection structure
+            # to match input topology.
+            if self.identity_routing_enabled:
+                # For mask handling, reuse attn_bias (it already includes -inf
+                # for blocked positions). The metric-bias term on it (k_norm/4t)
+                # is small relative to identity-similarity logits and acts as a
+                # weak regularizer on the identity branch — acceptable.
+                routed_v_id = F.scaled_dot_product_attention(
+                    query=h_normed, key=h_normed, value=V,
+                    attn_mask=attn_bias,
+                )
+                # Update EMA accumulator (no gradient — local Hebbian rule)
+                with torch.no_grad():
+                    decay = self.identity_routing_decay
+                    self._id_history = (
+                        (1.0 - decay) * self._id_history
+                        + decay * routed_v_id)
+                # Mix current identity routing with accumulated history,
+                # then mix with the metric routing via learned alpha.
+                alpha_id = torch.sigmoid(self.identity_routing_alpha)
+                routed_v_id_eff = 0.5 * routed_v_id + 0.5 * self._id_history
+                routed_v = (1.0 - alpha_id) * routed_v + alpha_id * routed_v_id_eff
 
-        # Optional masking (combine with attn_bias)
-        if mask is not None:
-            full_bias = attn_bias.expand(B, N, N).clone()
-            full_bias.masked_fill_(mask.unsqueeze(0), float('-inf'))
-            attn_bias = full_bias
-
-        if self.metric_rank > 0:
-            # Explicit logits: Q @ K^T / (2t) + bias, then softmax @ V
-            # This avoids V-padding and SDPA dimension mismatch issues
-            logits = torch.bmm(Q, K.transpose(1, 2)) / (2.0 * t_diff)  # [B, N, N]
-            logits = logits + attn_bias
-            attn_weights = F.softmax(logits, dim=-1)
-            routed_v = torch.bmm(attn_weights, V)  # [B, N, d]
-        else:
-            # Pure diagonal: use SDPA with FlashAttention (no N×N materialized)
-            scale_factor = math.sqrt(d_qk) / (2.0 * t_diff)
-            Q_scaled = Q * scale_factor
-            routed_v = F.scaled_dot_product_attention(
-                query=Q_scaled, key=K, value=V,
-                attn_mask=attn_bias,
-            )  # [B, N, d]
-        # No identity residual — zero-init W_o already provides identity ODE at start.
-        # Alpha residual was blocking 90% of cross-position information flow.
+        # Coupled mode: blend metric and attention paths via learned gate.
+        # gate_val is [B, N, 1] sigmoid; gate=1 → pure attention, gate=0 → pure metric.
+        if self.routing_mode == 'coupled':
+            routed_v = gate_val * routed_v_attn + (1.0 - gate_val) * routed_v_metric
+            # Store gate value for diagnostic logging (detached).
+            self._last_gate_mean = gate_val.mean().detach()
+            self._last_gate_std = gate_val.std().detach()
 
         # 4. Zero-init residual target (W_o starts at zeros -> dh/dt ~ 0)
         # F.linear with delta allows HyperNet to modulate W_o per-task.
         # When _delta_W_o is zero (default), this is equivalent to self.W_o(routed_v).
         update = F.linear(routed_v, self.W_o.weight + self._delta_W_o, None)
+        # Multi-timescale fast-weight overlay: per-batch low-rank Hebbian
+        # correction.  fw_update = routed_v @ U @ V^T   (batched bmm).
+        # Hebbian update sketches outer(routed_v, update) via fixed random
+        # projections — deterministic, compile-safe, no random calls inside
+        # the trace.
+        if self.fast_weights_enabled:
+            fw_proj = torch.bmm(routed_v, self._fast_U)              # [B,N,r]
+            fw_update = torch.bmm(fw_proj,
+                                   self._fast_V.transpose(1, 2))      # [B,N,d]
+            update = update + fw_update
+            with torch.no_grad():
+                N_ = update.shape[1]
+                # Sketched outer-product: project pre/post through fixed
+                # random matrices, then average across positions.
+                pre_sketch = torch.einsum(
+                    'bnd,dr->bnr', routed_v, self._fw_proj_pre)       # [B,N,r]
+                post_sketch = torch.einsum(
+                    'bnd,dr->bnr', update, self._fw_proj_post)        # [B,N,r]
+                upd_U = torch.einsum('bnd,bnr->bdr',
+                                       routed_v, post_sketch) / N_     # [B,d,r]
+                upd_V = torch.einsum('bnd,bnr->bdr',
+                                       update, pre_sketch) / N_        # [B,d,r]
+                eta = self.fast_weights_eta
+                lam = self.fast_weights_decay
+                # Decay + Hebbian + clamp (numerical stability under bf16)
+                self._fast_U = ((1.0 - lam) * self._fast_U
+                                + eta * upd_U).clamp(-1.0, 1.0)
+                self._fast_V = ((1.0 - lam) * self._fast_V
+                                + eta * upd_V).clamp(-1.0, 1.0)
         target = h + update
 
         # 5. Gate/Tau: per-position dynamics control
@@ -443,6 +709,13 @@ class ContinuousDynamics(nn.Module):
                 # Early steps: low tau (aggressive processing), Late steps: high tau (coast)
                 step_idx = self._current_step_index_buf.long().clamp(0, 19)
                 tau_hidden = tau_hidden + self.tau_step_embed(step_idx)
+                # Step-conditional FiLM on TauNet bottleneck (no-op at init)
+                if self.step_conditional_enabled:
+                    _s_t = self._current_step_index_buf.long().clamp(
+                        0, self._step_cond_n_max - 1)
+                    _gt = self.tau_film_gamma(_s_t).view(1, 1, -1)
+                    _bt = self.tau_film_beta(_s_t).view(1, 1, -1)
+                    tau_hidden = _gt * tau_hidden + _bt
                 tau_logits = self.tau_net_linear2(tau_hidden)
                 # External τ bias (from Mind's per-event τ floor)
                 if self._tau_external_bias is not None:
@@ -460,8 +733,9 @@ class ContinuousDynamics(nn.Module):
                         min=self.tau_min,
                         max=self.tau_max * self.structural_tau_max,
                     )
-                # τ-CV coupling: tau responds to local metric complexity
-                if self.tau_cv_coupling_enabled:
+                # τ-CV coupling: tau responds to local metric complexity.
+                # Requires a metric (g); skipped in 'attention' routing mode.
+                if self.tau_cv_coupling_enabled and self.routing_mode == 'metric':
                     with torch.no_grad():
                         g_mean_local = g.mean(dim=-1, keepdim=True)   # [B, N, 1]
                         g_std_local = g.std(dim=-1, keepdim=True)      # [B, N, 1]
@@ -527,6 +801,46 @@ class ContinuousDynamics(nn.Module):
             damping = 1.0 - self._damping_strength * (
                 self._current_step_index_buf / max(self._current_n_steps_buf - 1, 1))
             dh_dt = dh_dt * damping
+
+        # Sparse activation (Probe 4). Probe 7 adds a random-selection mode
+        # for ablating whether the learned activity score is load-bearing.
+        if self.sparse_fraction > 0 and hasattr(self, 'W_activity'):
+            B_, N_, _ = dh_dt.shape
+            k = max(1, int((1.0 - self.sparse_fraction) * N_))
+            if getattr(self, 'sparse_random', False):
+                # Probe 7: random top-k — uniformly random k positions per (batch, step)
+                rand = torch.rand(B_, N_, device=dh_dt.device, dtype=dh_dt.dtype)
+                _, topk_idx = rand.topk(k, dim=-1)
+                mask = torch.zeros(B_, N_, device=dh_dt.device, dtype=dh_dt.dtype)
+                mask.scatter_(-1, topk_idx, 1.0)
+                dh_dt = dh_dt * mask.unsqueeze(-1)
+                self._last_activity_mean = torch.tensor(0.5, device=dh_dt.device)
+                self._last_activity_std = torch.tensor(0.0, device=dh_dt.device)
+            else:
+                activity = torch.sigmoid(self.W_activity(h.detach())).squeeze(-1)
+                topk_vals, topk_idx = activity.topk(k, dim=-1)
+                mask = torch.zeros_like(activity)
+                mask.scatter_(-1, topk_idx, 1.0)
+                # Straight-through: gradient flows through activity score
+                mask_ste = activity + (mask - activity).detach()
+                dh_dt = dh_dt * mask_ste.unsqueeze(-1)
+                self._last_activity_mean = activity.mean().detach()
+                self._last_activity_std = activity.std().detach()
+            self._last_sparse_k = k
+
+        # ReZero gate: multiplies the full update. Near-0 at init → identity
+        # dynamics; grows as the gate gets reward-carrying gradient through
+        # deep supervision.
+        if self.rezero_enabled:
+            dh_dt = dh_dt * torch.sigmoid(self.rezero_gate_logit)
+
+        # Tier 3: halting — compute per-position halt probability, return as tuple.
+        # Solver reads p_halt to compute still_active and scale dh.
+        # Input uses norm_geo(h) for stable stats (same as metric/attention routing).
+        if self.halting_enabled:
+            halt_logit = self.halt_head(self.norm_geo(h))  # [B, N, 1]
+            p_halt = torch.sigmoid(halt_logit)
+            return dh_dt, p_halt
 
         return dh_dt
 

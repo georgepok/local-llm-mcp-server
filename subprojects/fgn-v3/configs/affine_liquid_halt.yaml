@@ -1,0 +1,43 @@
+# LiquidARC + adaptive halting on affine group composition.
+# Same width/depth/heads as affine_fgn.yaml so results are comparable.
+# n_ode_steps is the MAX budget; halt head learns per-position depth.
+# Hypothesis: short chains halt early, long chains use more steps,
+# recovering length generalization that fixed-depth FGN lost (81.9% at 120 ops).
+
+d_model: 256
+n_heads: 8
+n_layers: 6
+d_ff: 1024
+vocab_size: 50304
+max_seq_len: 512
+
+model_type: liquid
+
+metric_type: diagonal
+metric_activation: softplus
+n_scales: 3
+t_init: [0.1, 1.0, 10.0]
+scale_entropy_alpha: 0.01
+curvature_lambda: 0.0
+curvature_reward_mu: 0.0
+metric_lr_mult: 1.0
+correlation_length_init: 5.0
+
+curriculum_steps: 0
+dropout: 0.1
+transport_rank: 8
+use_torch_compile: true
+metric_rank: 0
+liquid_routing: metric
+
+liquid_tau_min: 0.5
+liquid_tau_max: 1.0
+
+# Adaptive halting (Tier 3) — the architectural feature under test.
+n_ode_steps: 32              # MAX budget; halt head can use less
+halting_enabled: true
+halting_min_steps: 4
+halting_ponder_lambda: 0.05  # compute-cost penalty (validated on python_repair)
+deep_supervision_enabled: true
+ponder_kl_lambda: 0.01
+ponder_kl_prior_rate: 0.0625  # Geom(1/16) prior, mean depth 16
