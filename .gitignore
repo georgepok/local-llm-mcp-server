@@ -46,5 +46,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Claude Code local settings
-.claude/
+# Claude Code local settings (ignore all except shared project skills)
+.claude/*
+!.claude/skills/
