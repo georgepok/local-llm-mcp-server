@@ -1,0 +1,115 @@
+import io
+PATH = '/home/pokazge/NativeEntity/world_pop.py'
+FN = r'''def gen_both2():
+    # HARDER interleaved convergence: memory = carry a KEY out-of-window + apply an in-window per-world
+    # KEYLINE at the decision (requires carry AND fuse); inference = crossed rules, hold LOOKUP. MLP head.
+    LAYERS = [int(x) for x in os.environ.get('GEO_LAYERS', '4,8,12,16,20,24,28,32,36,40,44,48,52,56,60').split(',')]
+    HELDPRIN = os.environ.get('GEO_HELD_PRIN', 'LOOKUP')
+    DISTS = [int(x) for x in os.environ.get('GEO_DISTS', '0,4,8,12').split(',')]
+    M_INF = int(os.environ.get('GEO_M', '8')); NW_MEM = int(os.environ.get('GEO_NW', '16'))
+    ITERS = int(os.environ.get('GEO_ITERS', '4000')); EVERY = int(os.environ.get('GEO_EVAL_EVERY', '1000'))
+    LR = float(os.environ.get('GEO_LR', '1e-4'))
+    PRINCIPLES = ['MATCH', 'LOOKUP', 'THRESHOLD']
+    SURFACES = ['ledger', 'vault', 'archive', 'pipeline', 'roster', 'gauge']
+    KEYACTS = ['RELEASE', 'REJECT', 'KEEP', 'DEFER']
+    print('=== GEN_BOTH2 | HARDER carry-key+keyline mem + crossed infer(held=%s) | dists=%s ===' % (HELDPRIN, DISTS), flush=True)
+    rng = random.Random(SEED)
+    FILL_U, FILL_A = 'Routine status check, no action needed.', 'Acknowledged. Standing by.'
+
+    def gen_lex(prin, surf):
+        order = LATENTS[:]; rng.shuffle(order); labs = ['KEEP', 'REJECT', 'DEFER', 'ASK']; lp = labs[:]; rng.shuffle(lp)
+        mp = dict(zip(order, lp)); anchor = order[rng.randrange(4)]; q = LATENTS[rng.randrange(4)]
+        spec = ('ASSESSMENT for the %s. Items in order: %s. Designated item: %s. Mapping: %s.'
+                % (surf, ', '.join(order), anchor, ', '.join('%s=%s' % (t, mp[t]) for t in order)))
+        if prin == 'LOOKUP':
+            rule = 'Rule: the ruling is the mapping value listed for the query item.'; c = mp[q]
+        elif prin == 'MATCH':
+            rule = 'Rule: the ruling is KEEP if the query item is the designated item, otherwise REJECT.'
+            c = 'KEEP' if q == anchor else 'REJECT'
+        else:
+            rule = ('Rule: the ruling is KEEP if the query item is at or before the designated item '
+                    'in the order, otherwise REJECT.')
+            c = 'KEEP' if order.index(q) <= order.index(anchor) else 'REJECT'
+        return spec + ' ' + rule + ' QUERY item: %s. %s' % (q, ASK_INSTR), ACTIONS.index(c)
+
+    @torch.no_grad()
+    def turn_stack(hist):
+        ids = tok(H.tmpl(hist[-WINDOW:]), return_tensors='pt').input_ids.to(dev)
+        hs = model(ids, output_hidden_states=True).hidden_states
+        return torch.stack([hs[L][0][-1].float() for L in LAYERS]).to(torch.float16).cpu()
+
+    worlds = []
+    print('GENB2 building worlds ...', flush=True)
+    for pi, prin in enumerate(PRINCIPLES):
+        for surf in SURFACES:
+            for _ in range(M_INF):
+                p, a = gen_lex(prin, surf)
+                worlds.append({'kind': 'inf', 'heldprin': (prin == HELDPRIN), 'act': a,
+                               'stacks': [turn_stack([{'role': 'user', 'content': p}])]})
+    for wi in range(NW_MEM):
+        for d in DISTS:
+            key = LATENTS[rng.randrange(4)]
+            kv = KEYACTS[:]; rng.shuffle(kv); keyline = dict(zip(LATENTS, kv))
+            commit = 'STANDING KEY for this session: %s %s %s. This key governs the ruling.' % (key, key, key)
+            hist = [{'role': 'user', 'content': commit}, {'role': 'assistant', 'content': 'Acknowledged.'}]
+            stacks = [turn_stack(hist)]
+            for _ in range(d):
+                hist += [{'role': 'user', 'content': FILL_U}, {'role': 'assistant', 'content': FILL_A}]
+                stacks.append(turn_stack(hist))
+            kl = ', '.join('%s->%s' % (t, keyline[t]) for t in LATENTS)
+            dec = 'RULING REQUIRED. Keyline: %s. Apply the standing key to the keyline. %s' % (kl, ASK_INSTR)
+            hist += [{'role': 'user', 'content': dec}]
+            stacks.append(turn_stack(hist))
+            worlds.append({'kind': 'mem', 'd': d, 'act': ACTIONS.index(keyline[key]), 'stacks': stacks})
+
+    r = random.Random(SEED)
+    for w in worlds: w['test'] = (r.random() < 0.3)
+    TRAINi = [i for i, w in enumerate(worlds) if not w['test'] and not (w['kind'] == 'inf' and w['heldprin'])]
+
+    g = AdaptiveGateSlot(D_MODEL, D_S, K, SLOW_K).to(dev)
+    head = nn.Sequential(nn.Linear(D_S, 256), nn.GELU(), nn.Dropout(0.1), nn.Linear(256, 6)).to(dev)
+    opt = torch.optim.Adam(list(g.parameters()) + list(head.parameters()), lr=LR)
+
+    def Sof(w):
+        S = g.init()
+        for st in w['stacks']:
+            S = g.step(S, st.float().to(dev))
+        return S
+
+    y = torch.tensor([w['act'] for w in worlds])
+
+    def ev(it):
+        g.eval(); head.eval()
+        with torch.no_grad():
+            pred = torch.tensor([int(head(Sof(worlds[i]).mean(0)).argmax()) for i in range(len(worlds))])
+        def acc(f):
+            sel = [i for i in range(len(worlds)) if f(worlds[i])]
+            return float(sum(int(pred[i] == y[i]) for i in sel) / max(1, len(sel)))
+        inf_fit = acc(lambda w: w['kind'] == 'inf' and not w['heldprin'] and w['test'])
+        inf_tr = acc(lambda w: w['kind'] == 'inf' and w['heldprin'])
+        md = {d: acc(lambda w, d=d: w['kind'] == 'mem' and w['d'] == d and w['test']) for d in DISTS}
+        print('GENB2 it=%-4d | INFER fit=%.3f held-%s=%.3f | MEM %s'
+              % (it, inf_fit, HELDPRIN, inf_tr, ' '.join('d%d:%.2f' % (d, md[d]) for d in DISTS)), flush=True)
+        g.train(); head.train()
+
+    ev(0)
+    rng2 = random.Random(SEED + 1)
+    for it in range(1, ITERS + 1):
+        i = TRAINi[rng2.randrange(len(TRAINi))]
+        S = Sof(worlds[i]); loss = F.cross_entropy(head(S.mean(0)).unsqueeze(0), torch.tensor([worlds[i]['act']], device=dev))
+        opt.zero_grad(); loss.backward()
+        torch.nn.utils.clip_grad_norm_(list(g.parameters()) + list(head.parameters()), 1.0); opt.step()
+        if it % EVERY == 0: ev(it)
+    print('=== GEN_BOTH2_DONE ===', flush=True)
+
+
+'''
+src = io.open(PATH, encoding='utf-8').read()
+if 'def gen_both2()' in src:
+    print('ALREADY'); raise SystemExit
+anchor = "if MODE == 'validate':   validate()"
+src = src.replace(anchor, FN + '\n\n' + anchor, 1)
+src = src.replace("elif MODE == 'gen_both': gen_both()",
+                  "elif MODE == 'gen_both': gen_both()\nelif MODE == 'gen_both2': gen_both2()", 1)
+io.open(PATH, 'w', encoding='utf-8').write(src)
+print('PATCHED_OK')

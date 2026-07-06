@@ -62,3 +62,7 @@ __pycache__/
 *.log
 *.gif
 subprojects/*/data/
+
+# NativeEntity run markers (junk)
+subprojects/NativeEntity/*.flag
+subprojects/NativeEntity/*done.flag
