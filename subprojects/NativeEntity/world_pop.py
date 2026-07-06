@@ -10119,9 +10119,9 @@ def critical_phase2d():
             a=agg(mm); print('  [%s] %-13s D: hold=%.2f update=%.2f CP=%.2f'%(tag,nm,a.get('hold',0),a.get('update',0),min(a.get('hold',0),a.get('update',0))), flush=True)
     # per-seed learned gate
     allseed=[]
-    for sd in SEEDS:
-        torch.manual_seed(1000+sd); gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
-        optg=torch.optim.Adam(gnet.parameters(),lr=3e-3); base={'v':0.0}; rng2=random.Random(sd+1)
+    for sdi in SEEDS:
+        torch.manual_seed(1000+sdi); gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
+        optg=torch.optim.Adam(gnet.parameters(),lr=3e-3); base={'v':0.0}; rng2=random.Random(sdi+1)
         BETA0=0.03
         for it in range(1,GITERS+1):
             e=TR[rng2.randrange(len(TR))]; st,lp,ent=evolve(e,'learned',gnet,sample=True)
@@ -10132,7 +10132,7 @@ def critical_phase2d():
         hist={'pred':_cl.Counter(),'true':_cl.Counter()}
         rt=full_eval(TR,'learned',gnet,decomp=True); re=full_eval(TE,'learned',gnet,decomp=True,hist=hist)
         cw=full_eval(TE,'learned',gnet,S0mode='wrong'); cr=full_eval(TE,'learned',gnet,S0mode='reset')
-        print('SEED %d | gate baselineR=%.2f'%(sd,base['v']), flush=True)
+        print('SEED %d | gate baselineR=%.2f'%(sdi,base['v']), flush=True)
         print('  state A(hold/upd)=%.2f/%.2f  decodeB=%.2f/%.2f  TF-C=%.2f/%.2f  greedyD TR=%.2f/%.2f TE=%.2f/%.2f'%(
             re.get('A_hold',0),re.get('A_update',0),re.get('B_hold',0),re.get('B_update',0),re.get('C_hold',0),re.get('C_update',0),
             rt.get('D_hold',0),rt.get('D_update',0),re.get('D_hold',0),re.get('D_update',0)), flush=True)
@@ -10142,7 +10142,7 @@ def critical_phase2d():
             min(re.get('D_hold',0),re.get('D_update',0)),min(cw.get('D_hold',0),cw.get('D_update',0)),min(cr.get('D_hold',0),cr.get('D_update',0))), flush=True)
         top=hist['pred'].most_common(5); tot=sum(hist['pred'].values())
         print('  HIST TE preds (modal=%.2f): %s'%(top[0][1]/max(tot,1),['%s:%d'%(k,v) for k,v in top]), flush=True)
-        allseed.append((sd,re,cw,cr))
+        allseed.append((sdi,re,cw,cr))
     print('--- AGGREGATE across seeds (TE greedy CP correct/wrong/reset) ---', flush=True)
     def mean(xs): return sum(xs)/len(xs)
     cps=[min(r.get('D_hold',0),r.get('D_update',0)) for (_,r,_,_) in allseed]
