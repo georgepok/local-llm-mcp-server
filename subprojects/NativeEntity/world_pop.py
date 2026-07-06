@@ -10097,7 +10097,7 @@ def critical_phase2d():
                 m['D_'+tg][0]+=okD; m['D_'+tg][1]+=1
                 m['D_all'][0]+=okD; m['D_all'][1]+=1
                 if decomp:
-                    for nm,ok in [('A',int(nearest(S)==tv)),('B',int(decodeB(S)==tv)),('C',int(KEYTOK.get(stageC(S))==tv))]:
+                    for nm,ok in [('A',int(nearest(S)==tv)),('B',int(decodeB(S)==KI[tv])),('C',int(KEYTOK.get(stageC(S))==tv))]:
                         m[nm+'_'+('hold' if tg!='update' else 'update')][0]+=ok; m[nm+'_'+('hold' if tg!='update' else 'update')][1]+=1
                 if alive and not okD:
                     V-=1
