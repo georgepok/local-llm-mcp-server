@@ -10307,19 +10307,22 @@ def critical_phase2e():
             a=agg(mm); print('  [%s] %-13s D: hold=%.2f update=%.2f CP=%.2f'%(tag,nm,a.get('hold',0),a.get('update',0),min(a.get('hold',0),a.get('update',0))), flush=True)
     # per-seed learned gate
     allseed=[]
-    NREST=int(os.environ.get('P2_NREST','3'))
+    NREST=int(os.environ.get('P2_NREST','8')); THR=float(os.environ.get('P2_THR','3.7'))
     for sdi in SEEDS:
-        best_state=None; best_R=-1e9; gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
-        for rs in range(NREST):  # best-of-N restarts, SELECTED BY TRAINING REWARD (viability, not test)
-            torch.manual_seed(1000+sdi*17+rs); gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
-            optg=torch.optim.Adam(gnet.parameters(),lr=3e-3); base={'v':0.0}; rng2=random.Random(sdi*13+rs+1)
+        best_state=None; best_R=-1e9; nrun=0; gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
+        for rs in range(NREST):  # threshold-driven restarts (diverse seeds), SELECTED BY TRAINING REWARD only
+            torch.manual_seed(7919*sdi+104729*rs+1); gnet=nn.Sequential(nn.Linear(DIN,64),nn.ReLU(),nn.Linear(64,1)).to(dev)
+            optg=torch.optim.Adam(gnet.parameters(),lr=3e-3); base={'v':0.0}; rng2=random.Random(15485863*sdi+32452843*rs+1)
             for it in range(1,GITERS+1):
                 e=TR[rng2.randrange(len(TR))]; st,lp,ent=evolve(e,'learned',gnet,sample=True)
                 R=sum(int(decodeB(S)==KI[tv]) for (typ,S,tv,tg) in st if typ=='probe'); adv=R-base['v']; base['v']=0.9*base['v']+0.1*R
                 beta=0.03 if it<0.6*GITERS else 0.03*max(0.0,1-(it-0.6*GITERS)/(0.4*GITERS))  # explore 60% then exploit
                 if lp: loss=-(adv)*torch.stack(lp).sum()-beta*torch.stack(ent).sum(); optg.zero_grad(); loss.backward(); optg.step()
+            nrun+=1
             if base['v']>best_R: best_R=base['v']; best_state={k:vv.detach().clone() for k,vv in gnet.state_dict().items()}
+            if best_R>=THR: break  # good gate found -> stop restarting
         gnet.load_state_dict(best_state); base={'v':best_R}
+        print('  [gate seed %d] restarts=%d best baselineR=%.2f'%(sdi,nrun,best_R), flush=True)
         for p in gnet.parameters(): p.requires_grad_(False)
         hist={'pred':_cl.Counter(),'true':_cl.Counter()}
         rt=full_eval(TR,'learned',gnet,decomp=True); re=full_eval(TE,'learned',gnet,decomp=True,hist=hist)
