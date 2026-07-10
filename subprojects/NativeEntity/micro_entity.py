@@ -262,21 +262,72 @@ HAND_GENOME = {  # sanity: reservoir (memory) + input-binding plastic readout â€
   'plasticity':{'enabled':True,'targets':['readout'],'rule':'input_bind','input_bind':True,'lr':0.05,'decay':0.0,'reward_mod':False},
   'init_state':{'gen':'zeros'}}
 
-def eval_genome(genome, neps=150, online=True, held=False, seed=SEED):
+def eval_genome(genome, neps=150, online=True, held=False, seed=SEED, weight_noise=0.0, hidden_perturb=0.0):
     net,msg = compile_and_check(genome)
     if net is None: return None, msg
     if not online: net.plastic=False
-    rng=random.Random(seed); per=[]; hist={}
+    if weight_noise>0:
+        wr=np.random.RandomState(seed+7)
+        net.Wrec = net.Wrec + weight_noise*wr.randn(*net.Wrec.shape).astype(np.float32)
+        net.Wout = net.Wout + weight_noise*wr.randn(*net.Wout.shape).astype(np.float32)
+    rng=random.Random(seed); per=[]; hist={}; prng=np.random.RandomState(seed+3)
     for ei in range(neps):
         net.reset('reset')                    # hidden resets each episode; readout PERSISTS if online (accumulates decoder)
         steps=make_episode(rng, held=held)
-        a,p,hs,unst=rollout(net,steps)
+        pa = (len(steps)//2) if hidden_perturb>0 else None
+        a,p,hs,unst=rollout(net,steps, rng=prng, perturb_at=pa, perturb_scale=hidden_perturb)
         r=score_rollout(steps,a,p); per.append(r)
         for x in p: hist[x]=hist.get(x,0)+1
     def avg(lst):
         n=len(lst); return {k:round(sum(d[k] for d in lst)/n,3) for k in lst[0]}
     third=max(1,neps//3)
     return {'early':avg(per[:third]),'late':avg(per[-third:]),'hist':dict(sorted(hist.items(),key=lambda x:-x[1])[:6])}, "ok"
+
+def state_metrics(genome, neps=60, seed=SEED):
+    net,msg=compile_and_check(genome)
+    if net is None: return {}
+    net.plastic=False                          # intrinsic reservoir memory (no readout adaptation)
+    rng=random.Random(seed); Hp=[];Yc=[];Hf=[];Yf=[]; norms=[]
+    for _ in range(neps):
+        net.reset('reset'); steps=make_episode(rng); a,p,hs,unst=rollout(net,steps)
+        for i,st in enumerate(steps):
+            norms.append(float(np.linalg.norm(hs[i])))
+            if st['ev']=='PROBE': Hp.append(hs[i]); Yc.append(ALPHABET.index(st['true']))
+            elif st['ev']=='FILLER' and st['sym'] in DISTRACT: Hf.append(hs[i]); Yf.append(DISTRACT.index(st['sym']))
+    def pa(H,Y,k):
+        if len(Y)<20: return 0.0
+        X=np.stack(H).astype(np.float32);y=np.array(Y);n=len(y);idx=np.arange(n);np.random.RandomState(0).shuffle(idx)
+        tr=idx[:int(n*.7)];te=idx[int(n*.7):];mu=X[tr].mean(0);sd=X[tr].std(0)+1e-6
+        Xtr=np.c_[(X[tr]-mu)/sd,np.ones((len(tr),1),np.float32)];Xte=np.c_[(X[te]-mu)/sd,np.ones((len(te),1),np.float32)]
+        Yt=np.zeros((len(tr),k),np.float32);Yt[np.arange(len(tr)),y[tr]]=1
+        W=np.linalg.solve(Xtr.T@Xtr+np.eye(Xtr.shape[1],dtype=np.float32),Xtr.T@Yt)
+        return round(float(((Xte@W).argmax(1)==y[te]).mean()),3)
+    return {'commit_decode':pa(Hp,Yc,len(ALPHABET)),'filler_decode':pa(Hf,Yf,len(DISTRACT)),'state_norm':round(float(np.mean(norms)),2)}
+
+def full_eval(genome, tag, neps=150):
+    net,msg=compile_and_check(genome)
+    if net is None: print(f"  {tag:18s} COMPILE-FAIL: {msg}", flush=True); return None
+    zs,_=eval_genome(genome,online=False,neps=neps)
+    on,_=eval_genome(genome,online=True,neps=neps)
+    onh,_=eval_genome(genome,online=True,neps=neps,held=True)
+    wn,_=eval_genome(genome,online=True,neps=neps,weight_noise=0.05)
+    hp,_=eval_genome(genome,online=True,neps=neps,hidden_perturb=1.0)
+    sm=state_metrics(genome)
+    def g(d,k): return d['late'].get(k,0) if d else 0
+    zsp = zs['early']['probe'] if zs else 0
+    print(f"  {tag:18s}| zshot_probe={zsp:.2f} | online probe={g(on,'probe'):.2f}/surv={g(on,'survival'):.2f} | HELD probe={g(onh,'probe'):.2f}/surv={g(onh,'survival'):.2f} | wnoise surv={g(wn,'survival'):.2f} | hpert surv={g(hp,'survival'):.2f} | commit_dec={sm.get('commit_decode',0)} filler_dec={sm.get('filler_decode',0)}", flush=True)
+    return {'tag':tag,'zs':zsp,'online':on['late'] if on else {},'held':onh['late'] if onh else {},'wnoise':wn['late'] if wn else {},'hpert':hp['late'] if hp else {},'state':sm}
+
+def evalfile():
+    import json
+    path=os.environ.get('ME_GENOMES','genomes.json'); genomes=json.load(open(path))
+    print(f"=== MICRO_ENTITY_V1 FULL EVAL | {len(genomes)} synthesized genomes ({path}) ===", flush=True)
+    fsm=FSM(); r,_=eval_system(fsm.run,60); rh,_=eval_system(fsm.run,60,held=True)
+    print(f"  {'A FSM (ceiling)':18s}| train probe={r['probe']:.2f}/surv={r['survival']:.2f} | HELD probe={rh['probe']:.2f}/surv={rh['survival']:.2f}  [grad-RNN B: train 0.80/0.87, HELD 0.00/0.00]", flush=True)
+    for entry in genomes: full_eval(entry['genome'], entry['tag'])
+    full_eval(random_genome(2000), 'E random')
+    print("=== DECISION TREE: C=plastic online>>fixed&random but below grad-RNN | D=plastic matches/beats grad-RNN on TRANSFER (grad-RNN HELD=0.0) / perturbation ===", flush=True)
+    print("=== MICRO_ENTITY_EVALFILE_DONE ===", flush=True)
 
 def handtest():
     print("=== MICRO_ENTITY handtest: can the DSL express a viable solution? (reservoir + input-bind plastic readout) ===", flush=True)
@@ -355,3 +406,4 @@ def smoke():
 if MODE=='smoke': smoke()
 elif MODE=='handtest': handtest()
 elif MODE=='baselines': baselines()
+elif MODE=='evalfile': evalfile()

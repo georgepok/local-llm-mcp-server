@@ -1,0 +1,26 @@
+[
+ {"tag":"C claude-fixed","genome":{
+   "family":"reservoir","input_dim":14,"hidden_dim":80,"output_dim":21,"slow_hidden":0,
+   "weights":{"recurrent":{"gen":"sparse","seed":101,"scale":1.0,"sparsity":0.15,"spectral_radius":0.9},
+              "input":{"gen":"dense","seed":102,"scale":0.7},
+              "readout":{"gen":"dense","seed":103,"scale":0.1}},
+   "dynamics":{"activation":"tanh","gain":1.0,"leak":0.15,"tau":1.0,"noise":0.0},
+   "plasticity":{"enabled":false},
+   "init_state":{"gen":"zeros"}}},
+ {"tag":"D claude-plastic","genome":{
+   "family":"reservoir","input_dim":14,"hidden_dim":80,"output_dim":21,"slow_hidden":0,
+   "weights":{"recurrent":{"gen":"sparse","seed":201,"scale":1.0,"sparsity":0.15,"spectral_radius":0.92},
+              "input":{"gen":"dense","seed":202,"scale":0.7},
+              "readout":{"gen":"dense","seed":203,"scale":0.02}},
+   "dynamics":{"activation":"tanh","gain":1.0,"leak":0.15,"tau":1.0,"noise":0.0},
+   "plasticity":{"enabled":true,"targets":["readout"],"rule":"input_bind","input_bind":true,"lr":0.06,"decay":0.003,"reward_mod":false},
+   "init_state":{"gen":"zeros"}}},
+ {"tag":"D2 claude-ctrnn","genome":{
+   "family":"ctrnn","input_dim":14,"hidden_dim":80,"output_dim":21,"slow_hidden":0,
+   "weights":{"recurrent":{"gen":"sparse","seed":301,"scale":1.0,"sparsity":0.2,"spectral_radius":1.0},
+              "input":{"gen":"dense","seed":302,"scale":0.8},
+              "readout":{"gen":"dense","seed":303,"scale":0.02}},
+   "dynamics":{"activation":"tanh","gain":1.0,"leak":0.2,"tau":3.0,"noise":0.0},
+   "plasticity":{"enabled":true,"targets":["readout"],"rule":"input_bind","input_bind":true,"lr":0.05,"decay":0.003,"reward_mod":false},
+   "init_state":{"gen":"zeros"}}}
+]
