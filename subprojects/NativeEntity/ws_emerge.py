@@ -19,6 +19,7 @@ VALUES = ['red','blue','green','gold','black','white','pink','gray','brown','tea
 
 # ---- environment ----
 WHICH = float(os.environ.get('WS_WHICH', '0.0'))   # env-v2: fraction weight of content-addressed 'which holds v?' ops
+DENSE = int(os.environ.get('WS_DENSE', '0'))       # env-v3: emit a full-state 'which holds v?' AFTER EVERY state-change (Othello-GPT density)
 
 def make_episode(rng, nreg=NREG, nops=30, values=None):
     import collections as _cl
@@ -37,6 +38,12 @@ def make_episode(rng, nreg=NREG, nops=30, values=None):
         req = (state[r] != last_set[r])      # current != last explicit set => integration needed
         probes.append((len(lines), r, state[r], req))
         lines.append(f'query {r} ?')
+    def emit_whichval():                     # env-v3 density: full-state query after every state-change
+        cnt=_cl.Counter(state[r] for r in regs if state[r] not in (None,'none'))
+        uniq=[v for v,c in cnt.items() if c==1]
+        if not uniq: return
+        v=rng.choice(uniq); holder=[r for r in regs if state[r]==v][0]
+        wanswers[len(lines)]=holder[1:]; lines.append(f'which holds {v} ?')
     ops_left = nops
     while ops_left > 0:
         # bias toward relative ops (workspace-forcing); ~55% of queries target integration-required regs
@@ -54,18 +61,22 @@ def make_episode(rng, nreg=NREG, nops=30, values=None):
         if op=='setrev':
             r=rng.choice(regs); v=rng.choice(values); state[r]=v; last_set[r]=v
             lines.append(f'set {r} = {v}')
+            if DENSE: emit_whichval()
         elif op=='copy':
             a,b=rng.sample(regs,2)
             if state[a] is None: continue
             state[b]=state[a]  # b takes a's CURRENT value (relative); last_set[b] unchanged
             lines.append(f'copy {a} -> {b}')
+            if DENSE: emit_whichval()
         elif op=='swap':
             a,b=rng.sample(regs,2)
             state[a],state[b]=state[b],state[a]
             lines.append(f'swap {a} {b}')
+            if DENSE: emit_whichval()
         elif op=='clear':
             r=rng.choice(regs); state[r]='none'; last_set[r]='none'
             lines.append(f'clear {r}')
+            if DENSE: emit_whichval()
         elif op=='denied':
             r=rng.choice(regs); v=rng.choice(values)  # invalid op -> must NOT change state
             lines.append(f'denied: set {r} = {v}')
@@ -402,3 +413,4 @@ if MODE=='gen': gen()
 elif MODE=='baseline': baseline()
 elif MODE=='train': train()
 elif MODE=='probe': probe()
+elif MODE=='probe2': probe2()
