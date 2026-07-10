@@ -292,6 +292,40 @@ def handtest():
     print("=== INTERPRET: if ONLINE late probe/survival >> early >> zero-shot => reservoir+local-plastic DSL is viable => LLM synthesis is meaningful ===", flush=True)
     print("=== MICRO_ENTITY_HANDTEST_DONE ===", flush=True)
 
+def train_rnn(neps=600, hidden=48, seed=0):
+    # Baseline B: gradient-trained small GRU (CPU), supervised on correct actions + current commitment (labels
+    # allowed for the TRAINED reference; synthesized genomes get NO backprop). The "achievable" upper bound.
+    import torch, torch.nn as nn, torch.nn.functional as F
+    torch.set_num_threads(2); torch.manual_seed(seed)
+    rnn=nn.GRUCell(D_IN,hidden); ha=nn.Linear(hidden,len(ACTIONS)); hs=nn.Linear(hidden,len(ALPHABET))
+    opt=torch.optim.Adam(list(rnn.parameters())+list(ha.parameters())+list(hs.parameters()),lr=2e-3)
+    rng=random.Random(seed)
+    for ep in range(neps):
+        steps=make_episode(rng); h=torch.zeros(1,hidden); loss=0.0
+        for st in steps:
+            o=torch.tensor(obs_vec(st['ev'],st['sym'],st['dis'])).unsqueeze(0); h=rnn(o,h)
+            loss=loss+F.cross_entropy(ha(h),torch.tensor([ACT_IDX[st['act']]]))
+            s_t=ALPHABET.index(st['true']) if st['true'] else 0
+            loss=loss+F.cross_entropy(hs(h),torch.tensor([s_t]))
+        opt.zero_grad(); loss.backward(); opt.step()
+    def runner(steps):
+        with torch.no_grad():
+            h=torch.zeros(1,hidden); acts=[]; preds=[]
+            for st in steps:
+                o=torch.tensor(obs_vec(st['ev'],st['sym'],st['dis'])).unsqueeze(0); h=rnn(o,h)
+                acts.append(ACTIONS[int(ha(h).argmax())]); preds.append(ALPHABET[int(hs(h).argmax())])
+            return acts,preds
+    return runner
+
+def baselines():
+    print("=== MICRO_ENTITY baselines: A=FSM  B=gradient-RNN  E=random-genome ===", flush=True)
+    fsm=FSM(); r,_=eval_system(fsm.run,neps=60); print("A FSM        :", {k:round(v,3) for k,v in r.items()}, flush=True)
+    rh,_=eval_system(fsm.run,neps=60,held=True); print("A FSM  (held):", {k:round(v,3) for k,v in rh.items()}, flush=True)
+    print("training gradient-RNN (CPU) ...", flush=True)
+    run=train_rnn(neps=600); r,_=eval_system(run,neps=60); print("B grad-RNN   :", {k:round(v,3) for k,v in r.items()}, flush=True)
+    rh,_=eval_system(run,neps=60,held=True); print("B grad-RNN(held):", {k:round(v,3) for k,v in rh.items()}, flush=True)
+    print("=== MICRO_ENTITY_BASELINES_DONE ===", flush=True)
+
 def smoke():
     print("=== MICRO_ENTITY smoke: validate world + compiler + baselines ===", flush=True)
     print(f"D_IN={D_IN} D_OUT={D_OUT} (5 actions + {len(ALPHABET)} symbols) | trainsym={len(TRAINSYM)} heldout={len(HELDOUT)}", flush=True)
@@ -320,3 +354,4 @@ def smoke():
 
 if MODE=='smoke': smoke()
 elif MODE=='handtest': handtest()
+elif MODE=='baselines': baselines()
