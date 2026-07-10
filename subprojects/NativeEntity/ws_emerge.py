@@ -224,9 +224,14 @@ def train():
     dev=next(model.parameters()).device
     STEPS=int(os.environ.get('WS_STEPS','1500')); BS=int(os.environ.get('WS_BS','4')); LR=float(os.environ.get('WS_LR','1e-4'))
     ADAPT=os.environ.get('WS_ADAPT','/home/pokazge/checkpoints/ws_lora')
-    lora=LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, task_type='CAUSAL_LM',
-                    target_modules=['q_proj','k_proj','v_proj','o_proj','gate_proj','up_proj','down_proj'])
-    model=get_peft_model(model, lora); model.print_trainable_parameters()
+    FULLFT=int(os.environ.get('WS_FULLFT','0'))
+    if FULLFT:
+        for p in model.parameters(): p.requires_grad_(True)
+        print("=== FULL FINE-TUNE: all %.1fM params trainable (LR=%g) ==="%(sum(p.numel() for p in model.parameters())/1e6, LR), flush=True)
+    else:
+        lora=LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, task_type='CAUSAL_LM',
+                        target_modules=['q_proj','k_proj','v_proj','o_proj','gate_proj','up_proj','down_proj'])
+        model=get_peft_model(model, lora); model.print_trainable_parameters()
     rng=random.Random(SEED)
     def batch(n):
         seqs=[build_seq(tok, make_episode(rng, values=vals)) for _ in range(n)]
@@ -267,7 +272,7 @@ def train():
         gn=torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],1.0); opt.step()
         if step<=10 or step%150==0:
             a,rq=evalacc(); print("step %d: loss=%.3f gnorm=%.2f acc=%.3f req-acc=%.3f"%(step,float(loss),float(gn),a,rq), flush=True)
-    os.makedirs(ADAPT, exist_ok=True); model.save_pretrained(ADAPT)
+    os.makedirs(ADAPT, exist_ok=True); model.save_pretrained(ADAPT); tok.save_pretrained(ADAPT)
     a,rq=evalacc(nep=80)
     print("=== FINAL: acc=%.3f req-acc=%.3f | adapter saved %s ==="%(a,rq,ADAPT), flush=True)
     print("=== WS_TRAIN_DONE ===", flush=True)
@@ -394,10 +399,15 @@ def probe2():
         print(f"  >> {tag} BEST: Q(queried@query)={bestQ:.2f}  NQ(other@query)={bestNQ:.2f}  NL(any@nonquery)={bestNL:.2f}", flush=True)
         return bestQ,bestNQ,bestNL
     print("=== WS PROBE2: on-demand vs running-workspace decomposition ===", flush=True)
+    FULLFT=int(os.environ.get('WS_FULLFT','0'))
     if os.path.isdir(ADAPT):
-        model2=PeftModel.from_pretrained(model, ADAPT); model2.eval()
-        tq,tnq,tnl=run(model2,'TRAINED',777)
-        model2=model2.unload() if hasattr(model2,'unload') else model
+        if FULLFT:
+            from transformers import AutoModelForCausalLM
+            model2=AutoModelForCausalLM.from_pretrained(ADAPT, dtype=torch.bfloat16, device_map='cuda', attn_implementation='eager'); model2.eval()
+            tq,tnq,tnl=run(model2,'TRAINED-fullft',777); del model2; gc.collect(); torch.cuda.empty_cache()
+        else:
+            model2=PeftModel.from_pretrained(model, ADAPT); model2.eval()
+            tq,tnq,tnl=run(model2,'TRAINED',777)
     bq,bnq,bnl=run(model,'BASE',777)
     print("=== INTERPRET: Q high (=behavior, sanity) . NQ&NL high => RUNNING workspace ; NQ&NL low => ON-DEMAND (no persistent workspace) ===", flush=True)
     print("=== WS_PROBE2_DONE ===", flush=True)
