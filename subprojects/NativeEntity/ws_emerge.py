@@ -18,12 +18,15 @@ MODEL = os.environ.get('WS_MODEL', '/home/pokazge/hf_cache/hub/models--Qwen--Qwe
 VALUES = ['red','blue','green','gold','black','white','pink','gray','brown','teal']  # filtered to single-token below
 
 # ---- environment ----
+WHICH = float(os.environ.get('WS_WHICH', '0.0'))   # env-v2: fraction weight of content-addressed 'which holds v?' ops
+
 def make_episode(rng, nreg=NREG, nops=30, values=None):
+    import collections as _cl
     values = values or VALUES
     regs = [f'R{i}' for i in range(nreg)]
     state = {r: None for r in regs}          # current value (ground truth workspace)
     last_set = {r: None for r in regs}       # last EXPLICIT set value (last-mention control)
-    lines = []; probes = []                  # probes: (line_index, reg, true_value, requires_integration)
+    lines = []; probes = []; wanswers = {}   # probes: (line_index, reg, true_value, requires_integration); wanswers: {li: idx}
     # seed: DISTINCT values so relative ops (copy/swap) are always observable
     seed_vals = rng.sample(values, min(nreg, len(values)))
     order = regs[:]; rng.shuffle(order)
@@ -37,8 +40,17 @@ def make_episode(rng, nreg=NREG, nops=30, values=None):
     ops_left = nops
     while ops_left > 0:
         # bias toward relative ops (workspace-forcing); ~55% of queries target integration-required regs
-        op = rng.choices(['setrev','copy','swap','clear','denied','query'],
-                         weights=[2,5,4,1,2,5])[0]
+        # env-v2: 'whichval' (content-addressed) forces the FULL state to be present at that position
+        op = rng.choices(['setrev','copy','swap','clear','denied','query','whichval'],
+                         weights=[2,5,4,1,2,5, 8*WHICH])[0]
+        if op=='whichval':
+            cnt=_cl.Counter(state[r] for r in regs if state[r] not in (None,'none'))
+            uniq=[v for v,c in cnt.items() if c==1]
+            if not uniq: continue
+            v=rng.choice(uniq); holder=[r for r in regs if state[r]==v][0]
+            wanswers[len(lines)]=holder[1:]     # 'R3' -> '3' (index digit; requires scanning ALL registers)
+            lines.append(f'which holds {v} ?')
+            ops_left-=1; continue
         if op=='setrev':
             r=rng.choice(regs); v=rng.choice(values); state[r]=v; last_set[r]=v
             lines.append(f'set {r} = {v}')
@@ -63,7 +75,7 @@ def make_episode(rng, nreg=NREG, nops=30, values=None):
             r = rng.choice(integ) if (integ and rng.random()<0.6) else rng.choice(avail)
             emit_query(r)
         ops_left-=1
-    return {'lines':lines,'probes':probes,'nreg':nreg}
+    return {'lines':lines,'probes':probes,'nreg':nreg,'wanswers':wanswers}
 
 def render(ep, upto=None):
     header=(f"You are tracking {ep['nreg']} registers R0..R{ep['nreg']-1}. Each holds a value. "
@@ -138,7 +150,8 @@ def header_text(nreg):
     return (f"You are tracking {nreg} registers R0..R{nreg-1}. Each holds a value. "
             "Operations: set/copy/swap/clear change values; 'copy A -> B' sets B to A's CURRENT value; "
             "'swap A B' exchanges current values; 'denied:' lines are invalid and change nothing. "
-            "When asked 'query R ?', reply with R's CURRENT value only (one word).")
+            "When asked 'query R ?', reply with R's CURRENT value only (one word). "
+            "When asked 'which holds V ?', reply with the index (0-%d) of the register currently holding V." % (nreg-1))
 
 def simulate(lines, nreg):
     # ground-truth register state AFTER each line (for probing the workspace)
@@ -156,6 +169,7 @@ def simulate(lines, nreg):
 def build_seq(tok, ep):
     # returns ids, labels (loss only on answer tokens), ansmeta, line_end (last instruction-token pos per line)
     probe_map={li:(r,tv) for (li,r,tv,rq) in ep['probes']}
+    wans=ep.get('wanswers',{})
     ids=tok(header_text(ep['nreg']), add_special_tokens=True).input_ids
     labels=[-100]*len(ids); ansmeta=[]; line_end=[]
     for li,line in enumerate(ep['lines']):
@@ -167,6 +181,11 @@ def build_seq(tok, ep):
             ans_pos=len(ids); ids+=ans
             labels+=[-100]*len(pre)+ans
             ansmeta.append((ans_pos, r, tv, li))
+        elif li in wans:                                # content-addressed 'which holds v ?' -> index
+            pre=tok("\n"+line, add_special_tokens=False).input_ids
+            ids+=pre; line_end.append(len(ids)-1)
+            ans=tok(" "+wans[li], add_special_tokens=False).input_ids
+            ids+=ans; labels+=[-100]*len(pre)+ans       # loss on the index answer (forces full-state scan)
         else:
             t=tok("\n"+line, add_special_tokens=False).input_ids
             ids+=t; line_end.append(len(ids)-1)
@@ -305,6 +324,72 @@ def probe():
     else:
         print(f"=== no adapter at {ADAPT}; ran BASE only ===", flush=True)
     print("=== WS_PROBE_DONE ===", flush=True)
+
+def probe2():
+    # DECOMPOSE on-demand vs running-workspace. At QUERY answer-predicting position: probe (a) the QUERIED
+    # register [expect HIGH = behavior; sanity] vs (b) NON-queried registers [running workspace when answering].
+    # At NON-query line-ends: probe (c) all registers [state maintained between queries?]. base vs trained.
+    import torch, glob, numpy as np, gc
+    from peft import PeftModel
+    tok, model, vals, snap = _load()
+    dev=next(model.parameters()).device
+    ADAPT=os.environ.get('WS_ADAPT','/home/pokazge/checkpoints/ws_lora')
+    NEP=int(os.environ.get('WS_PROBE_NEP','40'))
+    classes=vals+['none']; cidx={c:i for i,c in enumerate(classes)}
+    regs=[f'R{i}' for i in range(NREG)]
+    def fit(H,Y):
+        X=np.stack(H).astype(np.float32); y=np.array(Y); n=len(y)
+        idx=np.arange(n); np.random.RandomState(0).shuffle(idx); tr=idx[:int(n*0.7)]; te=idx[int(n*0.7):]
+        mu=X[tr].mean(0); sd=X[tr].std(0)+1e-6
+        Xtr=np.concatenate([(X[tr]-mu)/sd,np.ones((len(tr),1),np.float32)],1); Xte=np.concatenate([(X[te]-mu)/sd,np.ones((len(te),1),np.float32)],1)
+        K=len(classes); Yt=np.zeros((len(tr),K),np.float32); Yt[np.arange(len(tr)),y[tr]]=1
+        W=np.linalg.solve(Xtr.T@Xtr+1.0*np.eye(Xtr.shape[1],dtype=np.float32),Xtr.T@Yt)
+        return float(((Xte@W).argmax(1)==y[te]).mean()) if len(te) else 0.0
+    @torch.inference_mode()
+    def run(m,tag,seed):
+        r2=random.Random(seed)
+        # datasets per layer: Q=queried@query, NQ=nonqueried@query, NL=anyreg@nonquery-lineend
+        Q=None; NQ=None; NL=None; nl=0
+        for _ in range(NEP):
+            ep=make_episode(r2, values=vals); ids,labels,ansmeta,line_end=build_seq(tok,ep)
+            trace=simulate(ep['lines'], ep['nreg']); qlines={li for (li,r,tv,rq) in ep['probes']}
+            x=torch.tensor(ids,device=dev).unsqueeze(0); hs=m(x,output_hidden_states=True).hidden_states; nl=len(hs)
+            if Q is None: Q=[([],[]) for _ in range(nl)]; NQ=[([],[]) for _ in range(nl)]; NL=[([],[]) for _ in range(nl)]
+            # query positions
+            for (ans_pos,qr,tv,li) in ansmeta:
+                pos=ans_pos-1; st=trace[li]
+                for L in range(nl):
+                    h=hs[L][0,pos].float().cpu().numpy()
+                    Q[L][0].append(h); Q[L][1].append(cidx.get(st[qr],cidx['none']))
+                    for r in regs:
+                        if r==qr or st[r] is None: continue
+                        NQ[L][0].append(h); NQ[L][1].append(cidx.get(st[r],cidx['none']))
+            # non-query line-ends
+            for li,pos in enumerate(line_end):
+                if li in qlines: continue
+                st=trace[li]
+                for L in range(nl):
+                    h=hs[L][0,pos].float().cpu().numpy()
+                    for r in regs:
+                        if st[r] is None: continue
+                        NL[L][0].append(h); NL[L][1].append(cidx.get(st[r],cidx['none']))
+            del hs,x; gc.collect(); torch.cuda.empty_cache()
+        print(f"--- {tag}: Q=queried@query  NQ=nonqueried@query  NL=anyreg@nonquery (chance~{1/len(classes):.2f}) ---", flush=True)
+        bestQ=bestNQ=bestNL=0
+        for L in range(nl):
+            q=fit(*Q[L]); nq=fit(*NQ[L]); nlx=fit(*NL[L])
+            bestQ=max(bestQ,q); bestNQ=max(bestNQ,nq); bestNL=max(bestNL,nlx)
+            if L%4==0 or L==nl-1: print(f"  L{L:2d}: Q={q:.2f}  NQ={nq:.2f}  NL={nlx:.2f}", flush=True)
+        print(f"  >> {tag} BEST: Q(queried@query)={bestQ:.2f}  NQ(other@query)={bestNQ:.2f}  NL(any@nonquery)={bestNL:.2f}", flush=True)
+        return bestQ,bestNQ,bestNL
+    print("=== WS PROBE2: on-demand vs running-workspace decomposition ===", flush=True)
+    if os.path.isdir(ADAPT):
+        model2=PeftModel.from_pretrained(model, ADAPT); model2.eval()
+        tq,tnq,tnl=run(model2,'TRAINED',777)
+        model2=model2.unload() if hasattr(model2,'unload') else model
+    bq,bnq,bnl=run(model,'BASE',777)
+    print("=== INTERPRET: Q high (=behavior, sanity) . NQ&NL high => RUNNING workspace ; NQ&NL low => ON-DEMAND (no persistent workspace) ===", flush=True)
+    print("=== WS_PROBE2_DONE ===", flush=True)
 
 def gen():
     rng=random.Random(SEED)
