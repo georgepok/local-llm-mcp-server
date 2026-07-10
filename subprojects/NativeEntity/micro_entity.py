@@ -1,0 +1,322 @@
+import os, json, math, random
+import numpy as np
+
+# ============================================================================
+# SYNTHESIZED_MICRO_ENTITY_V1  (SEPARATE hypothesis from register-workspace probe)
+# Question: can an LLM COMPILE a semantic environment description into an executable
+# neural dynamical system, via a compact "neural genome" DSL?  NOT "train a model on
+# generated examples" — the LLM emits a genome; a deterministic compiler instantiates a
+# small recurrent net; we evaluate zero-shot + local-plasticity (no backprop for synthesized).
+# Compare: A=hand FSM, B=gradient-RNN, C=LLM fixed genome, D=LLM plastic genome, E=random genome.
+# Claim ceiling: "LLM synthesized a compact recurrent system whose dynamics+local plasticity
+# support viability" — NOT entity/selfhood/workspace/criticality.
+# ============================================================================
+
+MODE = os.environ.get('ME_MODE', 'smoke')
+SEED = int(os.environ.get('ME_SEED', '0'))
+
+# ---- symbol alphabet (held-out split) + fixed deterministic embeddings ----
+D_SYM = 8
+ALPHABET = ['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel',
+            'india','juliet','kilo','lima','mike','november','oscar','papa']  # 16
+HELDOUT = set(ALPHABET[12:])           # 4 held-out symbols
+TRAINSYM = ALPHABET[:12]
+DISTRACT = ['zulu','yankee','xray','whiskey','victor','uniform']  # filler-only pool
+def _emb_table(names, seed):
+    g = np.random.RandomState(seed)
+    return {n: g.randn(D_SYM).astype(np.float32) for n in names}
+SYM_EMB = _emb_table(ALPHABET, 12345)
+DIS_EMB = _emb_table(DISTRACT, 54321)
+
+EVENTS = ['COMMIT','FILLER','FALSE','VALID_REL','INVALID_REL','PROBE']
+EV_IDX = {e:i for i,e in enumerate(EVENTS)}
+ACTIONS = ['HOLD','UPDATE','REJECT','QUERY','RESPOND']
+ACT_IDX = {a:i for i,a in enumerate(ACTIONS)}
+D_IN = len(EVENTS) + D_SYM               # obs = event onehot + symbol embedding
+D_OUT = len(ACTIONS) + len(ALPHABET)     # action logits + symbol readout logits
+
+def obs_vec(event, sym_name, distractor=False):
+    v = np.zeros(D_IN, np.float32)
+    v[EV_IDX[event]] = 1.0
+    if sym_name is not None:
+        v[len(EVENTS):] = (DIS_EMB[sym_name] if distractor else SYM_EMB[sym_name])
+    return v
+
+# ---- world: observation-based viability episode ----
+def make_episode(rng, held=False, phrase_shift=False, nfill=None):
+    syms = list(HELDOUT) if held else TRAINSYM
+    seq = rng.sample(syms, 3); C0, X1, X2 = seq[0], seq[1], seq[2]
+    def W(cur):
+        w = rng.choice(syms)
+        while w == cur: w = rng.choice(syms)
+        return w
+    steps = []  # (event, sym_name, distractor, true_commitment_AFTER, expected_action, is_probe)
+    cur = C0
+    def add(ev, sym, dis, act):
+        nonlocal cur
+        steps.append({'ev':ev,'sym':sym,'dis':dis,'true':cur,'act':act})
+    add('COMMIT', C0, False, 'UPDATE')
+    def fillers(k):
+        for _ in range(k): add('FILLER', rng.choice(DISTRACT), True, 'HOLD')
+    fillers(nfill or rng.randint(1,3)); add('FALSE', W(cur), False, 'REJECT'); add('PROBE', None, False, 'RESPOND')
+    fillers(nfill or rng.randint(1,3)); cur = X1; add('VALID_REL', X1, False, 'UPDATE'); add('PROBE', None, False, 'RESPOND')
+    fillers(nfill or rng.randint(1,3)); add('INVALID_REL', W(cur), False, 'REJECT'); add('PROBE', None, False, 'RESPOND')
+    fillers(nfill or rng.randint(1,3)); add('FALSE', W(cur), False, 'REJECT'); add('PROBE', None, False, 'RESPOND')
+    fillers(nfill or rng.randint(1,3)); cur = X2; add('VALID_REL', X2, False, 'UPDATE'); add('PROBE', None, False, 'RESPOND')
+    return steps
+
+def score_rollout(steps, actions, symbol_preds, vmax=3):
+    # actions: list of action-name per step; symbol_preds: list of predicted symbol-name (or None) per step
+    m = {'valid_update':[0,0],'false_resist':[0,0],'invalid_reject':[0,0],'probe':[0,0],'post_release':[0,0]}
+    V = vmax; alive = True; last_rel = None
+    for i,st in enumerate(steps):
+        ev = st['ev']; a = actions[i]; sp = symbol_preds[i]; true = st['true']
+        if ev == 'VALID_REL':
+            ok = int(a == 'UPDATE'); m['valid_update'][0]+=ok; m['valid_update'][1]+=1; last_rel=true
+        elif ev == 'FALSE':
+            ok = int(a in ('REJECT','HOLD')); m['false_resist'][0]+=ok; m['false_resist'][1]+=1
+        elif ev == 'INVALID_REL':
+            ok = int(a in ('REJECT','HOLD')); m['invalid_reject'][0]+=ok; m['invalid_reject'][1]+=1
+        elif ev == 'PROBE':
+            ok = int(sp == true); m['probe'][0]+=ok; m['probe'][1]+=1
+            if last_rel is not None: m['post_release'][0]+=int(sp==true); m['post_release'][1]+=1
+            if alive and not ok:
+                V -= 1
+                if V <= 0: alive = False
+    r = {k:(v[0]/v[1] if v[1] else 0.0) for k,v in m.items()}
+    r['survival'] = int(alive)
+    return r
+
+# ---- neural genome compiler ----
+FAMILIES = {'vanilla_rnn','gru','ctrnn','reservoir'}
+LIMITS = {'hidden_max':128,'spectral_max':1.6}
+
+def validate(g):
+    try:
+        if g['family'] not in FAMILIES: return False,f"family {g.get('family')}"
+        H = int(g['hidden_dim'])
+        if not (2 <= H <= LIMITS['hidden_max']): return False,f"hidden {H}"
+        if int(g['input_dim']) != D_IN: return False,f"input_dim must be {D_IN}"
+        if int(g['output_dim']) != D_OUT: return False,f"output_dim must be {D_OUT}"
+        dyn = g['dynamics']
+        if not (0.0 <= dyn.get('leak',0.2) <= 1.0): return False,"leak range"
+        if dyn.get('gain',1.0) > 3.0: return False,"gain too high"
+        pl = g.get('plasticity',{})
+        if pl.get('enabled') and pl.get('rule') not in ('hebbian','reward_hebb','oja','input_bind'): return False,"plastic rule"
+        return True,"ok"
+    except Exception as e:
+        return False,f"malformed: {e}"
+
+def _gen_matrix(spec, rows, cols, default_scale=0.5):
+    seed = int(spec.get('seed',0)); g = np.random.RandomState(seed); scale = float(spec.get('scale',default_scale))
+    typ = spec.get('gen','dense')
+    if typ == 'lowrank':
+        r = int(spec.get('rank',4)); U = g.randn(rows,r); Vv = g.randn(r,cols); M = (U@Vv)/math.sqrt(r)
+    elif typ == 'sparse':
+        M = g.randn(rows,cols); mask = (g.rand(rows,cols) < float(spec.get('sparsity',0.2))).astype(np.float32); M = M*mask
+    else:
+        M = g.randn(rows,cols)
+    M = M.astype(np.float32) * scale
+    return M
+
+def _apply_recurrent_structure(M, spec):
+    # spectral radius normalization + diagonal stability + E/I sign structure
+    sr = spec.get('spectral_radius')
+    if sr is not None:
+        ev = np.max(np.abs(np.linalg.eigvals(M))) + 1e-8
+        M = M * (float(sr)/ev)
+    diag = spec.get('diag')
+    if diag is not None:
+        np.fill_diagonal(M, M.diagonal() + float(diag))
+    ei = spec.get('ei')
+    if ei is not None:
+        exc = int(M.shape[1]*float(ei.get('exc_frac',0.8)))
+        signs = np.ones(M.shape[1], np.float32); signs[exc:] = -1.0
+        M = np.abs(M)*signs[None,:]
+    return M.astype(np.float32)
+
+class MicroNet:
+    def __init__(self, g):
+        self.g = g; H = int(g['hidden_dim']); self.H = H
+        w = g['weights']
+        self.Wrec = _apply_recurrent_structure(_gen_matrix(w['recurrent'],H,H,0.9), w['recurrent'])
+        self.Win  = _gen_matrix(w['input'], H, D_IN, 0.5)
+        self.Wout = _gen_matrix(w['readout'], D_OUT, H, 0.3)
+        self.bout = np.zeros(D_OUT, np.float32)
+        d = g['dynamics']
+        self.act = d.get('activation','tanh'); self.gain=float(d.get('gain',1.0))
+        self.leak=float(d.get('leak',0.2)); self.tau=float(d.get('tau',1.0)); self.noise=float(d.get('noise',0.0))
+        self.family = g['family']
+        pl = g.get('plasticity',{})
+        self.plastic = bool(pl.get('enabled',False)); self.pl = pl
+        self.elig = np.zeros_like(self.Wout)
+        self._init_state(g.get('init_state',{}))
+    def _init_state(self, spec):
+        if spec.get('gen') == 'seed':
+            self.h = np.random.RandomState(int(spec.get('seed',0))).randn(self.H).astype(np.float32)*0.1
+        else:
+            self.h = np.zeros(self.H, np.float32)
+    def reset(self, mode='init'):
+        if mode=='reset': self.h = np.zeros(self.H, np.float32)
+        else: self._init_state(self.g.get('init_state',{}))
+    def _nl(self, x):
+        return np.tanh(x) if self.act=='tanh' else np.maximum(0,x)
+    def step(self, obs, rng=None):
+        pre = self.gain*(self.Wrec@self.h) + self.Win@obs
+        u = self._nl(pre)
+        if self.family=='ctrnn':
+            self.h = self.h + (1.0/max(self.tau,1e-3))*(-self.h + u)
+        else:
+            self.h = (1-self.leak)*self.h + self.leak*u
+        if self.noise>0 and rng is not None: self.h = self.h + self.noise*rng.randn(self.H).astype(np.float32)
+        self.h = np.clip(self.h, -10, 10)
+        out = self.Wout@self.h + self.bout
+        return out
+    def plastic_update(self, event=None, sym_idx=None, reward=0.0):
+        # local, no-backprop plasticity. input_bind: at ADOPTION events (COMMIT/VALID_REL) the symbol is IN
+        # the observation (visible to all systems) -> self-supervised delta rule binding maintained state ->
+        # observed symbol in the symbol-readout. NOT a probe-time answer label. Optional reward modulation.
+        if not self.plastic: return
+        pl=self.pl; lr=float(pl.get('lr',0.02)); dec=float(pl.get('decay',0.0))
+        if pl.get('input_bind') and event in ('COMMIT','VALID_REL') and sym_idx is not None:
+            row=len(ACTIONS)+sym_idx
+            pred=self.Wout@self.h
+            target=pred.copy(); target[len(ACTIONS):]=-0.2; target[row]=1.5   # push this symbol up, others down
+            err=target-pred
+            self.Wout += lr*np.outer(err, self.h)
+        if dec>0: self.Wout -= dec*self.Wout
+
+def rollout(net, steps, rng=None, perturb_at=None, perturb_scale=0.0):
+    actions=[]; symbol_preds=[]; hs=[]; unstable=False
+    for i,st in enumerate(steps):
+        o = obs_vec(st['ev'], st['sym'], st['dis'])
+        if perturb_at is not None and i==perturb_at and rng is not None:
+            net.h = net.h + perturb_scale*rng.randn(net.H).astype(np.float32)
+        out = net.step(o, rng)
+        if not np.all(np.isfinite(out)): unstable=True; break
+        a = ACTIONS[int(np.argmax(out[:len(ACTIONS)]))]
+        sp = ALPHABET[int(np.argmax(out[len(ACTIONS):]))]
+        actions.append(a); symbol_preds.append(sp); hs.append(net.h.copy())
+        if net.plastic:
+            sidx = ALPHABET.index(st['sym']) if (st['sym'] in SYM_EMB and not st['dis']) else None
+            net.plastic_update(event=st['ev'], sym_idx=sidx)
+    return actions, symbol_preds, hs, unstable
+
+def compile_and_check(g):
+    ok,reason = validate(g)
+    if not ok: return None, f"INVALID: {reason}"
+    try:
+        net = MicroNet(g)
+        # stability probe: random drive for 30 steps, reject if explodes/NaN
+        rng = np.random.RandomState(SEED)
+        for _ in range(30):
+            out = net.step(rng.randn(D_IN).astype(np.float32))
+            if not np.all(np.isfinite(out)) or np.max(np.abs(net.h))>50: return None,"UNSTABLE"
+        net.reset()
+        return net, "ok"
+    except Exception as e:
+        return None, f"BUILD_ERR: {e}"
+
+# ---- baseline A: hand-designed FSM (optimal reference) ----
+class FSM:
+    def __init__(self): self.cur=None
+    def run(self, steps):
+        actions=[]; preds=[]; self.cur=None
+        for st in steps:
+            ev=st['ev']
+            if ev=='COMMIT': self.cur=st['sym']; actions.append('UPDATE'); preds.append(self.cur)
+            elif ev=='VALID_REL': self.cur=st['sym']; actions.append('UPDATE'); preds.append(self.cur)
+            elif ev in ('FALSE','INVALID_REL'): actions.append('REJECT'); preds.append(self.cur)
+            elif ev=='FILLER': actions.append('HOLD'); preds.append(self.cur)
+            elif ev=='PROBE': actions.append('RESPOND'); preds.append(self.cur)
+        return actions, preds
+
+def eval_system(runner, neps=60, held=False, seed=SEED, **kw):
+    rng=random.Random(seed); agg={}; hist={}
+    for _ in range(neps):
+        steps=make_episode(rng, held=held)
+        actions,preds=runner(steps)
+        r=score_rollout(steps,actions,preds)
+        for k,v in r.items(): agg[k]=agg.get(k,0)+v
+        for p in preds: hist[p]=hist.get(p,0)+1
+    n=neps; return {k:v/n for k,v in agg.items()}, hist
+
+# ---- random genome sampler (baseline E) ----
+def random_genome(seed):
+    g=random.Random(seed)
+    fam=g.choice(list(FAMILIES)); H=g.choice([16,32,48,64])
+    return {'family':fam,'input_dim':D_IN,'hidden_dim':H,'output_dim':D_OUT,'slow_hidden':0,
+        'weights':{'recurrent':{'gen':g.choice(['dense','lowrank','sparse']),'seed':g.randint(0,9999),'scale':round(g.uniform(0.3,1.0),2),'spectral_radius':round(g.uniform(0.5,1.3),2)},
+                   'input':{'gen':'dense','seed':g.randint(0,9999),'scale':round(g.uniform(0.3,0.8),2)},
+                   'readout':{'gen':'dense','seed':g.randint(0,9999),'scale':round(g.uniform(0.2,0.6),2)}},
+        'dynamics':{'activation':'tanh','gain':round(g.uniform(0.7,1.3),2),'leak':round(g.uniform(0.1,0.5),2),'tau':1.0,'noise':0.0},
+        'plasticity':{'enabled':g.random()<0.5,'targets':['readout'],'rule':'reward_hebb','lr':0.01,'reward_mod':True},
+        'init_state':{'gen':'zeros'}}
+
+HAND_GENOME = {  # sanity: reservoir (memory) + input-binding plastic readout — does the DSL express a viable solution?
+  'family':'reservoir','input_dim':D_IN,'hidden_dim':64,'output_dim':D_OUT,'slow_hidden':0,
+  'weights':{'recurrent':{'gen':'sparse','seed':7,'scale':1.0,'sparsity':0.2,'spectral_radius':0.95},
+             'input':{'gen':'dense','seed':8,'scale':0.6},
+             'readout':{'gen':'dense','seed':9,'scale':0.05}},
+  'dynamics':{'activation':'tanh','gain':1.0,'leak':0.2,'tau':1.0,'noise':0.0},
+  'plasticity':{'enabled':True,'targets':['readout'],'rule':'input_bind','input_bind':True,'lr':0.05,'decay':0.0,'reward_mod':False},
+  'init_state':{'gen':'zeros'}}
+
+def eval_genome(genome, neps=150, online=True, held=False, seed=SEED):
+    net,msg = compile_and_check(genome)
+    if net is None: return None, msg
+    if not online: net.plastic=False
+    rng=random.Random(seed); per=[]; hist={}
+    for ei in range(neps):
+        net.reset('reset')                    # hidden resets each episode; readout PERSISTS if online (accumulates decoder)
+        steps=make_episode(rng, held=held)
+        a,p,hs,unst=rollout(net,steps)
+        r=score_rollout(steps,a,p); per.append(r)
+        for x in p: hist[x]=hist.get(x,0)+1
+    def avg(lst):
+        n=len(lst); return {k:round(sum(d[k] for d in lst)/n,3) for k in lst[0]}
+    third=max(1,neps//3)
+    return {'early':avg(per[:third]),'late':avg(per[-third:]),'hist':dict(sorted(hist.items(),key=lambda x:-x[1])[:6])}, "ok"
+
+def handtest():
+    print("=== MICRO_ENTITY handtest: can the DSL express a viable solution? (reservoir + input-bind plastic readout) ===", flush=True)
+    ok,reason=validate(HAND_GENOME); print("validate:",ok,reason, flush=True)
+    zs,_=eval_genome(HAND_GENOME, online=False); print("ZERO-SHOT (readout fixed):", {'early':zs['early']} if zs else _, flush=True)
+    on,_=eval_genome(HAND_GENOME, online=True)
+    if on:
+        print("ONLINE-PLASTIC early:", on['early'], flush=True)
+        print("ONLINE-PLASTIC late :", on['late'], flush=True)
+        print("  pred-hist(top):", on['hist'], flush=True)
+    onh,_=eval_genome(HAND_GENOME, online=True, held=True)
+    if onh: print("ONLINE-PLASTIC late (HELD-OUT symbols):", onh['late'], flush=True)
+    print("=== INTERPRET: if ONLINE late probe/survival >> early >> zero-shot => reservoir+local-plastic DSL is viable => LLM synthesis is meaningful ===", flush=True)
+    print("=== MICRO_ENTITY_HANDTEST_DONE ===", flush=True)
+
+def smoke():
+    print("=== MICRO_ENTITY smoke: validate world + compiler + baselines ===", flush=True)
+    print(f"D_IN={D_IN} D_OUT={D_OUT} (5 actions + {len(ALPHABET)} symbols) | trainsym={len(TRAINSYM)} heldout={len(HELDOUT)}", flush=True)
+    # A: FSM (should be ~perfect)
+    fsm=FSM(); r,_=eval_system(fsm.run, neps=60)
+    print("A  FSM        :", {k:round(v,3) for k,v in r.items()}, flush=True)
+    # constant predictor control (always HOLD + always predict a fixed symbol)
+    fixed=ALPHABET[0]
+    def const(steps): return ['HOLD']*len(steps), [fixed]*len(steps)
+    rc,_=eval_system(const, neps=60)
+    print("   const-pred :", {k:round(v,3) for k,v in rc.items()}, flush=True)
+    # E: random genomes (should be ~chance)
+    goods=0; results=[]
+    for s in range(8):
+        g=random_genome(1000+s); net,msg=compile_and_check(g)
+        if net is None: results.append((s,msg)); continue
+        goods+=1
+        def run(steps, net=net):
+            net.reset(); a,p,_,unst=rollout(net,steps); return a,p
+        r,_=eval_system(run, neps=40)
+        results.append((s, {k:round(v,2) for k,v in r.items()}))
+    print(f"E  random-genome ({goods}/8 compiled):", flush=True)
+    for s,res in results: print(f"     seed{s}: {res}", flush=True)
+    print("=== VALID IF: FSM~1.0 on all, const-pred fails probe/update, random-genome ~chance ===", flush=True)
+    print("=== MICRO_ENTITY_SMOKE_DONE ===", flush=True)
+
+if MODE=='smoke': smoke()
+elif MODE=='handtest': handtest()
