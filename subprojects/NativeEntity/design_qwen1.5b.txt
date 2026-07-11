@@ -1,0 +1,39 @@
+### 1. COMPUTATIONAL DECOMPOSITION
+
+The task involves tracking a commitment symbol in a sequence of events that can either fillers, false assertions, valid commitments, invalid commitments, or probes. To achieve this, we decompose the problem into several key sub-tasks:
+
+1. **Event Detection**: Identify filler, false assertion, valid commitment, invalid commitment, and probe events based on their unique characteristics.
+   
+2. **Symbol Tracking**: Maintain a state variable representing the current commitment symbol throughout the episode.
+
+   
+3. **Action Selection**: Based on the current state, select appropriate actions such as holding, updating, rejecting, querying, or responding to the probe.
+
+   
+4. **Response Generation**: Generate a response based on the selected action and the current commitment symbol.
+
+   
+5. **Generalization Handling**: Ensure the model generalizes well to unseen symbols during testing phases.
+
+ 
+
+### 2. MEMORY TIMESCALE
+
+To ensure the model retains information effectively, we need to define a memory timescale that allows the system to remember past events while adapting to new ones. This will involve storing relevant states and patterns related to the commitment symbol.
+
+  
+### 3. PLASTICITY TYPE
+
+Given the absence of gradients, we employ local online plasticity to adaptively adjust parameters without relying on backpropagation. Specifically, we use a simple form of Hebbian learning where the strength of connections between neurons is updated based on the correlation between inputs and outputs. In our case, the input would be the current state of the commitment symbol, and the output would be the probability distribution over possible actions.
+
+### 4. NEURAL MOTIF
+
+The recurrent neural network motif consists of multiple layers, including an input layer, two hidden layers, and an output layer. The input layer receives the embedding of the committed symbol along with the event types. The first hidden layer processes this information through a series of non-linear transformations, capturing temporal dependencies and context. The second hidden layer further refines this representation, possibly incorporating additional features like the presence of a probe. Finally, the output layer generates the action probabilities and symbol readouts, allowing the model to respond appropriately to the current situation.
+
+### 5. PARAMETER REGIME
+
+The parameter regime is characterized by stability and timescales that allow the model to handle both stable and changing environments efficiently. Given the fixed weights and lack of gradient-based optimization, the dynamics should remain predictable and controllable. Spectral properties suggest that the network's eigenvalues should lie within a certain range to prevent divergence or premature convergence issues. Additionally, the model’s ability to generalize to unseen symbols indicates robustness against perturbations in the environment.
+
+### 6. FAILURE MODES AND MITIGATION
+
+Failure modes include incorrect predictions leading to incorrect responses, which can occur due to misinterpretation of events or failure to track the commitment symbol accurately. To mitigate this, the model employs mechanisms such as error correction loops and feedback mechanisms to refine its predictions. For unseen symbols, the model uses a combination of learned representations and contextual cues to make informed decisions, ensuring that it remains adaptable even when faced with novel stimuli. Regular updates to the internal state and connection strengths help maintain the model's performance across different episodes.

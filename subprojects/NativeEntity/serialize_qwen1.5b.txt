@@ -1,0 +1,44 @@
+```json
+{
+  "family": "reservoir",
+  "input_dim": 14,
+  "output_dim": 21,
+  "hidden_dim": 64,
+  "slow_hidden": 0,
+  "weights": {
+    "recurrent": {
+      "gen": "sparse",
+      "seed": 1234567890,
+      "scale": 0.6,
+      "spectral_radius": 0.95,
+      "sparsity": 0.1,
+      "diag": 0.0
+    },
+    "input": {
+      "gen": "dense",
+      "seed": 1234567890,
+      "scale": 0.6
+    }
+  },
+  "dynamics": {
+    "activation": "tanh",
+    "gain": 3,
+    "leak": 0.2,
+    "tau": 1,
+    "noise": 0
+  },
+  "plasticity": {
+    "enabled": true,
+    "targets": ["readout"],
+    "rule": "input_bind",
+    "input_bind": true,
+    "lr": 0.05,
+    "decay": 0.003,
+    "eligibility": 0.1,
+    "reward_mod": false
+  },
+  "init_state": {
+    "gen": "zeros"
+  }
+}
+```
