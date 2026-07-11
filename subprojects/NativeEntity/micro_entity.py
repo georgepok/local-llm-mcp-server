@@ -320,6 +320,58 @@ def full_eval(genome, tag, neps=150):
     print(f"  {tag:18s}| zshot_probe={zsp:.2f} | online probe={g(on,'probe'):.2f}/surv={g(on,'survival'):.2f} | HELD probe={g(onh,'probe'):.2f}/surv={g(onh,'survival'):.2f} | wnoise surv={g(wn,'survival'):.2f} | hpert surv={g(hp,'survival'):.2f} | commit_dec={sm.get('commit_decode',0)} filler_dec={sm.get('filler_decode',0)}", flush=True)
     return {'tag':tag,'zs':zsp,'online':on['late'] if on else {},'held':onh['late'] if onh else {},'wnoise':wn['late'] if wn else {},'hpert':hp['late'] if hp else {},'state':sm}
 
+def rand_genome_v2(seed):
+    g=random.Random(seed)
+    rule=g.choice(['none','hebbian','reward_hebb','input_bind']); plastic=rule!='none'
+    return {'family':g.choice(['reservoir','gru','ctrnn','vanilla_rnn']),'input_dim':D_IN,'hidden_dim':g.choice([16,32,48,64,96]),'output_dim':D_OUT,'slow_hidden':0,
+      'weights':{'recurrent':{'gen':g.choice(['dense','sparse']),'seed':g.randint(0,99999),'scale':round(g.uniform(0.5,1.2),2),'spectral_radius':round(g.uniform(0.7,1.3),2),'sparsity':round(g.uniform(0.1,0.5),2)},
+                 'input':{'gen':'dense','seed':g.randint(0,99999),'scale':round(g.uniform(0.4,1.2),2)},
+                 'readout':{'gen':'dense','seed':g.randint(0,99999),'scale':round(g.uniform(0.02,0.5),2)}},
+      'dynamics':{'activation':'tanh','gain':round(g.uniform(0.8,1.4),2),'leak':round(g.uniform(0.05,0.5),2),'tau':round(g.uniform(1,5),1),'noise':0.0},
+      'plasticity':{'enabled':plastic,'targets':['readout'],'rule':rule if plastic else 'hebbian','input_bind':rule=='input_bind','lr':round(g.uniform(0.01,0.3),3),'decay':round(g.uniform(0,0.03),3),'eligibility':round(g.uniform(0,0.7),2),'reward_mod':rule=='reward_hebb'},
+      'init_state':{'gen':'zeros'}}
+
+def fitness(genome):
+    net,msg=compile_and_check(genome)
+    if net is None: return 0.0
+    r,_=eval_genome(genome, online=True, held=True, neps=50)
+    return r['late']['survival'] if r else 0.0
+
+def _mutate(g, seed):
+    import copy; r=random.Random(seed); g=copy.deepcopy(g)
+    ch=r.choice(['lr','sr','leak','rule','hidden','readscale'])
+    p=g['plasticity']; rec=g['weights']['recurrent']
+    if ch=='lr': p['lr']=round(max(0.005,p.get('lr',0.05)*r.uniform(0.5,2)),3)
+    elif ch=='sr': rec['spectral_radius']=round(min(1.5,max(0.6,rec.get('spectral_radius',0.9)+r.uniform(-0.2,0.2))),2)
+    elif ch=='leak': g['dynamics']['leak']=round(min(0.6,max(0.05,g['dynamics']['leak']+r.uniform(-0.1,0.1))),2)
+    elif ch=='rule': rr=r.choice(['input_bind','reward_hebb','hebbian']); p['rule']=rr; p['input_bind']=(rr=='input_bind'); p['enabled']=True
+    elif ch=='hidden': g['hidden_dim']=r.choice([16,32,48,64,96])
+    elif ch=='readscale': g['weights']['readout']['scale']=round(max(0.01,g['weights']['readout']['scale']*r.uniform(0.4,2)),3)
+    return g
+
+def search():
+    K=int(os.environ.get('ME_K','80'))
+    print(f"=== PART 3: SEARCH over the DSL (does search find Claude-level w/o Claude?) | fitness=held-out survival ===", flush=True)
+    print(f"  Reference: Claude ONE-SHOT (0 eval feedback) median held-out survival ~0.72; best ~0.86", flush=True)
+    # random search
+    best=0.0; hist=[]; nib=0
+    for k in range(K):
+        g=rand_genome_v2(9000+k); f=fitness(g); best=max(best,f); hist.append(best)
+        if g['plasticity'].get('rule')=='input_bind' and g['plasticity']['enabled']: nib+=1
+    marks=[9,19,39,K-1]
+    print(f"  RANDOM search {K} evals: best held-out surv={best:.2f} | best@[10,20,40,{K}]evals = {[round(hist[min(i,K-1)],2) for i in marks]} | {nib}/{K} sampled input_bind", flush=True)
+    # evolutionary search (pop 10, 8 gens, keep 4 elite)
+    pop=[rand_genome_v2(5000+i) for i in range(10)]; scored=[(fitness(g),g) for g in pop]; evals=10; bestev=max(s for s,_ in scored); curve=[bestev]
+    for gen in range(8):
+        scored.sort(key=lambda x:-x[0]); elite=[g for _,g in scored[:4]]; newpop=elite[:]
+        j=0
+        while len(newpop)<10: newpop.append(_mutate(elite[j%4], gen*1000+len(newpop))); j+=1
+        scored=[(s,g) for s,g in scored[:4]]+[(fitness(g),g) for g in newpop[4:]]; evals+=6
+        bestev=max(bestev, max(s for s,_ in scored)); curve.append(round(bestev,2))
+    print(f"  EVO search ~{evals} evals: best held-out surv={bestev:.2f} | curve/gen = {curve}", flush=True)
+    print(f"=== INTERPRET: search finds it FAST (<20 evals) => DSL encodes solution (cause B); needs MANY/never => Claude's 1-shot design is sample-efficient (cause A) ===", flush=True)
+    print("=== MICRO_ENTITY_SEARCH_DONE ===", flush=True)
+
 def ablate():
     # PART 2: component ablations of the best Claude-plastic genome. Which piece(s) cause the result?
     import json, copy, random as R
@@ -429,3 +481,4 @@ elif MODE=='handtest': handtest()
 elif MODE=='baselines': baselines()
 elif MODE=='evalfile': evalfile()
 elif MODE=='ablate': ablate()
+elif MODE=='search': search()
