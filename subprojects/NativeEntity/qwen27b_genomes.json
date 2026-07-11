@@ -1,0 +1,106 @@
+[
+ {
+  "tag": "Q27B_C0",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 64,
+   "slow_hidden": 0,
+   "weights": {
+    "recurrent": {
+     "gen": "dense",
+     "seed": 42,
+     "scale": 0.5,
+     "spectral_radius": 1.0,
+     "sparsity": 0.0,
+     "diag": 0.0
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 123,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 456,
+     "scale": 0.5
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.0,
+    "leak": 0.0,
+    "tau": 1.0,
+    "noise": 0.0
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "none",
+    "input_bind": false,
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false
+   },
+   "init_state": {
+    "gen": "zeros",
+    "seed": 0
+   }
+  }
+ },
+ {
+  "tag": "Q27B_D1",
+  "genome": {
+   "family": "vanilla_rnn",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 32,
+   "slow_hidden": 0,
+   "weights": {
+    "recurrent": {
+     "gen": "dense",
+     "seed": 789,
+     "scale": 0.8,
+     "spectral_radius": 1.5,
+     "sparsity": 0.0,
+     "diag": 0.0
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 101,
+     "scale": 1.2
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 202,
+     "scale": 0.1
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.5,
+    "leak": 0.1,
+    "tau": 1.0,
+    "noise": 0.01
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "readout"
+    ],
+    "rule": "input_bind",
+    "input_bind": true,
+    "lr": 0.05,
+    "decay": 0.99,
+    "eligibility": 0.5,
+    "reward_mod": false
+   },
+   "init_state": {
+    "gen": "zeros",
+    "seed": 0
+   }
+  }
+ }
+]

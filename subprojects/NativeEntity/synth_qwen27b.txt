@@ -1,0 +1,115 @@
+Here are the two NEURAL GENOME configurations designed for the viability world task.
+
+### 1. FIXED Genome (Deterministic, No Plasticity)
+
+This genome relies on a high-capacity GRU with a carefully tuned spectral radius to maintain stable memory traces over long sequences of fillers. It uses a dense readout initialized with a specific seed to ensure the mapping from hidden state to symbol logits is robust enough to handle the held-out symbols through generalization of the embedding space, assuming the recurrent dynamics preserve the semantic structure of the input symbols.
+
+```json
+{
+  "family": "gru",
+  "input_dim": 14,
+  "output_dim": 21,
+  "hidden_dim": 64,
+  "slow_hidden": 0,
+  "weights": {
+    "recurrent": {
+      "gen": "dense",
+      "seed": 42,
+      "scale": 0.5,
+      "spectral_radius": 1.0,
+      "sparsity": 0.0,
+      "diag": 0.0
+    },
+    "input": {
+      "gen": "dense",
+      "seed": 123,
+      "scale": 1.0
+    },
+    "readout": {
+      "gen": "dense",
+      "seed": 456,
+      "scale": 0.5
+    }
+  },
+  "dynamics": {
+    "activation": "tanh",
+    "gain": 1.0,
+    "leak": 0.0,
+    "tau": 1.0,
+    "noise": 0.0
+  },
+  "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "none",
+    "input_bind": false,
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false
+  },
+  "init_state": {
+    "gen": "zeros",
+    "seed": 0
+  }
+}
+```
+
+### 2. PLASTIC Genome (Online Adaptation)
+
+This genome uses a smaller, faster-adapting Vanilla RNN with a higher spectral radius to allow for rapid state changes. The key feature is the `input_bind` plasticity rule. When a `COMMIT` or `VALID_REL` event occurs, the network locally adjusts its readout weights to bind the current hidden state representation to the observed symbol embedding. This allows the network to "learn" the mapping for unseen symbols on the fly, ensuring that when a `PROBE` occurs, the readout can correctly retrieve the currently bound symbol, even if it was never seen during any initial training phase.
+
+```json
+{
+  "family": "vanilla_rnn",
+  "input_dim": 14,
+  "output_dim": 21,
+  "hidden_dim": 32,
+  "slow_hidden": 0,
+  "weights": {
+    "recurrent": {
+      "gen": "dense",
+      "seed": 789,
+      "scale": 0.8,
+      "spectral_radius": 1.5,
+      "sparsity": 0.0,
+      "diag": 0.0
+    },
+    "input": {
+      "gen": "dense",
+      "seed": 101,
+      "scale": 1.2
+    },
+    "readout": {
+      "gen": "dense",
+      "seed": 202,
+      "scale": 0.1
+    }
+  },
+  "dynamics": {
+    "activation": "tanh",
+    "gain": 1.5,
+    "leak": 0.1,
+    "tau": 1.0,
+    "noise": 0.01
+  },
+  "plasticity": {
+    "enabled": true,
+    "targets": ["readout"],
+    "rule": "input_bind",
+    "input_bind": true,
+    "lr": 0.05,
+    "decay": 0.99,
+    "eligibility": 0.5,
+    "reward_mod": false
+  },
+  "init_state": {
+    "gen": "zeros",
+    "seed": 0
+  }
+}
+```
+
+### Rationale
+
+The fixed genome leverages the gating mechanisms of a GRU to maintain a stable memory trace of the current commitment symbol across long sequences of distractors, relying on the generalization capability of the dense readout layer to map hidden states to symbol logits for unseen symbols. In contrast, the plastic genome employs a simpler Vanilla RNN with a higher spectral radius to facilitate rapid state transitions and utilizes the `input_bind` plasticity rule to dynamically adjust the readout weights whenever a new commitment is established. This online learning mechanism allows the network to explicitly bind the current hidden state to the observed symbol embedding, ensuring accurate retrieval during probes even for completely novel symbols that were not present in any initial training data, thereby satisfying the requirement for robust performance in a viability world with held-out symbols.
