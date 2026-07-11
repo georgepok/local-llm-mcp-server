@@ -200,6 +200,8 @@ def rollout(net, steps, rng=None, perturb_at=None, perturb_scale=0.0):
         if net.plastic:
             sidx = ALPHABET.index(st['sym']) if (st['sym'] in SYM_EMB and not st['dis']) else None
             net.plastic_update(event=st['ev'], sym_idx=sidx)
+    while len(actions)<len(steps):                 # unstable rollout broke early -> pad as failed steps
+        actions.append('HOLD'); symbol_preds.append(None); hs.append(np.zeros(net.H,np.float32))
     return actions, symbol_preds, hs, unstable
 
 def compile_and_check(g):
@@ -318,6 +320,25 @@ def full_eval(genome, tag, neps=150):
     print(f"  {tag:18s}| zshot_probe={zsp:.2f} | online probe={g(on,'probe'):.2f}/surv={g(on,'survival'):.2f} | HELD probe={g(onh,'probe'):.2f}/surv={g(onh,'survival'):.2f} | wnoise surv={g(wn,'survival'):.2f} | hpert surv={g(hp,'survival'):.2f} | commit_dec={sm.get('commit_decode',0)} filler_dec={sm.get('filler_decode',0)}", flush=True)
     return {'tag':tag,'zs':zsp,'online':on['late'] if on else {},'held':onh['late'] if onh else {},'wnoise':wn['late'] if wn else {},'hpert':hp['late'] if hp else {},'state':sm}
 
+def ablate():
+    # PART 2: component ablations of the best Claude-plastic genome. Which piece(s) cause the result?
+    import json, copy, random as R
+    base=json.load(open('claude_robust.json'))[0]['genome']
+    V={}
+    V['D-full']=base
+    g=copy.deepcopy(base); g['plasticity']['enabled']=False; V['D-no-plasticity']=g
+    g=copy.deepcopy(base); rr=R.Random(1); g['plasticity']['lr']=round(rr.uniform(0.001,0.2),3); g['plasticity']['decay']=round(rr.uniform(0,0.1),3); V['D-random-plasticity']=g
+    g=copy.deepcopy(base); g['weights']['recurrent']['spectral_radius']=0.1; g['dynamics']['leak']=0.9; V['D-no-reservoir']=g
+    g=copy.deepcopy(base); g['plasticity']['rule']='hebbian'; g['plasticity']['input_bind']=False; V['D-no-binding']=g
+    g=copy.deepcopy(base); g['weights']['recurrent']['spectral_radius']=0.05; g['dynamics']['leak']=0.95; V['D-readout-only']=g
+    g=copy.deepcopy(base); g['weights']['recurrent']['seed']=8888; g['weights']['input']['seed']=8889; g['weights']['readout']['seed']=8890; V['D-random-structure']=g
+    V['D-example-template']={"family":"reservoir","input_dim":D_IN,"hidden_dim":64,"output_dim":D_OUT,"slow_hidden":0,"weights":{"recurrent":{"gen":"sparse","seed":7,"scale":1.0,"sparsity":0.15,"spectral_radius":0.9},"input":{"gen":"dense","seed":8,"scale":0.6},"readout":{"gen":"dense","seed":9,"scale":0.05}},"dynamics":{"activation":"tanh","gain":1.0,"leak":0.2,"tau":1.0,"noise":0.0},"plasticity":{"enabled":True,"targets":["readout"],"rule":"input_bind","input_bind":True,"lr":0.05,"decay":0.003,"reward_mod":False},"init_state":{"gen":"zeros"}}
+    V['D-minimal-binding']={"family":"reservoir","input_dim":D_IN,"hidden_dim":8,"output_dim":D_OUT,"slow_hidden":0,"weights":{"recurrent":{"gen":"dense","seed":3,"scale":1.0,"spectral_radius":0.9},"input":{"gen":"dense","seed":4,"scale":0.6},"readout":{"gen":"dense","seed":5,"scale":0.02}},"dynamics":{"activation":"tanh","gain":1.0,"leak":0.2,"tau":1.0,"noise":0.0},"plasticity":{"enabled":True,"targets":["readout"],"rule":"input_bind","input_bind":True,"lr":0.08,"decay":0.003,"reward_mod":False},"init_state":{"gen":"zeros"}}
+    print("=== PART 2 COMPONENT ABLATIONS (base = Claude D-plastic) ===", flush=True)
+    print("  KEY: D-no-reservoir/D-no-binding should FAIL if both components matter; D-minimal-binding==D-full => compact binding algorithm", flush=True)
+    for tag,g in V.items(): full_eval(g, tag)
+    print("=== MICRO_ENTITY_ABLATE_DONE ===", flush=True)
+
 def evalfile():
     import json
     path=os.environ.get('ME_GENOMES','genomes.json'); genomes=json.load(open(path))
@@ -407,3 +428,4 @@ if MODE=='smoke': smoke()
 elif MODE=='handtest': handtest()
 elif MODE=='baselines': baselines()
 elif MODE=='evalfile': evalfile()
+elif MODE=='ablate': ablate()
