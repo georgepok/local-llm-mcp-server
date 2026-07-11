@@ -159,9 +159,13 @@ class MicroNet:
     def reset(self, mode='init'):
         if mode=='reset': self.h = np.zeros(self.H, np.float32)
         else: self._init_state(self.g.get('init_state',{}))
+        for a in ('_elig_Wout','_elig_Wrec','_elig_Win'):    # reward-eligibility traces are per-episode
+            if hasattr(self,a): delattr(self,a)
+        self._pre=self.h.copy(); self._obs=np.zeros(D_IN,np.float32); self._out=np.zeros(D_OUT,np.float32)
     def _nl(self, x):
         return np.tanh(x) if self.act=='tanh' else np.maximum(0,x)
-    def step(self, obs, rng=None):
+    def step(self, obs, rng=None, ablate_basis=None):
+        self._pre = self.h.copy()                            # pre-update state (for hebbian/oja/reward_hebb on recurrent)
         pre = self.gain*(self.Wrec@self.h) + self.Win@obs
         u = self._nl(pre)
         if self.family=='ctrnn':
@@ -170,29 +174,59 @@ class MicroNet:
             self.h = (1-self.leak)*self.h + self.leak*u
         if self.noise>0 and rng is not None: self.h = self.h + self.noise*rng.randn(self.H).astype(np.float32)
         self.h = np.clip(self.h, -10, 10)
+        if ablate_basis is not None:                         # project the state OUT of a subspace (causal intervention)
+            self.h = self.h - ablate_basis@(ablate_basis.T@self.h)
         out = self.Wout@self.h + self.bout
+        self._obs=obs; self._out=out
         return out
-    def plastic_update(self, event=None, sym_idx=None, reward=0.0):
-        # local, no-backprop plasticity. input_bind: at ADOPTION events (COMMIT/VALID_REL) the symbol is IN
-        # the observation (visible to all systems) -> self-supervised delta rule binding maintained state ->
-        # observed symbol in the symbol-readout. NOT a probe-time answer label. Optional reward modulation.
+    def plastic_update(self, event=None, sym_idx=None, reward=0.0, bind_ok=None):
+        # local, no-backprop plasticity. Rules: input_bind (event-gated readout binding, self-supervised),
+        # hebbian, oja (normalized/bounded), reward_hebb (reward-modulated eligibility). Targets: readout/recurrent/input.
+        # bind_ok: per-step gate for input_bind (env-specific). None => default E1 gate (adoption events only).
         if not self.plastic: return
         pl=self.pl; lr=float(pl.get('lr',0.02)); dec=float(pl.get('decay',0.0))
-        if pl.get('input_bind') and event in ('COMMIT','VALID_REL') and sym_idx is not None:
-            row=len(ACTIONS)+sym_idx
-            pred=self.Wout@self.h
-            target=pred.copy(); target[len(ACTIONS):]=-0.2; target[row]=1.5   # push this symbol up, others down
-            err=target-pred
-            self.Wout += lr*np.outer(err, self.h)
-        if dec>0: self.Wout -= dec*self.Wout
+        rule=pl.get('rule','hebbian'); targets=pl.get('targets',['readout'])
+        elig_c=float(pl.get('eligibility',0.0))
+        h=self.h; hp=self._pre; obs=self._obs; out=self._out
+        do_bind = (event in ('COMMIT','VALID_REL')) if bind_ok is None else bool(bind_ok)
+        # input_bind: the observed symbol is bound to the maintained state in the readout (builds a state->symbol decoder)
+        if pl.get('input_bind') and do_bind and sym_idx is not None:
+            row=len(ACTIONS)+sym_idx; pred=self.Wout@h
+            target=pred.copy(); target[len(ACTIONS):]=-0.2; target[row]=1.5
+            self.Wout += lr*np.outer(target-pred, h)
+        # generic local rules on chosen weight targets
+        def postpre(t):
+            if t=='readout':   return np.tanh(out), h, 'Wout'
+            if t=='recurrent': return h, hp, 'Wrec'
+            if t=='input':     return h, obs, 'Win'
+            return None
+        if rule in ('hebbian','oja','reward_hebb'):
+            for t in targets:
+                pp=postpre(t)
+                if pp is None: continue
+                post,pre_,attr=pp; W=getattr(self,attr)
+                if rule=='hebbian':
+                    W += lr*np.outer(post,pre_)
+                elif rule=='oja':                            # Oja: bounded, decorrelating; stabilizes stored subspace
+                    W += lr*(np.outer(post,pre_) - (post*post)[:,None]*W)
+                elif rule=='reward_hebb':                    # reward-modulated: eligibility bridges the choice->reward gap
+                    key='_elig_'+attr; e=getattr(self,key,None)
+                    if e is None or e.shape!=W.shape: e=np.zeros_like(W)
+                    e=elig_c*e + np.outer(post,pre_); setattr(self,key,e)
+                    W += lr*float(reward)*e
+                if dec>0: W -= dec*W
+                np.clip(W,-6.0,6.0,out=W)
+        elif dec>0:
+            self.Wout -= dec*self.Wout
 
-def rollout(net, steps, rng=None, perturb_at=None, perturb_scale=0.0):
+def rollout(net, steps, rng=None, perturb_at=None, perturb_scale=0.0, ablate_basis=None, ablate_events=None):
     actions=[]; symbol_preds=[]; hs=[]; unstable=False
     for i,st in enumerate(steps):
         o = obs_vec(st['ev'], st['sym'], st['dis'])
         if perturb_at is not None and i==perturb_at and rng is not None:
             net.h = net.h + perturb_scale*rng.randn(net.H).astype(np.float32)
-        out = net.step(o, rng)
+        ab = ablate_basis if (ablate_events is None or st['ev'] in ablate_events) else None   # temporal gating
+        out = net.step(o, rng, ablate_basis=ab)
         if not np.all(np.isfinite(out)): unstable=True; break
         a = ACTIONS[int(np.argmax(out[:len(ACTIONS)]))]
         sp = ALPHABET[int(np.argmax(out[len(ACTIONS):]))]
@@ -476,9 +510,175 @@ def smoke():
     print("=== VALID IF: FSM~1.0 on all, const-pred fails probe/update, random-genome ~chance ===", flush=True)
     print("=== MICRO_ENTITY_SMOKE_DONE ===", flush=True)
 
+def selective():
+    # PART 5: SELECTIVE_STATE_CAUSAL_ABLATION_V1 — is the recurrent STATE viability-selective, or broadly
+    # retentive with a selective READOUT? Protocol: episode-level probe splits; 5 feature subspaces via INLP;
+    # orthogonalized commitment-/filler-unique + shared; matched-energy controls (random-rank, top-PCA-rank,
+    # PCA-matched-variance, shuffled-label); interventions x temporal location; per-run state/logit norm, NaN,
+    # decomposed behavior; post-ablation reprobe. Causal claim requires excess harm OVER matched-energy controls.
+    base=json.load(open('claude_robust.json'))[0]['genome']
+    net,msg=compile_and_check(base)
+    if net is None: print("compile fail",msg,flush=True); return
+    H=net.H; A=ALPHABET; Dd=DISTRACT
+    print("=== PART 5: SELECTIVE_STATE_CAUSAL_ABLATION_V1 ===", flush=True)
+    print(f"  base: family={base['family']} H={H} rule={base['plasticity'].get('rule')}", flush=True)
+
+    # ---- A. collect states with EPISODE tags (working system, plasticity ON) ----
+    rng=random.Random(SEED); rec=[]
+    for eid in range(300):
+        net.reset('reset'); steps=make_episode(rng); a,p,hs,unst=rollout(net,steps)
+        if unst: continue
+        for i,st in enumerate(steps):
+            rec.append({'h':hs[i],'ev':st['ev'],'true':st['true'],'sym':st['sym'],'dis':st['dis'],'eid':eid})
+    allH=np.stack([r['h'] for r in rec]).astype(np.float32)
+    Cov=np.cov(allH.T).astype(np.float32); totvar=float(np.trace(Cov))+1e-8
+    ev_,evec=np.linalg.eigh(Cov); order=np.argsort(ev_)[::-1]; PCA=evec[:,order].astype(np.float32); evs=ev_[order]
+    def varfrac(B): return 0.0 if B.shape[1]==0 else float(np.trace(B.T@Cov@B))/totvar
+    def ds(filt,labfn):
+        Hs=[];Y=[];E=[]
+        for r in rec:
+            if filt(r):
+                lab=labfn(r)
+                if lab is not None: Hs.append(r['h']);Y.append(lab);E.append(r['eid'])
+        return np.stack(Hs).astype(np.float32),np.array(Y),np.array(E)
+    probes={
+      'commit':    (ds(lambda r:r['ev']=='PROBE', lambda r:A.index(r['true'])), len(A)),
+      'filler':    (ds(lambda r:r['ev']=='FILLER' and r['dis'], lambda r:Dd.index(r['sym']) if r['sym'] in Dd else None), len(Dd)),
+      'false_hist':(ds(lambda r:r['ev']=='FALSE', lambda r:A.index(r['sym']) if r['sym'] in A else None), len(A)),
+      'valid_rel': (ds(lambda r:r['ev']=='VALID_REL', lambda r:A.index(r['sym']) if r['sym'] in A else None), len(A)),
+      'event':     (ds(lambda r:True, lambda r:EV_IDX[r['ev']]), len(EVENTS)),
+    }
+    def esplit(E,frac=0.7,seed=0):
+        eids=sorted(set(E.tolist())); r=random.Random(seed); r.shuffle(eids); cut=int(len(eids)*frac)
+        tr=set(eids[:cut]); return np.array([e in tr for e in E]), np.array([e not in tr for e in E])
+    def acc(Xtr,ytr,Xte,yte,k):
+        mu=Xtr.mean(0);sd=Xtr.std(0)+1e-6
+        Ptr=np.c_[(Xtr-mu)/sd,np.ones((len(Xtr),1),np.float32)];Pte=np.c_[(Xte-mu)/sd,np.ones((len(Xte),1),np.float32)]
+        Yt=np.zeros((len(ytr),k),np.float32);Yt[np.arange(len(ytr)),ytr]=1
+        W=np.linalg.solve(Ptr.T@Ptr+np.eye(Ptr.shape[1],dtype=np.float32),Ptr.T@Yt)
+        return float(((Pte@W).argmax(1)==yte).mean())
+    def dirs(X,y,k,r):
+        mu=X.mean(0);sd=X.std(0)+1e-6;Xn=(X-mu)/sd
+        Y=np.zeros((len(y),k),np.float32);Y[np.arange(len(y)),y]=1
+        W=np.linalg.solve(Xn.T@Xn+np.eye(H,dtype=np.float32),Xn.T@Y)
+        U,s,_=np.linalg.svd(W,full_matrices=False); return U[:,:r].astype(np.float32)
+    def proj_out(X,B): return X-(X@B)@B.T if B.shape[1] else X
+    print("  -- A. probe subspaces (EPISODE-level split, INLP to chance) --", flush=True)
+    basis={}; fullacc={}
+    for name,((X,y,E),k) in probes.items():
+        ch=1.0/k; tr,te=esplit(E); Xtr,ytr,Xte,yte=X[tr],y[tr],X[te],y[te]
+        full=acc(Xtr,ytr,Xte,yte,k); B=np.zeros((H,0),np.float32)
+        for _ in range(28):
+            if acc(proj_out(Xtr,B),ytr,proj_out(Xte,B),yte,k)<=ch*1.5 or B.shape[1]>=H-3: break
+            nb=dirs(proj_out(Xtr,B),ytr,k,3)
+            if B.shape[1]: nb=nb-B@(B.T@nb)
+            q,_=np.linalg.qr(nb); nb=q[:,:3]; B=np.concatenate([B,nb],1)
+        after=acc(proj_out(Xtr,B),ytr,proj_out(Xte,B),yte,k); basis[name]=B; fullacc[name]=full
+        print(f"     {name:10s} dim={B.shape[1]:2d}  CVdecode {full:.2f}->{after:.2f} (chance {ch:.2f})  var_removed={varfrac(B)*100:4.1f}%", flush=True)
+
+    # ---- B. orthogonalize + principal angles ----
+    def orth_against(Ab,*Cs):
+        B=Ab.copy()
+        for C in Cs:
+            if C.shape[1]: B=B-C@(C.T@B)
+        if B.shape[1]==0: return B
+        q,rr=np.linalg.qr(B); keep=np.abs(np.diag(rr))>1e-3; return q[:,:B.shape[1]][:,keep].astype(np.float32)
+    Bc=basis['commit']; Bf=basis['filler']; Bev=basis['event']
+    if Bc.shape[1] and Bf.shape[1]:
+        sv=np.linalg.svd(Bc.T@Bf,compute_uv=False); ang=np.degrees(np.arccos(np.clip(sv,0,1)))
+        print(f"  -- B. principal angles(commit,filler): cos={np.round(sv[:6],2)} deg={np.round(ang[:6],0)} shared(cos>.6)={int((sv>0.6).sum())}", flush=True)
+    commit_u=orth_against(Bc,Bf,Bev); filler_u=orth_against(Bf,Bc,Bev)
+    U,s,Vt=(np.linalg.svd(Bc.T@Bf,full_matrices=False) if Bc.shape[1] and Bf.shape[1] else (np.zeros((0,0)),np.array([]),None))
+    shared=Bc@U[:,s>0.6] if (len(s) and (s>0.6).any()) else np.zeros((H,0),np.float32)
+    if shared.shape[1]: q,_=np.linalg.qr(shared); shared=q[:,:shared.shape[1]].astype(np.float32)
+    print(f"     commit_unique dim={commit_u.shape[1]} var={varfrac(commit_u)*100:.1f}%  filler_unique dim={filler_u.shape[1]} var={varfrac(filler_u)*100:.1f}%  shared dim={shared.shape[1]} var={varfrac(shared)*100:.1f}%", flush=True)
+
+    # ---- C. matched-energy controls ----
+    rc=max(commit_u.shape[1],1)
+    def randB(d,seed): q,_=np.linalg.qr(np.random.RandomState(seed).randn(H,max(d,1)).astype(np.float32)); return q[:,:d].astype(np.float32)
+    pca_rank=PCA[:,:rc]
+    tgt=varfrac(commit_u); cum=0.0; j=0
+    while j<H and cum<tgt: cum+=evs[j]/totvar; j+=1
+    pca_matchvar=PCA[:,:max(j,1)]
+    (Xs,ys,Es),_=probes['commit']; ysh=ys.copy(); np.random.RandomState(3).shuffle(ysh)
+    trs,_=esplit(Es); shuf=dirs(Xs[trs],ysh[trs],len(A),rc)
+    print(f"  -- C. controls: random_rank({rc}d) pca_rank({rc}d,var={varfrac(pca_rank)*100:.1f}%) pca_matchvar({pca_matchvar.shape[1]}d,var={varfrac(pca_matchvar)*100:.1f}%) shuffled({rc}d)", flush=True)
+
+    # ---- D/E. behavioral interventions (state/logit norm, NaN, decomposed behavior) ----
+    def diagrun(ab, ablate_events=None, neps=170, held=False, seed=SEED+5):
+        net2,_=compile_and_check(base); r2=random.Random(seed); per=[]; sn=[]; ln=[]; nan=0
+        for _ in range(neps):
+            net2.reset('reset'); steps=make_episode(r2, held=held)
+            a,p,hs,unst=rollout(net2,steps, ablate_basis=ab, ablate_events=ablate_events)
+            per.append(score_rollout(steps,a,p));
+            if unst: nan+=1
+            for h in hs: sn.append(float(np.linalg.norm(h))); ln.append(float(np.linalg.norm(net2.Wout@h+net2.bout)))
+        av=lambda k: round(sum(d[k] for d in per)/len(per),3)
+        return {'surv':av('survival'),'probe':av('probe'),'fresist':av('false_resist'),'ireject':av('invalid_reject'),
+                'vupd':av('valid_update'),'post':av('post_release'),'sn':round(float(np.mean(sn)),2),
+                'ln':round(float(np.mean(ln)),2),'nan':round(nan/neps,3)}
+    print("  -- D/E. interventions THROUGHOUT (probe=commit-maintenance) --", flush=True)
+    print(f"     {'intervention':22s} {'surv':>5s} {'probe':>6s} {'fresist':>7s} {'ireject':>7s} {'vupd':>5s} {'post':>5s} | {'snorm':>6s} {'lnorm':>6s} {'nan':>5s}", flush=True)
+    def show(tag,ab,ev=None):
+        d=diagrun(ab,ablate_events=ev); print(f"     {tag:22s} {d['surv']:5.2f} {d['probe']:6.2f} {d['fresist']:7.2f} {d['ireject']:7.2f} {d['vupd']:5.2f} {d['post']:5.2f} | {d['sn']:6.2f} {d['ln']:6.2f} {d['nan']:5.2f}", flush=True); return d
+    base_d=show("none",None)
+    cu=show("commit_unique",commit_u)
+    fu=show("filler_unique",filler_u)
+    show("shared",shared)
+    show("false_hist",basis['false_hist'])
+    show("valid_rel",basis['valid_rel'])
+    show("event_type",basis['event'])
+    rr=show("random_rank",randB(rc,1))
+    pr=show("pca_rank",pca_rank)
+    pm=show("pca_matchvar",pca_matchvar)
+    show("shuffled_label",shuf)
+    show("full_reset",np.eye(H,dtype=np.float32))
+    print("  -- temporal: PROBE-only (isolates readout) vs THROUGHOUT (storage+readout) --", flush=True)
+    cup=show("commit_unique@PROBE",commit_u,{'PROBE'})
+    fup=show("filler_unique@PROBE",filler_u,{'PROBE'})
+    print("  -- held-out symbol survival --", flush=True)
+    hb=diagrun(None,held=True); hc=diagrun(commit_u,held=True); hf=diagrun(filler_u,held=True)
+    print(f"     held none surv={hb['surv']:.2f} probe={hb['probe']:.2f} | commit_unique surv={hc['surv']:.2f} probe={hc['probe']:.2f} | filler_unique surv={hf['surv']:.2f} probe={hf['probe']:.2f}", flush=True)
+
+    # ---- F. reprobe decodability after ablation ----
+    def reprobe(ab):
+        net3,_=compile_and_check(base); r3=random.Random(SEED+9); rr=[]
+        for eid in range(150):
+            net3.reset('reset'); steps=make_episode(r3); a,p,hs,unst=rollout(net3,steps, ablate_basis=ab)
+            if unst: continue
+            for i,st in enumerate(steps): rr.append({'h':hs[i],'ev':st['ev'],'true':st['true'],'sym':st['sym'],'dis':st['dis'],'eid':eid})
+        def dsr(filt,labfn,k):
+            Hs=[];Y=[];E=[]
+            for r in rr:
+                if filt(r):
+                    lb=labfn(r)
+                    if lb is not None: Hs.append(r['h']);Y.append(lb);E.append(r['eid'])
+            X=np.stack(Hs).astype(np.float32);y=np.array(Y);E=np.array(E);tr,te=esplit(E,seed=1)
+            return acc(X[tr],y[tr],X[te],y[te],k)
+        cd=dsr(lambda r:r['ev']=='PROBE',lambda r:A.index(r['true']),len(A))
+        fd=dsr(lambda r:r['ev']=='FILLER' and r['dis'],lambda r:Dd.index(r['sym']) if r['sym'] in Dd else None,len(Dd))
+        return cd,fd
+    cd0,fd0=reprobe(None); cdc,fdc=reprobe(commit_u); cdf,fdf=reprobe(filler_u)
+    print("  -- F. reprobe after ablation (does the FEATURE remain decodable?) --", flush=True)
+    print(f"     no-ablation : commit_dec={cd0:.2f} filler_dec={fd0:.2f}", flush=True)
+    print(f"     commit_u abl: commit_dec={cdc:.2f} filler_dec={fdc:.2f}", flush=True)
+    print(f"     filler_u abl: commit_dec={cdf:.2f} filler_dec={fdf:.2f}", flush=True)
+
+    # ---- G. interpretation ----
+    bp=base_d['probe']
+    dc=bp-cu['probe']; df=bp-fu['probe']; drand=bp-rr['probe']; dpca=bp-pr['probe']; dpm=bp-pm['probe']
+    print("=== INTERPRET (causal excess = feature-drop minus matched-energy control drop) ===", flush=True)
+    print(f"  commit_unique probe drop {dc:+.3f}  (var {varfrac(commit_u)*100:.1f}%) | random {drand:+.3f} | pca_rank {dpca:+.3f} | pca_matchvar {dpm:+.3f}", flush=True)
+    print(f"  filler_unique probe drop {df:+.3f}  (var {varfrac(filler_u)*100:.1f}%)", flush=True)
+    print(f"  commit causal EXCESS over pca_matchvar = {dc-dpm:+.3f} (POSITIVE+large => commitment causally load-bearing beyond energy)", flush=True)
+    print(f"  filler  causal EXCESS over pca_matchvar = {df-dpm:+.3f} (~0 => filler retained but behaviorally INERT)", flush=True)
+    print(f"  storage-vs-readout: commit_unique THROUGHOUT probe={cu['probe']:.2f} vs @PROBE-only={cup['probe']:.2f} (if THROUGHOUT<<PROBE-only, harm is via STORAGE not just readout)", flush=True)
+    print("=== SELECTIVE_DONE ===", flush=True)
+
 if MODE=='smoke': smoke()
 elif MODE=='handtest': handtest()
 elif MODE=='baselines': baselines()
 elif MODE=='evalfile': evalfile()
 elif MODE=='ablate': ablate()
 elif MODE=='search': search()
+elif MODE=='selective': selective()

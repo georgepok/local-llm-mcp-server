@@ -1,0 +1,335 @@
+[
+ {
+  "tag": "E2_claude1_C0",
+  "src": "a6137a93ad0fbb84f",
+  "genome": {
+   "family": "ctrnn",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 96,
+   "slow_hidden": 32,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.85,
+     "seed": 1101,
+     "scale": 1.0,
+     "spectral_radius": 1.05,
+     "diag": 0.95,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 1102,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 1103,
+     "scale": 0.6
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.2,
+    "leak": 0.15,
+    "tau": 5.0,
+    "noise": 0.01
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "hebbian",
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false,
+    "homeostatic_target": 0.0,
+    "input_bind": false
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E2_claude1_D1",
+  "src": "a6137a93ad0fbb84f",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 96,
+   "slow_hidden": 32,
+   "weights": {
+    "recurrent": {
+     "gen": "lowrank",
+     "rank": 12,
+     "seed": 2201,
+     "scale": 1.0,
+     "spectral_radius": 1.1,
+     "diag": 0.9,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 2202,
+     "scale": 1.1
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 2203,
+     "scale": 0.5
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.3,
+    "leak": 0.1,
+    "tau": 4.0,
+    "noise": 0.02
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "recurrent"
+    ],
+    "rule": "reward_hebb",
+    "lr": 0.02,
+    "decay": 0.001,
+    "eligibility": 0.9,
+    "reward_mod": true,
+    "homeostatic_target": 0.1,
+    "input_bind": true
+   },
+   "init_state": {
+    "gen": "seed",
+    "seed": 2204
+   }
+  }
+ },
+ {
+  "tag": "E2_claude2_C0",
+  "src": "ae7187f3ece2928cf",
+  "genome": {
+   "family": "reservoir",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 100,
+   "slow_hidden": 20,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.85,
+     "seed": 1207,
+     "scale": 1.0,
+     "spectral_radius": 1.1,
+     "diag": 0.9,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 1301,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 1409,
+     "scale": 0.4
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 0.9,
+    "leak": 0.1,
+    "tau": 4.0,
+    "noise": 0.0
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "hebbian",
+    "input_bind": false,
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false,
+    "homeostatic_target": 0.0
+   },
+   "init_state": {
+    "gen": "zeros",
+    "seed": 0
+   }
+  }
+ },
+ {
+  "tag": "E2_claude2_D1",
+  "src": "ae7187f3ece2928cf",
+  "genome": {
+   "family": "reservoir",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 80,
+   "slow_hidden": 24,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.85,
+     "seed": 2207,
+     "scale": 1.0,
+     "spectral_radius": 1.0,
+     "diag": 0.9,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 2301,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 2409,
+     "scale": 0.02
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 0.9,
+    "leak": 0.08,
+    "tau": 4.0,
+    "noise": 0.0
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "readout"
+    ],
+    "rule": "input_bind",
+    "input_bind": true,
+    "lr": 0.15,
+    "decay": 0.001,
+    "eligibility": 0.6,
+    "reward_mod": false,
+    "homeostatic_target": 0.0
+   },
+   "init_state": {
+    "gen": "zeros",
+    "seed": 0
+   }
+  }
+ },
+ {
+  "tag": "E2_claude3_C0",
+  "src": "ae6da2824e25a9f3e",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 48,
+   "slow_hidden": 16,
+   "weights": {
+    "recurrent": {
+     "gen": "lowrank",
+     "rank": 12,
+     "seed": 101,
+     "scale": 1.0,
+     "spectral_radius": 1.05,
+     "diag": 0.92
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 202,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 303,
+     "scale": 1.0
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.0,
+    "leak": 0.3,
+    "tau": 10.0,
+    "noise": 0.01
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "oja",
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false,
+    "homeostatic_target": 0.0,
+    "input_bind": false
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E2_claude3_D1",
+  "src": "ae6da2824e25a9f3e",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 48,
+   "slow_hidden": 16,
+   "weights": {
+    "recurrent": {
+     "gen": "lowrank",
+     "rank": 12,
+     "seed": 101,
+     "scale": 1.0,
+     "spectral_radius": 1.05,
+     "diag": 0.92
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 202,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 303,
+     "scale": 1.0
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.0,
+    "leak": 0.3,
+    "tau": 10.0,
+    "noise": 0.01
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "recurrent"
+    ],
+    "rule": "oja",
+    "lr": 0.02,
+    "decay": 0.001,
+    "eligibility": 0.9,
+    "reward_mod": false,
+    "homeostatic_target": 0.5,
+    "input_bind": false
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ }
+]

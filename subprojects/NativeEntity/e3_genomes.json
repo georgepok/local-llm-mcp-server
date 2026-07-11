@@ -1,0 +1,319 @@
+[
+ {
+  "tag": "E3_claude1_C0",
+  "src": "a0d087e7d83fe3781",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 64,
+   "slow_hidden": 0,
+   "weights": {
+    "recurrent": {
+     "gen": "dense",
+     "seed": 1101,
+     "scale": 1.0,
+     "spectral_radius": 1.1,
+     "diag": 0.15
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 1102,
+     "scale": 0.9
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 1103,
+     "scale": 0.6
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.2,
+    "leak": 0.2,
+    "tau": 1.0,
+    "noise": 0.03
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "hebbian",
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false,
+    "homeostatic_target": 0.0
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E3_claude1_D1",
+  "src": "a0d087e7d83fe3781",
+  "genome": {
+   "family": "ctrnn",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 64,
+   "slow_hidden": 16,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.8,
+     "seed": 2201,
+     "scale": 1.0,
+     "spectral_radius": 1.2,
+     "diag": 0.2,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 2202,
+     "scale": 1.0
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 2203,
+     "scale": 0.4
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.0,
+    "leak": 0.3,
+    "tau": 2.0,
+    "noise": 0.03
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "readout"
+    ],
+    "rule": "input_bind",
+    "input_bind": true,
+    "reward_mod": true,
+    "lr": 0.3,
+    "decay": 0.05,
+    "eligibility": 0.7,
+    "homeostatic_target": 0.0
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E3_claude2_C0",
+  "src": "a1cdbdd6d0ec237da",
+  "genome": {
+   "family": "ctrnn",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 96,
+   "slow_hidden": 0,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.85,
+     "seed": 1017,
+     "scale": 1.0,
+     "spectral_radius": 1.05,
+     "diag": 0.85,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 2027,
+     "scale": 0.9
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 3037,
+     "scale": 0.7
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.4,
+    "leak": 0.15,
+    "tau": 2.5,
+    "noise": 0.02
+   },
+   "plasticity": {
+    "enabled": false,
+    "targets": [],
+    "rule": "hebbian",
+    "input_bind": false,
+    "lr": 0.0,
+    "decay": 0.0,
+    "eligibility": 0.0,
+    "reward_mod": false,
+    "homeostatic_target": 0.0
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E3_claude2_D1",
+  "src": "a1cdbdd6d0ec237da",
+  "genome": {
+   "family": "gru",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 64,
+   "slow_hidden": 16,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.8,
+     "seed": 4041,
+     "scale": 1.0,
+     "spectral_radius": 0.95,
+     "diag": 0.9,
+     "ei": {
+      "exc_frac": 0.8
+     }
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 5051,
+     "scale": 0.9
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 6061,
+     "scale": 0.5
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.3,
+    "leak": 0.2,
+    "tau": 2.0,
+    "noise": 0.02
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "readout"
+    ],
+    "rule": "input_bind",
+    "input_bind": true,
+    "lr": 0.5,
+    "decay": 0.05,
+    "eligibility": 0.7,
+    "reward_mod": true,
+    "homeostatic_target": 0.5
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E3_claude3_C0",
+  "src": "af6590f3e56de0dcf",
+  "genome": {
+   "family": "reservoir",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 96,
+   "slow_hidden": 0,
+   "weights": {
+    "recurrent": {
+     "gen": "sparse",
+     "sparsity": 0.9,
+     "seed": 2001,
+     "scale": 1.0,
+     "spectral_radius": 0.95,
+     "diag": 0.1
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 2002,
+     "scale": 1.2
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 2003,
+     "scale": 0.6
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.3,
+    "leak": 0.2,
+    "tau": 1.5,
+    "noise": 0.02
+   },
+   "plasticity": {
+    "enabled": false
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ },
+ {
+  "tag": "E3_claude3_D1",
+  "src": "af6590f3e56de0dcf",
+  "genome": {
+   "family": "ctrnn",
+   "input_dim": 14,
+   "output_dim": 21,
+   "hidden_dim": 64,
+   "slow_hidden": 16,
+   "weights": {
+    "recurrent": {
+     "gen": "dense",
+     "seed": 3001,
+     "scale": 0.9,
+     "spectral_radius": 0.95,
+     "diag": 0.15
+    },
+    "input": {
+     "gen": "dense",
+     "seed": 3002,
+     "scale": 1.1
+    },
+    "readout": {
+     "gen": "dense",
+     "seed": 3003,
+     "scale": 0.4
+    }
+   },
+   "dynamics": {
+    "activation": "tanh",
+    "gain": 1.3,
+    "leak": 0.2,
+    "tau": 2.0,
+    "noise": 0.03
+   },
+   "plasticity": {
+    "enabled": true,
+    "targets": [
+     "recurrent",
+     "readout"
+    ],
+    "rule": "reward_hebb",
+    "lr": 0.08,
+    "decay": 0.03,
+    "eligibility": 0.6,
+    "reward_mod": true,
+    "input_bind": true,
+    "homeostatic_target": 0.1
+   },
+   "init_state": {
+    "gen": "zeros"
+   }
+  }
+ }
+]
