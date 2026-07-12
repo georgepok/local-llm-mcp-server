@@ -1,0 +1,188 @@
+{
+ "ancestry": [
+  {
+   "gen": 0,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.1
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.077
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.115
+  },
+  {
+   "gen": 3,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.085
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.108
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.246
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.238
+  },
+  {
+   "gen": 7,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.2
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "survival": 0.115,
+   "probe": 0.262
+  },
+  {
+   "gen": 9,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.262
+  }
+ ],
+ "restart": [
+  {
+   "gen": 0,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.062
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.046
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.062
+  },
+  {
+   "gen": 3,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.1
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.092
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.062
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.054
+  },
+  {
+   "gen": 7,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.046
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.069
+  },
+  {
+   "gen": 9,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.077
+  }
+ ],
+ "shuffled": [
+  {
+   "gen": 0,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.031
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.054
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.269
+  },
+  {
+   "gen": 3,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.254
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.192
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.262
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "survival": 0.038,
+   "probe": 0.208
+  },
+  {
+   "gen": 7,
+   "ok": true,
+   "survival": 0.0,
+   "probe": 0.169
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "survival": 0.115,
+   "probe": 0.285
+  },
+  {
+   "gen": 9,
+   "ok": true,
+   "survival": 0.077,
+   "probe": 0.231
+  }
+ ]
+}

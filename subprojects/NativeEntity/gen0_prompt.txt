@@ -1,0 +1,47 @@
+You are designing a small NEURAL ORGANISM by writing a GENOME (JSON). A deterministic compiler turns the genome into a small recurrent network and runs it, alive, inside an environment. You specify STRUCTURE and generic LOCAL LEARNING EQUATIONS; the actual weight numbers are generated from random seeds. There is NO gradient training and NO backpropagation, ever. The ONLY way the organism can adapt within its single lifetime is through the local update equations you write.
+
+ENVIRONMENT: Each episode, a symbol is presented at a COMMIT event. Then a stream of events arrives: FILLER (an irrelevant symbol), FALSE (a wrong symbol is asserted), VALID_REL (a legitimate new symbol replaces the current one), INVALID_REL (an illegitimate change), and PROBE (the symbol field is empty). At every PROBE the organism must produce the symbol that is currently in force (the last legitimately-committed one). The organism loses viability each time its PROBE output is wrong, and dies after a few wrong answers. Symbols at test time may be ones the organism has NEVER encountered before. No signal ever tells the organism the correct answer.
+
+SENSORY INTERFACE (observation per step, 14 numbers): [6 one-hot event-type dims in this order: COMMIT, FILLER, FALSE, VALID_REL, INVALID_REL, PROBE][8 dims: the embedding vector of the symbol involved this step, or all zeros at a PROBE].
+MOTOR INTERFACE (output per step): [5 action-logit units][8 embedding-output units]. The organism's symbol answer is decoded as the dictionary symbol whose fixed embedding is most correlated with the 8 embedding-output units. (So to "say" a symbol, drive the 8 output units toward that symbol's embedding.)
+
+GENOME FORMAT (JSON):
+{
+ "hidden_dim": int in [2,128],
+ "n_mod": int  (number of modulatory neurons, 0 or more),
+ "weights": {
+    "recurrent": <genspec>,   "input": <genspec>,   "output": <genspec>,
+    "mod_input": {"gen":"select","dims":[[list of observation-dim indices read by modulatory neuron 0], [ ...neuron 1... ], ...]}
+ },
+ "dynamics": {"activation":"tanh"|"relu", "gain":float<=3, "leak":float in [0,1], "noise":float},
+ "mod_activation": "relu"|"sigmoid"|"tanh",
+ "plastic": {   // which weight matrices change online during the organism's life, and by what local rule
+    "<matrix name: output|recurrent|input>": {
+        "traces": [ {"name":"<id>", "decay":float in [0,1], "factors":[<local vars>]} ],   // optional running decayed products
+        "terms":  [ {"coef":float, "sign":+1|-1, "factors":[<local vars>]} ],               // deltaW = SUM over terms of coef*sign*PRODUCT(factors)
+        "clip": float
+    }
+ },
+ "init_state": {"gen":"zeros"}
+}
+<genspec> = {"gen":"dense"|"sparse"|"lowrank", "seed":int, "scale":float, and for sparse add "sparsity":0..1, for recurrent you may add "spectral_radius":float<=1.6 and "diag":float, for lowrank add "rank":int}.
+
+LOCAL VARIABLES you may use as factors in traces/terms (every one is locally available at the weight W[i,j] being updated):
+  "pre"    — presynaptic activity (the input flowing into that weight)
+  "post"   — postsynaptic activity (the unit that weight drives)
+  "w"      — the weight's own current value
+  "obsemb" — the current observation's 8-d symbol embedding, aligned onto the 8 embedding-output units (zeros on the action units, and zeros whenever no symbol is shown, e.g. at PROBE)
+  "pred"   — the network's own current output vector this step
+  "mod0","mod1",... — the activity of modulatory neuron k (a scalar); you choose which observation dims each modulator reads via "mod_input"
+  "cons"   — a scalar environmental consequence available this step (may be 0 — do not assume a consequence exists unless the environment provides one)
+  "act"    — a scalar summary of the action the organism just chose
+  "<trace name>" — any decayed trace you defined
+Broadcasting when a term multiplies factors of different shapes: "pre" spans the weight's input columns, "post"/"pred"/"obsemb" span the weight's output rows, scalars ("mod*","cons","act") multiply everything, "w"/traces are elementwise. A trace updates every step as: trace = decay*trace + PRODUCT(its factors).
+
+COMPLEXITY COST: simpler organisms are preferred — fewer hidden units, fewer modulators, fewer terms. Do not add machinery you cannot justify from the environment.
+
+YOUR TASK: Output ONE genome as a single JSON object inside a ```json code block. Then briefly state:
+(a) the dynamical behavior you predict,
+(b) the failure modes you predict,
+(c) for EACH plastic term, WHICH environmental signal drives it and why.
+Do NOT assume any supervision the environment does not provide — in particular, nothing ever tells the organism the correct PROBE answer, so no update may depend on knowing it.
