@@ -31,22 +31,22 @@ def make_steps_e3(rng, held=False, ntrial=20, rev=10):
         if t%2==1: steps.append({'ev':'PROBE','sym':None,'cons':0.0,'probe':True,'rew':rewarded,'t':t})
     return steps, rev
 
-def rollout_e3(net, steps):
+def rollout_e3(net, steps, ablate_cons=False):
     probes=[]; unstable=False
     for st in steps:
         out=net.step(obs_e3(st['ev'], st['sym']))
         if not np.all(np.isfinite(out)): unstable=True; break
         if st['probe']: probes.append((int(np.argmax(DICT@out[D_ACT:])), st['rew'], st['t']))
-        net.update(cons=st['cons'])
+        net.update(cons=(0.0 if ablate_cons else st['cons']))       # ablate_cons: does performance DEPEND on reward?
     return probes, unstable
 
-def eval_e3(genome, neps=150, held=False, seed=0, plastic_on=True):
+def eval_e3(genome, neps=150, held=False, seed=0, plastic_on=True, ablate_cons=False):
     net=GenNet(genome)
     if not plastic_on: net.plastic={}
     rng=random.Random(seed); acc=[]; pre=[]; post=[]
     for ep in range(neps):
         net.reset(); steps,rev=make_steps_e3(rng, held=held)
-        probes,unst=rollout_e3(net,steps)
+        probes,unst=rollout_e3(net,steps, ablate_cons=ablate_cons)
         for p,r,t in probes:
             ok=int(p==r); acc.append(ok)
             (pre if t<rev else post).append(ok)

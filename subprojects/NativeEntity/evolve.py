@@ -110,10 +110,13 @@ def mech_signature(g):
 def fitness(g, gen):
     net,msg=compile_gen(g)
     if net is None: return -1.0, {'valid':False}
-    r=eval_e3(g, neps=40, seed=1000+gen); rh=eval_e3(g, neps=24, held=True, seed=5000+gen)
+    r=eval_e3(g, neps=30, seed=1000+gen)
+    ra=eval_e3(g, neps=30, seed=1000+gen, ablate_cons=True)     # SAME worlds w/o reward -> isolates reward-DEPENDENCE
+    rh=eval_e3(g, neps=20, held=True, seed=5000+gen)
+    dep=max(0.0, r['probe_acc']-ra['probe_acc'])               # causal reward-dependence (kills reward-independent shortcut)
     out=g['plastic']['output']; comp=len(out.get('terms',[]))+len(out.get('traces',[]))+g['hidden_dim']/48.0
-    score=0.35*r['probe_acc']+0.4*r['post_rev']+0.25*rh['probe_acc']-0.002*comp     # light complexity cost
-    return round(score,4), {'valid':True,'probe':r['probe_acc'],'post':r['post_rev'],'held':rh['probe_acc'],'sig':mech_signature(g)}
+    score=0.15*r['probe_acc']+0.2*r['post_rev']+0.15*rh['probe_acc']+0.7*dep-0.002*comp   # fitness REQUIRES reward-use
+    return round(score,4), {'valid':True,'probe':r['probe_acc'],'post':r['post_rev'],'held':rh['probe_acc'],'dep':round(dep,3),'sig':mech_signature(g)}
 
 def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=False):
     rng=random.Random(seed); gid=[0]
@@ -121,7 +124,7 @@ def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=Fals
     pop=[sample_genome(rng, newid()) for _ in range(N)]
     if seed_handbuilt:                          # hidden feasibility control: does selection PRESERVE+PROPAGATE a working rule?
         hb=copy.deepcopy(HANDBUILT_E3); hb['_id']=newid(); hb['_parents']=['HANDBUILT']; pop[0]=hb
-    hist=[]
+    hist=[]; best_genome=None; best_fit=-9
     for gen in range(gens):
         scored=[(fitness(g,gen),g) for g in pop]
         real=[s[0][0] for s in scored]                              # REAL fitness (always tracked)
@@ -163,21 +166,28 @@ def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=Fals
         sigs=[s[0][1]['sig'] for s in valid]
         freq=[round(np.mean([sg[k] for sg in sigs]),2) if sigs else 0 for k in range(4)]
         best=max(real); med=float(np.median(real))
-        bestg=pop[0] if condition not in ('shuffled','random') else max(scored,key=lambda s:s[0][0])[1]
+        bi=int(np.argmax(real))
+        if real[bi]>best_fit: best_fit=real[bi]; best_genome=copy.deepcopy(pop[bi])
         hist.append({'gen':gen,'best':round(best,3),'median':round(med,3),'valid':len(valid),
                      'mech_M1_M3_M3xM2_M6':freq})
         if gen%5==0 or gen==gens-1:
             print(f"  [{condition}] gen{gen:2d}: best={best:.3f} median={med:.3f} valid={len(valid)}/{N} mech(trace_obs,cons,cons*trace,decay)={freq}", flush=True)
-    return hist
+    return hist, best_genome
 
 if __name__=='__main__':
     N=int(os.environ.get('EV_N','64')); G=int(os.environ.get('EV_G','40'))
     conds=os.environ.get('EV_CONDS','pure,shuffled,random').split(',')
-    allh={}
+    from gendev_e3 import eval_e3
+    allh={}; bestg={}
     for c in conds:
         print(f"### CONDITION {c} (N={N}, gens={G})", flush=True)
-        allh[c]=evolve('pure' if c=='feasibility' else c, N=N, gens=G, seed=0, seed_handbuilt=(c=='feasibility'))
-    json.dump(allh, open('/home/pokazge/NativeEntity/evolve_results.json','w'))
+        allh[c],bestg[c]=evolve('pure' if c=='feasibility' else c, N=N, gens=G, seed=0, seed_handbuilt=(c=='feasibility'))
+    json.dump({'hist':allh,'best_genomes':bestg}, open('/home/pokazge/NativeEntity/evolve_results.json','w'))
     print("=== SUMMARY (best REAL fitness by gen) ===", flush=True)
     for c,h in allh.items():
         print(f"  {c:9s}: best_traj={[x['best'] for x in h][::max(1,len(h)//10)]} final_best={max(x['best'] for x in h):.3f}", flush=True)
+    print("=== CAUSAL CHECK on each condition's BEST genome: does performance DEPEND on the reward signal cons? ===", flush=True)
+    for c,g in bestg.items():
+        if g is None: continue
+        base=eval_e3(g, neps=80); abl=eval_e3(g, neps=80, ablate_cons=True); off=eval_e3(g, neps=80, plastic_on=False)
+        print(f"  {c:9s}: probe_acc normal={base['probe_acc']:.2f} | cons-ABLATED={abl['probe_acc']:.2f} | plasticity-OFF={off['probe_acc']:.2f}  => reward-dependent drop={base['probe_acc']-abl['probe_acc']:+.2f}", flush=True)
