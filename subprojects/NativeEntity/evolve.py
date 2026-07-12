@@ -176,6 +176,17 @@ def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=Fals
                      'dep':round(dep,3),'mech_M1_M3_M3xM2_M6':freq})
         if gen%5==0 or gen==gens-1:
             print(f"  [{condition}] gen{gen:2d}: best={best:.3f} median={med:.3f} valid={len(valid)}/{N} mech(trace_obs,cons,cons*trace,decay)={freq}", flush=True)
+    # de-overfit: pick best by HELD-OUT re-eval; ALSO measure population-level enrichment (isolates SELECTION
+    # from variation-luck: does the condition ENRICH the pop for held-out reward-dependence, not just contain one?)
+    ho=[]; hodeps=[]
+    for g in pop:
+        net,_=compile_gen(g)
+        if net is None: ho.append(-9); hodeps.append(0.0); continue
+        r=eval_e3(g,neps=50,seed=77777); ra=eval_e3(g,neps=50,seed=77777,ablate_cons=True)
+        d=max(0.0,r['probe_acc']-ra['probe_acc']); hodeps.append(d); ho.append(0.5*r['probe_acc']+0.6*d)
+    if ho and max(ho)>-9: best_genome=copy.deepcopy(pop[int(np.argmax(ho))])
+    frac=float(np.mean([1.0 if d>0.15 else 0.0 for d in hodeps])); medd=float(np.median(hodeps))
+    print(f"  [{condition}] FINAL-POP held-out reward-dep: fraction>0.15={frac:.2f} median={medd:.3f} (population enrichment = SELECTION signal)", flush=True)
     return hist, best_genome
 
 if __name__=='__main__':
