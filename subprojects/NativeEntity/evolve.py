@@ -118,7 +118,7 @@ def fitness(g, gen):
     score=0.15*r['probe_acc']+0.2*r['post_rev']+0.15*rh['probe_acc']+0.7*dep-0.002*comp   # fitness REQUIRES reward-use
     return round(score,4), {'valid':True,'probe':r['probe_acc'],'post':r['post_rev'],'held':rh['probe_acc'],'dep':round(dep,3),'sig':mech_signature(g)}
 
-def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=False):
+def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=False, guided_fn=None, guided_frac=0.25):
     rng=random.Random(seed); gid=[0]
     def newid(): gid[0]+=1; return gid[0]
     pop=[sample_genome(rng, newid()) for _ in range(N)]
@@ -152,14 +152,17 @@ def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=Fals
             if len(elites)>=ne+max(2,N//12): break
             if scored[i][0][1].get('valid') and scored[i][0][1]['sig'] not in nkept:
                 elites.append(pop[i]); nkept.add(scored[i][0][1]['sig'])
-        def tourn():
-            cands=rng.sample(range(N),min(4,N)); return pop[max(cands,key=lambda i:sel[i])]
-        offspring=[]
+        def tourni():
+            cands=rng.sample(range(N),min(4,N)); return max(cands,key=lambda i:sel[i])
+        offspring=[]; gcount=0
         while len(offspring)<N-len(elites):
+            if guided_fn is not None and rng.random()<guided_frac and gcount<max(2,int((N-len(elites))*guided_frac)):
+                pi=tourni(); kid=guided_fn(copy.deepcopy(pop[pi]), real[pi], newid()); gcount+=1     # LLM proposes; env still selects
+                if kid is not None: offspring.append(kid); continue
             if rng.random()<0.4:
-                offspring.append(crossover(tourn(),tourn(),rng,newid()))
+                offspring.append(crossover(pop[tourni()],pop[tourni()],rng,newid()))
             else:
-                offspring.append(mutate(tourn(),rng,newid()))
+                offspring.append(mutate(pop[tourni()],rng,newid()))
         pop=elites+offspring
         # report on REAL fitness + mechanism-component frequencies
         valid=[s for s in scored if s[0][1].get('valid')]
@@ -168,8 +171,9 @@ def evolve(condition, N=64, gens=40, seed=0, elite_frac=0.1, seed_handbuilt=Fals
         best=max(real); med=float(np.median(real))
         bi=int(np.argmax(real))
         if real[bi]>best_fit: best_fit=real[bi]; best_genome=copy.deepcopy(pop[bi])
+        dep=scored[bi][0][1].get('dep',0.0)                    # per-gen best genome's CAUSAL reward-dependence
         hist.append({'gen':gen,'best':round(best,3),'median':round(med,3),'valid':len(valid),
-                     'mech_M1_M3_M3xM2_M6':freq})
+                     'dep':round(dep,3),'mech_M1_M3_M3xM2_M6':freq})
         if gen%5==0 or gen==gens-1:
             print(f"  [{condition}] gen{gen:2d}: best={best:.3f} median={med:.3f} valid={len(valid)}/{N} mech(trace_obs,cons,cons*trace,decay)={freq}", flush=True)
     return hist, best_genome
@@ -178,16 +182,17 @@ if __name__=='__main__':
     N=int(os.environ.get('EV_N','64')); G=int(os.environ.get('EV_G','40'))
     conds=os.environ.get('EV_CONDS','pure,shuffled,random').split(',')
     from gendev_e3 import eval_e3
+    seeds=[int(s) for s in os.environ.get('EV_SEEDS','0').split(',')]
     allh={}; bestg={}
-    for c in conds:
-        print(f"### CONDITION {c} (N={N}, gens={G})", flush=True)
-        allh[c],bestg[c]=evolve('pure' if c=='feasibility' else c, N=N, gens=G, seed=0, seed_handbuilt=(c=='feasibility'))
+    for sd in seeds:
+        for c in conds:
+            key=f"{c}_s{sd}"
+            print(f"### CONDITION {c} seed={sd} (N={N}, gens={G})", flush=True)
+            allh[key],bestg[key]=evolve('pure' if c=='feasibility' else c, N=N, gens=G, seed=sd, seed_handbuilt=(c=='feasibility'))
     json.dump({'hist':allh,'best_genomes':bestg}, open('/home/pokazge/NativeEntity/evolve_results.json','w'))
-    print("=== SUMMARY (best REAL fitness by gen) ===", flush=True)
-    for c,h in allh.items():
-        print(f"  {c:9s}: best_traj={[x['best'] for x in h][::max(1,len(h)//10)]} final_best={max(x['best'] for x in h):.3f}", flush=True)
-    print("=== CAUSAL CHECK on each condition's BEST genome: does performance DEPEND on the reward signal cons? ===", flush=True)
-    for c,g in bestg.items():
+    print("=== CAUSAL CHECK: best genome reward-dependence per condition/seed + gradual-assembly trace ===", flush=True)
+    for key,g in bestg.items():
         if g is None: continue
-        base=eval_e3(g, neps=80); abl=eval_e3(g, neps=80, ablate_cons=True); off=eval_e3(g, neps=80, plastic_on=False)
-        print(f"  {c:9s}: probe_acc normal={base['probe_acc']:.2f} | cons-ABLATED={abl['probe_acc']:.2f} | plasticity-OFF={off['probe_acc']:.2f}  => reward-dependent drop={base['probe_acc']-abl['probe_acc']:+.2f}", flush=True)
+        base=eval_e3(g, neps=80); abl=eval_e3(g, neps=80, ablate_cons=True)
+        deptraj=[h['dep'] for h in allh[key]]
+        print(f"  {key:14s}: best_fit={max(h['best'] for h in allh[key]):.3f} | probe normal={base['probe_acc']:.2f} cons-ABL={abl['probe_acc']:.2f} REWARD-DEP={base['probe_acc']-abl['probe_acc']:+.2f} | dep_trace={deptraj[::max(1,len(deptraj)//8)]}", flush=True)
