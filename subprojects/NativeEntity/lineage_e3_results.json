@@ -1,0 +1,186 @@
+{
+ "ancestry": [
+  {
+   "gen": 0,
+   "ok": false
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "probe_acc": 0.022,
+   "post_rev": 0.037
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "probe_acc": 0.002,
+   "post_rev": 0.003
+  },
+  {
+   "gen": 3,
+   "ok": true,
+   "probe_acc": 0.01,
+   "post_rev": 0.01
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "probe_acc": 0.008,
+   "post_rev": 0.003
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "probe_acc": 0.093,
+   "post_rev": 0.087
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "probe_acc": 0.165,
+   "post_rev": 0.093
+  },
+  {
+   "gen": 7,
+   "ok": true,
+   "probe_acc": 0.083,
+   "post_rev": 0.103
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "probe_acc": 0.312,
+   "post_rev": 0.62
+  },
+  {
+   "gen": 9,
+   "ok": false,
+   "probe_acc": 0.0,
+   "post_rev": null
+  }
+ ],
+ "restart": [
+  {
+   "gen": 0,
+   "ok": false,
+   "probe_acc": 0.0,
+   "post_rev": null
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "probe_acc": 0.113,
+   "post_rev": 0.177
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "probe_acc": 0.038,
+   "post_rev": 0.043
+  },
+  {
+   "gen": 3,
+   "ok": false,
+   "probe_acc": 0.0,
+   "post_rev": null
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "probe_acc": 0.092,
+   "post_rev": 0.07
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "probe_acc": 0.165,
+   "post_rev": 0.033
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "probe_acc": 0.057,
+   "post_rev": 0.057
+  },
+  {
+   "gen": 7,
+   "ok": false,
+   "probe_acc": 0.0,
+   "post_rev": null
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "probe_acc": 0.068,
+   "post_rev": 0.063
+  },
+  {
+   "gen": 9,
+   "ok": true,
+   "probe_acc": 0.057,
+   "post_rev": 0.033
+  }
+ ],
+ "shuffled": [
+  {
+   "gen": 0,
+   "ok": true,
+   "probe_acc": 0.06,
+   "post_rev": 0.07
+  },
+  {
+   "gen": 1,
+   "ok": true,
+   "probe_acc": 0.082,
+   "post_rev": 0.113
+  },
+  {
+   "gen": 2,
+   "ok": true,
+   "probe_acc": 0.045,
+   "post_rev": 0.0
+  },
+  {
+   "gen": 3,
+   "ok": true,
+   "probe_acc": 0.095,
+   "post_rev": 0.133
+  },
+  {
+   "gen": 4,
+   "ok": true,
+   "probe_acc": 0.09,
+   "post_rev": 0.147
+  },
+  {
+   "gen": 5,
+   "ok": true,
+   "probe_acc": 0.048,
+   "post_rev": 0.037
+  },
+  {
+   "gen": 6,
+   "ok": true,
+   "probe_acc": 0.247,
+   "post_rev": 0.0
+  },
+  {
+   "gen": 7,
+   "ok": true,
+   "probe_acc": 0.137,
+   "post_rev": 0.147
+  },
+  {
+   "gen": 8,
+   "ok": true,
+   "probe_acc": 0.2,
+   "post_rev": 0.353
+  },
+  {
+   "gen": 9,
+   "ok": true,
+   "probe_acc": 0.155,
+   "post_rev": 0.257
+  }
+ ]
+}
