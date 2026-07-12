@@ -1,0 +1,34 @@
+You are designing a small NEURAL ORGANISM by writing a GENOME (JSON). A deterministic compiler turns the genome into a small recurrent network and runs it, alive, inside an environment. You specify STRUCTURE and generic LOCAL LEARNING EQUATIONS; the actual weight numbers come from random seeds. There is NO gradient training and NO backpropagation, ever. The ONLY way the organism adapts within its single lifetime is through the local update equations you write.
+
+ENVIRONMENT: A two-choice world whose reward mapping REVERSES partway through each episode. There are two candidate symbols in play. On each trial: a CHOICE event shows one candidate symbol; then, ONE STEP LATER, a REWARD event delivers a scalar consequence — it is +1 if the symbol that was just shown is the currently-rewarded one, and −1 if it is not — but at that REWARD step the symbol is NO LONGER shown (the symbol field is empty). Which of the two candidates is "rewarded" flips ONCE, partway through the episode, and is signalled only by these consequences. At PROBE events (symbol field empty) the organism must output the symbol that is CURRENTLY rewarded. The organism is never told the correct PROBE answer directly — it must infer the currently-rewarded symbol from the stream of consequences, and it must re-infer it after the reversal. Candidate symbols at test time may be ones the organism has NEVER seen before.
+
+SENSORY INTERFACE (observation per step, 14 numbers): [6 one-hot event-type dims in this order: CHOICE(0), REWARD_POSITIVE(1), REWARD_NEGATIVE(2), (unused 3), (unused 4), PROBE(5)][8 dims: the embedding vector of the candidate symbol shown this step, or all zeros when no symbol is shown (i.e. at REWARD and PROBE steps)].
+CONSEQUENCE: at each step the update equations also receive a scalar "cons" — the environmental consequence for that step. It is +1 at REWARD_POSITIVE, −1 at REWARD_NEGATIVE, and 0 otherwise.
+MOTOR INTERFACE (output per step): [5 action-logit units][8 embedding-output units]. The organism's symbol answer is decoded as the dictionary symbol whose fixed embedding is most correlated with the 8 embedding-output units.
+
+GENOME FORMAT (JSON):
+{
+ "hidden_dim": int in [2,128], "n_mod": int,
+ "weights": { "recurrent": <genspec>, "input": <genspec>, "output": <genspec>,
+    "mod_input": {"gen":"select","dims":[[obs-dim indices read by modulatory neuron 0], ...]} },
+ "dynamics": {"activation":"tanh"|"relu","gain":float<=3,"leak":float in [0,1],"noise":float},
+ "mod_activation": "relu"|"sigmoid"|"tanh",
+ "plastic": { "<output|recurrent|input>": {
+        "traces": [ {"name":"<id>","decay":float in [0,1],"factors":[<local vars>]} ],
+        "terms":  [ {"coef":float,"sign":+1|-1,"factors":[<local vars>]} ],
+        "clip": float } },
+ "init_state": {"gen":"zeros"}
+}
+<genspec> = {"gen":"dense"|"sparse"|"lowrank","seed":int,"scale":float, sparse adds "sparsity":0..1, recurrent may add "spectral_radius":float<=1.6 and "diag":float, lowrank adds "rank":int}.
+
+LOCAL VARIABLES usable as factors in traces/terms (each locally available at weight W[i,j]):
+  "pre" — presynaptic activity; "post" — postsynaptic activity; "w" — the weight's own value;
+  "obsemb" — the current observation's 8-d symbol embedding, aligned onto the 8 embedding-output units (zeros on action units, and zeros whenever no symbol is shown, e.g. at REWARD and PROBE);
+  "pred" — the network's own current output vector; "cons" — the scalar environmental consequence this step (see above);
+  "mod0","mod1",... — activity of modulatory neuron k (scalar); "act" — scalar summary of the action just chosen;
+  "<trace name>" — any decayed trace you defined.
+Broadcasting: "pre" spans input columns, "post"/"pred"/"obsemb" span output rows, scalars ("mod*","cons","act") multiply everything, "w"/traces are elementwise. Trace update each step: trace = decay*trace + PRODUCT(its factors). Term: deltaW += coef*sign*PRODUCT(factors).
+
+COMPLEXITY COST: simpler organisms preferred — fewer hidden units, fewer modulators, fewer terms.
+
+YOUR TASK: Output ONE genome as a single JSON object inside a ```json code block. Then briefly state: (a) predicted dynamical behavior, (b) predicted failure modes (especially: how does it re-adapt after the reward reversal?), (c) for EACH plastic term/trace, WHICH environmental signal drives it and why. Do NOT assume any supervision the environment does not provide — nothing tells the organism the correct PROBE answer; the only feedback is the scalar consequence "cons".
