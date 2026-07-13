@@ -10,12 +10,13 @@ import diag, physics
 # sparse impulses; NOT a seeded organism). Fills a CANDIDATE resource channel to operating level (try ch0/1/3 since
 # channels are neutral) + sparse nucleation. Score each law BEST-over-families x seeds. GS must reach Case D here to
 # confirm the protocol is fair; then ask whether NON-GS strong-drive laws reach Case D.
-def soup(rc):   # resource channel rc filled ~1, sparse impulse nucleation on all channels
+def soup(rc):   # resource channel rc filled ~1, CLEAN POSITIVE sparse nucleation on the OTHER (product) channels
     def f(H,W,D,kind,seed):
         g=np.random.RandomState(seed); X=(0.02*g.standard_normal((H,W,D))).astype(np.float32)
         X[:,:,rc]+=1.0
-        m=(g.random((H,W))<0.10)                      # 10% nucleation sites
-        for c in range(D): X[:,:,c]+=0.3*m*g.standard_normal((H,W))
+        m=(g.random((H,W))<0.10).astype(np.float32)   # 10% nucleation sites
+        for c in range(D):
+            if c!=rc: X[:,:,c]+=0.3*m                  # positive specks (clean nucleation, like validated u1noisy)
         return X
     return f
 FAM={'soup0':soup(0),'soup1':soup(1),'soup3':soup(3)}
@@ -35,6 +36,7 @@ if __name__=='__main__':
     for nm,law in [('GRAY_SCOTT(ctrl)',GRAY_SCOTT),('FROZEN_TURING(ctrl)',FROZEN_TURING)]:
         r=best_fair(law)
         print(f"  {nm:24s} {r['case']:4s} {r['fam']:6s} {r['localization']:>4.2f} {r['inflow_dep']:>6.2f} {r['org_caus']:>5.2f} {r['repair_c']:>5.2f} {'HIT' if r['milestone'] else '':>4s}", flush=True)
+    if os.environ.get('CTRL_ONLY'): print("=== CTRL_ONLY: GS must be Case-D (protocol valid) before batch ===",flush=True); print("=== INITFAIR_DONE ===",flush=True); raise SystemExit
     print("  -- STRONG-DRIVE batch --", flush=True)
     mile=0; cases={}; hits=[]
     for nm,law in STRONG.items():

@@ -45,6 +45,7 @@ def step(X, law, t, rng):
         elif op=='exchange':                                        # conservative swap between two channels
             a,b=tm['src']; flow=c*(X[:,:,a]-X[:,:,b]); dX[:,:,a]-=flow; dX[:,:,b]+=flow
     X=X+float(law.get('dt',1.0))*dX
+    X=X*(1.0-float(law.get('base_leak',0.004)))   # universal baseline dissipation (Part 4): persistent structure must be ACTIVELY maintained; inert init remnants in unused channels decay
     if law.get('noise',0)>0: X=X+float(law['noise'])*rng.standard_normal(X.shape).astype(np.float32)
     lo,hi=law.get('clamp',[-6.0,6.0]); X=np.clip(X,lo,hi)
     return X
