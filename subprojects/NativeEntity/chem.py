@@ -26,11 +26,20 @@ class Obj:
         s.bound=-1; s.dbuf=[]; s.rptr=0; s.age=0; s.y=y; s.x=x; s.exec_credit=0; s.cls=cls; s.alive=True
 
 class World:
-    def __init__(s,H=12,Wd=12,seed=0,inflow=0.35):
-        s.H=H; s.W=Wd; s.objs=[]; s.rng=random.Random(seed); s.R=[[2.0]*Wd for _ in range(H)]; s.t=0; s.inflow=inflow
-    def cell(s,y,x): return [i for i,o in enumerate(s.objs) if o.alive and o.y==y and o.x==x]
+    def __init__(s,H=12,Wd=12,seed=0,inflow=0.35,family='base'):
+        s.H=H; s.W=Wd; s.objs=[]; s.rng=random.Random(seed); s.R=[[2.0]*Wd for _ in range(H)]; s.t=0; s.inflow=inflow; s.family=family; s.cmap=None
+    def _rebuild(s):
+        s.cmap={}
+        for i,o in enumerate(s.objs):
+            if o.alive: s.cmap.setdefault((o.y,o.x),[]).append(i)
+    def cell(s,y,x):                                        # O(cell) via per-tick index + freshness filter (handles move/death/spawn)
+        if s.cmap is None: return [i for i,o in enumerate(s.objs) if o.alive and o.y==y and o.x==x]
+        return [i for i in s.cmap.get((y,x),()) if s.objs[i].alive and s.objs[i].y==y and s.objs[i].x==x]
     def add(s,o):
-        if len(s.cell(o.y,o.x))<C['MAX_PER_CELL']: s.objs.append(o); return len(s.objs)-1
+        if len(s.cell(o.y,o.x))<C['MAX_PER_CELL']:
+            s.objs.append(o)
+            if s.cmap is not None: s.cmap.setdefault((o.y,o.x),[]).append(len(s.objs)-1)
+            return len(s.objs)-1
         return -1
     def nb(s,y,x,k): dy,dx=[(0,0),(0,1),(0,-1),(1,0),(-1,0)][k%5]; return ((y+dy)%s.H,(x+dx)%s.W)
     def step_obj(s,oi):
@@ -46,6 +55,9 @@ class World:
             sym=o.instr[(o.ip+1)%L]; b=bnd(); o.regs[0]=1 if (b and sym in b.instr) else 0; o.ip+=1
         elif op==COPY:
             b=bnd()
+            if b is None and s.family=='autocat':                      # CROSS-DOMAIN family: COPY grabs a random co-cell template (template-free autocatalysis)
+                cs=[j for j in s.cell(o.y,o.x) if j!=oi and s.objs[j].instr]
+                if cs: b=s.objs[cs[o.regs[0]%len(cs)]]
             if b:
                 seg=b.instr[o.rptr:o.rptr+C['COPY_SEG']]
                 for tk in seg:
@@ -74,8 +86,12 @@ class World:
             b=bnd()
             if b: b.exec_credit+=2
         elif op==ACTIVATE:
-            tgt=bnd()
-            if tgt is not None: tgt.active=True; tgt.act_ttl=C['ACT_TTL']
+            if s.family=='broadcast':                                  # ALIEN family: activate all co-cell objects (no bind needed)
+                for j in s.cell(o.y,o.x):
+                    if j!=oi: s.objs[j].active=True; s.objs[j].act_ttl=C['ACT_TTL']
+            else:
+                tgt=bnd()
+                if tgt is not None: tgt.active=True; tgt.act_ttl=C['ACT_TTL']
         elif op==INHIBIT:
             b=bnd()
             if b: b.active=False; b.act_ttl=0
@@ -89,7 +105,7 @@ class World:
             if b: b.res-=C['DECAY_HIT']
         o.ip=(o.ip+1)%max(len(o.instr),1)
     def tick(s):
-        s.t+=1
+        s.t+=1; s._rebuild()
         for y in range(s.H):
             for x in range(s.W): s.R[y][x]+=s.inflow*(0.6+0.4*((s.t*7+y*3+x)%11)/11.0)
         for o in s.objs:
