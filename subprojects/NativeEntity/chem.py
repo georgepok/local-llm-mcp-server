@@ -99,6 +99,10 @@ class World:
         elif op==SPAWN:
             if o.dbuf and o.res>C['SPAWN_COST']+C['SPAWN_ENDOW']:
                 ny,nx=s.nb(o.y,o.x,o.regs[2])
+                if len(s.cell(ny,nx))>=C['MAX_PER_CELL']:                  # target full -> try neighbor cells (space-seeking spawn)
+                    for k in (1,2,3,4):
+                        cy,cx=s.nb(o.y,o.x,k)
+                        if len(s.cell(cy,cx))<C['MAX_PER_CELL']: ny,nx=cy,cx; break
                 seq=o.dbuf[:C['MAX_LEN']]
                 mr=C.get('MUT_RATE',0.0)                                   # inner evolution (Part 10): point mutation on spawn
                 if mr>0:
