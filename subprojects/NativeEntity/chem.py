@@ -98,7 +98,15 @@ class World:
         elif op==SPAWN:
             if o.dbuf and o.res>C['SPAWN_COST']+C['SPAWN_ENDOW']:
                 ny,nx=s.nb(o.y,o.x,o.regs[2])
-                child=Obj(o.dbuf[:C['MAX_LEN']],ny,nx,C['SPAWN_ENDOW'],cls='child')
+                seq=o.dbuf[:C['MAX_LEN']]
+                mr=C.get('MUT_RATE',0.0)                                   # inner evolution (Part 10): point mutation on spawn
+                if mr>0:
+                    seq=list(seq)
+                    for k in range(len(seq)):
+                        if s.rng.random()<mr: seq[k]=s.rng.randrange(len(TOK))
+                    if s.rng.random()<mr and len(seq)<C['MAX_LEN']: seq.insert(s.rng.randrange(len(seq)+1),s.rng.randrange(len(TOK)))
+                    if s.rng.random()<mr and len(seq)>1: del seq[s.rng.randrange(len(seq))]
+                child=Obj(seq,ny,nx,C['SPAWN_ENDOW'],cls='child')
                 if s.add(child)>=0: o.res-=C['SPAWN_COST']+C['SPAWN_ENDOW']; o.dbuf=[]; o.rptr=0; o.regs[1]=0
         elif op==DECAY:
             b=bnd()
