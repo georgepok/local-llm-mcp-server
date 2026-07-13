@@ -86,6 +86,7 @@ class World:
             b=bnd()
             if b: b.exec_credit+=2
         elif op==ACTIVATE:
+            o.res-=C.get('ACTIVATE_COST',0.0)                          # activating others can be COSTLY -> pure activator starves unless repaid (forces reciprocity)
             if s.family=='broadcast':                                  # ALIEN family: activate all co-cell objects (no bind needed)
                 for j in s.cell(o.y,o.x):
                     if j!=oi: s.objs[j].active=True; s.objs[j].act_ttl=C['ACT_TTL']
