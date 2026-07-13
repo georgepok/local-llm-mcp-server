@@ -9,15 +9,15 @@ import numpy as np
 # a HELD context with a CURRENT observation (non-linearly separable; single factor insufficient).
 np.seterr(over='ignore', invalid='ignore')
 
-D_IN=8   # [2 event: CONTEXT/OBS ... actually: ctx_onehot(2) + obs_onehot(2) + event(2: is_ctx,is_reward) + bias(2)]
+D_IN=8   # ctx(0/1), f1(2/3), f2(4/5), distractor(6), reward-flag(7)
 D_ACT=2
 
-def obs_ctx(c):
-    v=np.zeros(D_IN,np.float32); v[c]=1.0; v[4]=1.0; return v          # context on dims 0/1, is_context flag dim4
-def obs_o(o):
-    v=np.zeros(D_IN,np.float32); v[2+o]=1.0; return v                  # observation on dims 2/3
-def obs_reward():
-    v=np.zeros(D_IN,np.float32); v[5]=1.0; return v                    # reward event flag dim5 (no symbol)
+def obs_ctx(c):    v=np.zeros(D_IN,np.float32); v[c]=1.0; return v
+def obs_f1(f):     v=np.zeros(D_IN,np.float32); v[2+f]=1.0; return v
+def obs_f2(f):     v=np.zeros(D_IN,np.float32); v[4+f]=1.0; return v
+def obs_o(o):      v=np.zeros(D_IN,np.float32); v[2+o]=1.0; return v    # (legacy easy task)
+def obs_dist(rng): v=np.zeros(D_IN,np.float32); v[6]=1.0; v[:6]=0.15*rng.randn(6); return v
+def obs_reward():  v=np.zeros(D_IN,np.float32); v[7]=1.0; return v
 
 class Organism:
     """Classical recurrent + eligibility-trace plastic readout, with an optional coherence layer whose
@@ -69,29 +69,41 @@ class Organism:
         self.Wout += self.eta*cons*cf*self.e
         np.clip(self.Wout,-4,4,out=self.Wout)
 
-def rollout_e3plus(org, rng, ntrials=24):
+def rollout_e3plus(org, rng, ntrials=24):                            # legacy EASY task (contextual XOR, per-channel)
     c=rng.randint(0,1); org.step(obs_ctx(c), rng); corr=[]
     for t in range(ntrials):
         o=rng.randint(0,1); out,C=org.step(obs_o(o), rng)
         a=int(np.argmax(out[:D_ACT])); target=c ^ o; cons=1.0 if a==target else -1.0
-        corr.append(int(a==target))
-        _,C2=org.step(obs_reward(), rng)                            # delayed reward step (context/obs absent)
-        org.update(cons, a, C2)
+        corr.append(int(a==target)); _,C2=org.step(obs_reward(), rng); org.update(cons, a, C2)
     return corr
 
-def eval_cond(cond, neps=200, H=24, N=16, seed=0):
+def rollout_hard(org, rng, ntrials=36, ndist=3):
+    # 3-factor DISTRIBUTED parity: context c (held all episode) + f1 + f2 separated by distractors; delayed reward.
+    # reward iff action == (c XOR f1 XOR f2). Requires holding+binding 3 factors across interference w/ limited state.
+    c=rng.randint(0,1); org.step(obs_ctx(c), rng); corr=[]
+    for t in range(ntrials):
+        f1=rng.randint(0,1); org.step(obs_f1(f1), rng)
+        for _ in range(ndist): org.step(obs_dist(rng), rng)
+        f2=rng.randint(0,1); out,C=org.step(obs_f2(f2), rng)
+        a=int(np.argmax(out[:D_ACT])); target=c ^ f1 ^ f2; cons=1.0 if a==target else -1.0
+        corr.append(int(a==target))
+        for _ in range(ndist): org.step(obs_dist(rng), rng)         # delay before reward (eligibility must bridge)
+        _,C2=org.step(obs_reward(), rng); org.update(cons, a, C2)
+    return corr
+
+def eval_cond(cond, task='hard', neps=200, H=12, N=16, ndist=3):
     accs_late=[]; accs_all=[]; Cs=[]; unstable=0
     for ep in range(neps):
-        org=Organism(cond, H=H, N=N, seed=1000+ (ep%17)); rng=np.random.RandomState(7000+ep)
-        corr=rollout_e3plus(org, rng)
+        org=Organism(cond, H=H, N=N, seed=1000+(ep%17)); rng=np.random.RandomState(7000+ep)
+        corr=rollout_hard(org, rng, ndist=ndist) if task=='hard' else rollout_e3plus(org, rng)
         if not np.all(np.isfinite(org.Wout)): unstable+=1; continue
-        accs_late.append(np.mean(corr[-8:])); accs_all.append(np.mean(corr)); Cs.append(getattr(org,'C',1.0))
+        accs_late.append(np.mean(corr[-10:])); accs_all.append(np.mean(corr)); Cs.append(getattr(org,'C',1.0))
     return {'late':round(float(np.mean(accs_late)),3),'all':round(float(np.mean(accs_all)),3),
             'coh':round(float(np.mean(Cs)),3),'nan':round(unstable/neps,3),'n':len(accs_late)}
 
 if __name__=='__main__':
-    print("=== COHERENCE_SUBSTRATE_EVOLUTION_V1 Phase-1 smoke: E3-PLUS (contextual XOR delayed credit) ===", flush=True)
-    print("  chance=0.50; must bind HELD context + CURRENT obs (XOR, non-linearly-separable) via delayed reward", flush=True)
+    print("=== COHERENCE_SUBSTRATE_EVOLUTION_V1 Phase-1: E3-PLUS HARD (3-factor DISTRIBUTED parity, H=12, distractors) ===", flush=True)
+    print("  chance=0.50; bind context(held) XOR f1 XOR f2 across distractors+delay w/ limited state", flush=True)
     conds=[('B0 classical','classical'),('B1 extra_real (matched cap)','extra_real'),
            ('B2 phase-coherence','phase'),('B4 high-dephasing','phase_highdephase'),
            ('B5 global-lock','global_lock'),('B6 PHASE-SCRAMBLE','phase_scramble')]
